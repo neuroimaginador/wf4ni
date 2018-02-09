@@ -1,0 +1,5 @@
+flow_parcellation                    Create a flow to perform brain extraction, segmentation and parcellation using dense layers.
+flow_parcellation_conv               Create a flow to perform brain extraction, segmentation and parcellation using convolutional layers.
+flow_parcellation_conv_3schemes      Create a flow to perform brain extraction, segmentation and parcellation using convolutional layers, with a scheme different for each model in the flow.
+flow_t1_flair                        Create a flow to perform brain extraction, segmentation and the transformation from T1 to FLAIR using dense layers.
+flow_t1_flair_conv                   Create a flow to perform brain extraction, segmentation and the transformation from T1 to FLAIR using convolutional layers.
