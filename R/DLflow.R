@@ -248,7 +248,28 @@ DLflow <- R6::R6Class(
 
   private = list(
 
-    log_lines = c()
+    log_lines = c(),
+
+    get_log_lines = function(level = c("DEBUG", "WARNING", "INFO", "ERROR")) {
+
+      lines <- c()
+
+      if ("DEBUG" %in% level)
+        level <- c("DEBUG", "INFO", "WARNING", "ERROR")
+
+      for (i in seq_along(level)) {
+
+        lines <- c(lines, grep(private$log_lines, pattern = level[i]))
+
+      }
+
+      lines <- sort(lines)
+
+      lines <- private$log_lines[lines]
+
+      return(lines)
+
+    }
 
   ),
 
