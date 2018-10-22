@@ -158,6 +158,43 @@ DLflow <- R6::R6Class(
 
     },
 
+    log = function(level = c("DEBUG", "INFO", "WARNING", "ERROR"), message = "...") {
+
+      line_to_add <- paste0("(", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ") [",
+                            level[1], "] ",
+                            message)
+
+      private$log_lines <- c(private$log_lines, line_to_add)
+
+    },
+
+    print_log = function(level = c("DEBUG", "WARNING", "INFO", "ERROR")) {
+
+      lines <- private$get_log_lines(level)
+
+      cat(lines, sep = "\n")
+
+    },
+
+    errors = function() {
+
+      self$print_log(level = "ERROR")
+
+    },
+
+    warnings = function() {
+
+      self$print_log(level = "WARNING")
+
+    },
+
+    save_log = function(filename, level = c("DEBUG", "WARNING", "INFO", "ERROR")) {
+
+      lines <- private$get_log_lines(level)
+
+      cat(lines, sep = "\n", file = filename)
+
+    },
 
     graph = function() {
 
@@ -206,6 +243,12 @@ DLflow <- R6::R6Class(
       return(new_flow)
 
     }
+
+  ),
+
+  private = list(
+
+    log_lines = c()
 
   ),
 
