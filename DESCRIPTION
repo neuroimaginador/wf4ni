@@ -8,6 +8,6 @@ Maintainer: Domingo Lopez-Rodriguez <neuroimaginador@gmail.com>
 Description: The aim of this package is to provide a means to create reproducible workflows specifically desgined for Neuroimaging. This package was created as an extension to dl4ni, so it accepts Deep Learning models as parts of a workflow.
 License: GPL (>= 2)
 Enhances: dl4ni
-Suggests: testthat, ni.datasets, utils4ni
+Suggests: testthat, ni.datasets, utils4ni, stringr
 Encoding: UTF-8
 LazyData: true

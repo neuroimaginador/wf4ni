@@ -18,11 +18,15 @@ add_inputs <- function(flow, inputs = list()) {
   # Basic checks
   stopifnot(inherits(flow, "DLflow"))
 
+  suppressPackageStartupMessages(require(stringr))
+
   # Add inputs to the graph
   if (length(inputs) > 0) {
 
     flow$log(level = "DEBUG",
-             message = paste0("Adding inputs ", unlist(inputs)))
+             message = paste0("Adding inputs ",
+                              stringr::str_flatten(unlist(inputs),
+                                                   collapse = ", ")))
 
     flow$inputs <- c(flow$inputs, inputs)
     flow$graph <- flow$graph %>% igraph::add_vertices(nv = length(inputs),
@@ -63,7 +67,7 @@ add_process <- function(flow,
                         output,
                         trained = TRUE) {
 
-  require(igraph)
+  suppressPackageStartupMessages(require(igraph))
 
   # Basic checks
   stopifnot(inherits(flow, "DLflow"))
@@ -75,10 +79,11 @@ add_process <- function(flow,
   type <- "DLmodel"
   if (inherits(proc, "function")) type <- "function"
 
-
   flow$log(level = "DEBUG",
-           message = paste0("Adding process with inputs: ", unlist(inputs), " and output(s): ",
-                            unlist(output)))
+           message = paste0("Adding process with inputs: ",
+                            stringr::str_flatten(unlist(inputs), collapse = ", "),
+                            " and output(s): ",
+                            stringr::str_flatten(unlist(output), collapse = ", ")))
 
   # Add a node to the graph, with edges from its inputs to it.
   flow$graph <- flow$graph %>% igraph::add_vertices(nv = 1, name = output, type = type)

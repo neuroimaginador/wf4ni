@@ -170,7 +170,22 @@ DLflow <- R6::R6Class(
 
     print_log = function(level = c("DEBUG", "WARNING", "INFO", "ERROR")) {
 
-      lines <- private$get_log_lines(level)
+      all_lines <- private$log_lines
+
+      lines <- c()
+
+      if ("DEBUG" %in% level)
+        level <- c("DEBUG", "INFO", "WARNING", "ERROR")
+
+      for (i in seq_along(level)) {
+
+        lines <- c(lines, grep(all_lines, pattern = level[i]))
+
+      }
+
+      lines <- sort(lines)
+
+      lines <- private$log_lines[lines]
 
       cat(lines, sep = "\n")
 
@@ -190,7 +205,22 @@ DLflow <- R6::R6Class(
 
     save_log = function(filename, level = c("DEBUG", "WARNING", "INFO", "ERROR")) {
 
-      lines <- private$get_log_lines(level)
+      all_lines <- private$log_lines
+
+      lines <- c()
+
+      if ("DEBUG" %in% level)
+        level <- c("DEBUG", "INFO", "WARNING", "ERROR")
+
+      for (i in seq_along(level)) {
+
+        lines <- c(lines, grep(all_lines, pattern = level[i]))
+
+      }
+
+      lines <- sort(lines)
+
+      lines <- private$log_lines[lines]
 
       cat(lines, sep = "\n", file = filename)
 
@@ -241,33 +271,6 @@ DLflow <- R6::R6Class(
       new_flow$.__enclos_env__$private <- new_flow_env
 
       return(new_flow)
-
-    }
-
-  ),
-
-  private = list(
-
-    log_lines = c(),
-
-    get_log_lines = function(level = c("DEBUG", "WARNING", "INFO", "ERROR")) {
-
-      lines <- c()
-
-      if ("DEBUG" %in% level)
-        level <- c("DEBUG", "INFO", "WARNING", "ERROR")
-
-      for (i in seq_along(level)) {
-
-        lines <- c(lines, grep(private$log_lines, pattern = level[i]))
-
-      }
-
-      lines <- sort(lines)
-
-      lines <- private$log_lines[lines]
-
-      return(lines)
 
     }
 
