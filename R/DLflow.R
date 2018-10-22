@@ -72,7 +72,7 @@ DLflow <- R6::R6Class(
 
     },
 
-    get_model = function(output) {
+    get_process = function(output) {
 
       my_flow <- self$.__enclos_env__$private
 
