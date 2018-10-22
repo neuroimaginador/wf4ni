@@ -80,6 +80,21 @@ DLflow <- R6::R6Class(
 
     },
 
+    get_dependencies = function() {
+
+      my_flow <- self$.__enclos_env__$private
+      unique(unlist(my_flow$pkgs))
+
+    },
+
+    check_dependencies = function() {
+
+      pkgs <- self$get_dependencies()
+
+      all(pkgs %in% row.names(installed.packages()))
+
+    },
+
     replace = function(output, with) {
 
       if (!(output %in% self$get_outputs())) {

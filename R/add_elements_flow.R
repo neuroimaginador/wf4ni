@@ -117,6 +117,9 @@ add_process <- function(flow,
   #
   # }
 
+  # Add package dependencies
+  flow$pkgs[[output]] <- get_dependencies(proc)
+
   # Add its pipeline (updating all previous pipelines)
   inputs <- which(V(flow$graph)$type == "Input")
   for (target_idx in setdiff(seq(new_vertex_idx), inputs)) {
