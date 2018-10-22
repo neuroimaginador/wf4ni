@@ -31,8 +31,14 @@ execute_flow <- function(flow, inputs = list(),
   # Check that inputs is a named list of files and that all of them exist
   all_exist <- all(sapply(inputs, file.exists))
 
-  if (!all_exist)
+  if (!all_exist) {
+
     stop("Not all input files exist.")
+
+    flow$log(level = "ERROR",
+             message = "Not all input files exist.")
+
+  }
 
   input_names <- names(inputs)
   # input_names <- input_names[input_names %in% flow$inputs]
@@ -43,8 +49,14 @@ execute_flow <- function(flow, inputs = list(),
 
   # Check that the desired outputs can be computed
   all_computable <- all(desired_outputs %in% flow$outputs)
-  if (!all_computable)
+  if (!all_computable) {
+
     warning("Some of the outputs cannot be computed.")
+
+    flow$log(level = "WARNING",
+             message = "Some of the outputs cannot be computed.")
+
+  }
 
   desired_outputs <- desired_outputs[desired_outputs %in% flow$outputs]
 
@@ -56,6 +68,9 @@ execute_flow <- function(flow, inputs = list(),
 
     # Read inputs
     for (name in input_names) {
+
+      flow$log(level = "DEBUG", message = paste0("Reading input ", name,
+                                                 " from file ", inputs[[name]]))
 
       flow$computed_outputs[[name]] <-
         switch(tools::file_ext(inputs[[name]]),
@@ -93,8 +108,14 @@ execute_flow <- function(flow, inputs = list(),
           # if this process is already computed, go to the next one
           if (!is.null(flow$computed_outputs[[intermediate_output]])) next
 
-          if (verbose)
+          if (verbose) {
+
             cat("Computing", intermediate_output, "...\n") # nocov
+
+          }
+
+          flow$log(level = "DEBUG",
+                   message = paste0("Computing", intermediate_output, "..."))
 
           process <- flow$processes[[intermediate_output]]
           my_inputs <- flow$inmediate_inputs[[intermediate_output]]
@@ -115,13 +136,14 @@ execute_flow <- function(flow, inputs = list(),
 
       }
 
-
     }
+
+    flow$log(level = "DEBUG",
+             message = "Computed all results")
 
     results <- flow$computed_outputs[desired_outputs]
 
   }
-
 
   return(results)
 
@@ -140,6 +162,8 @@ execute_flow <- function(flow, inputs = list(),
 reset_outputs <- function(flow) {
 
   flow$computed_outputs <- list()
+
+  flow$log(level = "DEBUG", message = "Outputs reset")
 
   return(invisible(flow))
 

@@ -20,6 +20,9 @@ save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
   stopifnot(inherits(flow, "DLflow"))
   flow %>% reset_outputs()
 
+  flow$log(level = "DEBUG",
+           message = paste0("Saving flow ", flow$name, " in ", path))
+
   # Output directory
   output_dir <- file.path(path, file_prefix)
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
@@ -60,7 +63,8 @@ save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
     suppressWarnings(
       zip::zip(zipfile = output_file,
                files = file.path(basename(output_dir),
-                                 list.files(output_dir, recursive = TRUE, all.files = TRUE, include.dirs = TRUE)),
+                                 list.files(output_dir, recursive = TRUE,
+                                            all.files = TRUE, include.dirs = TRUE)),
                recurse = FALSE)
     )
 
@@ -115,7 +119,7 @@ load_flow <- function(filename, verbose = FALSE) {
 
   # For each process, incorporate it to the flow
   processes_dir <- file.path(output_dir, "processes")
-  
+
   # Functions and models
   functions <- list.files(processes_dir, pattern = ".rds")
   models <- list.dirs(processes_dir, full.names = FALSE)
