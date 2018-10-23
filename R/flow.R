@@ -40,6 +40,7 @@ create_flow <- function(name = "", inputs = list()) {
 
   # Add inputs to the graph
   if (length(inputs) > 0) {
+
     flow$inputs <- inputs
     flow$graph <- flow$graph %>% igraph::add_vertices(nv = length(inputs),
                                                       name = unlist(inputs),
@@ -55,12 +56,8 @@ create_flow <- function(name = "", inputs = list()) {
 
   with(flow, expr = {
 
-
-  })
-
-  with(flow, expr = {
-
-    log <- function(level = c("DEBUG", "INFO", "WARNING", "ERROR"), message = "...") {
+    log <- function(level = c("DEBUG", "INFO", "WARNING", "ERROR"),
+                    message = "...") {
 
       line_to_add <- paste0("(", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ") [",
                             level[1], "] ",

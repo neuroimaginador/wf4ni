@@ -58,6 +58,12 @@ DLflow <- R6::R6Class(
 
     },
 
+    set_name = function(new_name) {
+
+      private$name <- new_name
+
+    },
+
     get_inputs = function() {
 
       my_flow <- self$.__enclos_env__$private
@@ -173,7 +179,8 @@ DLflow <- R6::R6Class(
 
     },
 
-    log = function(level = c("DEBUG", "INFO", "WARNING", "ERROR"), message = "...") {
+    log = function(level = c("DEBUG", "INFO", "WARNING", "ERROR"),
+                   message = "...") {
 
       line_to_add <- paste0("(", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ") [",
                             level[1], "] ",
