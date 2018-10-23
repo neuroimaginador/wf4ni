@@ -27,10 +27,11 @@ save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
   output_dir <- file.path(path, file_prefix)
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-  # Models must be saved apart.
+  # Models/functions must be saved apart.
   processes <- flow$processes
 
-  # In the output folder, save the flow and create a specific folder for all the processes
+  # In the output folder, save the flow and create a specific
+  # folder for all the processes
   saveRDS(flow, file = file.path(output_dir, paste0(file_prefix, "_flow.rds")))
   processes_dir <- file.path(output_dir, "processes")
   dir.create(processes_dir, recursive = TRUE, showWarnings = FALSE)
@@ -47,7 +48,9 @@ save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
     } else {
 
       # The remaining objects are saved in RDS format
-      saveRDS(object = proc, file = file.path(processes_dir, paste0(names(processes)[proc_idx], ".rds")))
+      saveRDS(object = proc,
+              file = file.path(processes_dir,
+                               paste0(names(processes)[proc_idx], ".rds")))
 
     }
 
@@ -59,12 +62,19 @@ save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
 
   if (require(zip)) {
 
+    output_file <- suppressWarnings(normalizePath(output_file))
+
     setwd(dirname(output_dir))
+
+    file_list <- file.path(basename(output_dir),
+                           list.files(output_dir,
+                                      recursive = TRUE,
+                                      all.files = TRUE,
+                                      include.dirs = TRUE))
+
     suppressWarnings(
       zip::zip(zipfile = output_file,
-               files = file.path(basename(output_dir),
-                                 list.files(output_dir, recursive = TRUE,
-                                            all.files = TRUE, include.dirs = TRUE)),
+               files = file_list,
                recurse = FALSE)
     )
 

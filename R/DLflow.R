@@ -294,6 +294,57 @@ DLflow <- R6::R6Class(
 
       return(new_flow)
 
+    },
+
+    to_package = function(path, package_name = self$name()) {
+
+      empty_env <- new.env()
+
+      my_outputs <- self$get_outputs()
+      my_inputs <- self$get_inputs()
+      my_flow <- self$.__enclos_env__$private
+
+      # Add specific functions to compute outputs
+      for (output in setdiff(my_outputs, my_inputs)) {
+
+        required_inputs <- unlist(my_flow$outputs[my_flow$required_inputs[[output]]])
+        f <- build_compute_function(args = required_inputs,
+                                    output = output)
+
+        eval(expr = parse(text = f), envir = empty_env)
+
+      }
+
+      # Create package
+      package.skeleton(name = package_name,
+                       path = path,
+                       environment = empty_env)
+
+      pkg <- file.path(path, package_name)
+
+      # Remove "Read-and-delete-me" file
+      unlink(x = file.path(pkg, "Read-and-delete-me"), force = TRUE)
+
+      # Add dependencies to the DESCRIPTION file
+      deps <- self$get_dependencies()
+
+      invisible(sapply(deps, devtools::use_package, pkg = pkg))
+
+      # Save the flow
+      data_folder <- file.path(pkg, "inst", "flow")
+
+      self$save(path = data_folder, file_prefix = package_name)
+
+      # Add zzz.R which loads the flow as "flow"
+      zzz_file <- file.path(pkg, "R", "zzz.R")
+
+      string <- paste0("flow_file <- system.file('flow', '",
+                       package_name , "_flow.zip', package = '",
+                       package_name, "')\n\n",
+                       "flow <- wf4ni::load_flow(flow_file)\n")
+
+      cat(string, file = zzz_file)
+
     }
 
   ),
