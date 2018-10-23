@@ -167,7 +167,8 @@ load_flow <- function(filename, verbose = FALSE) {
     if (verbose)
       cat("Loading model:", model_name, "...\n") # nocov
 
-    flow$processes[[model_name]] <- load_model(path = processes_dir, prefix = model_name)
+    flow$processes[[model_name]] <- dl4ni::load_model(path = processes_dir,
+                                                      prefix = model_name)
 
   }
 
@@ -175,8 +176,11 @@ load_flow <- function(filename, verbose = FALSE) {
   setwd(current_dir)
   unlink(output_dir, recursive = TRUE, force = TRUE)
 
+  final_flow <- DLflow$new(name = flow$name, inputs = flow$inputs)
+  final_flow$.__enclos_env__$private <- flow
+
   # Return the flow
-  return(flow)
+  return(final_flow)
 
 }
 
@@ -197,3 +201,4 @@ clone_flow <- function(flow) {
   return(new_flow)
 
 }
+
