@@ -72,16 +72,26 @@ execute_flow <- function(flow, inputs = list(),
       flow$log(level = "DEBUG", message = paste0("Reading input ", name,
                                                  " from file ", inputs[[name]]))
 
-      flow$computed_outputs[[name]] <-
-        switch(tools::file_ext(inputs[[name]]),
+      # If a file is provided as input, read it
+      if (is.character(inputs[[name]]) & file.exists(inputs[[name]])) {
 
-               "rds" = readRDS(inputs[[name]]),
+        flow$computed_outputs[[name]] <-
+          switch(tools::file_ext(inputs[[name]]),
 
-               "nii" = neurobase::readnii(inputs[[name]]),
+                 "rds" = readRDS(inputs[[name]]),
 
-               "gz" = neurobase::readnii(inputs[[name]])
+                 "nii" = neurobase::readnii(inputs[[name]]),
 
-        )
+                 "gz" = neurobase::readnii(inputs[[name]])
+
+          )
+
+      } else {
+
+        # Another data type is provided
+        flow$computed_outputs[[name]] <- inputs[[name]]
+
+      }
 
     }
 
