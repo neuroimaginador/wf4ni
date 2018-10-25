@@ -29,16 +29,16 @@ execute_flow <- function(flow, inputs = list(),
   stopifnot(inherits(flow, "DLflow"))
 
   # Check that inputs is a named list of files and that all of them exist
-  all_exist <- all(sapply(inputs, file.exists))
-
-  if (!all_exist) {
-
-    stop("Not all input files exist.")
-
-    flow$log(level = "ERROR",
-             message = "Not all input files exist.")
-
-  }
+  # all_exist <- all(sapply(inputs, file.exists))
+  #
+  # if (!all_exist) {
+  #
+  #   stop("Not all input files exist.")
+  #
+  #   flow$log(level = "ERROR",
+  #            message = "Not all input files exist.")
+  #
+  # }
 
   input_names <- names(inputs)
   # input_names <- input_names[input_names %in% flow$inputs]
@@ -73,7 +73,7 @@ execute_flow <- function(flow, inputs = list(),
                                                  " from file ", inputs[[name]]))
 
       # If a file is provided as input, read it
-      if (is.character(inputs[[name]]) & file.exists(inputs[[name]])) {
+      if (is.character(inputs[[name]]) && file.exists(inputs[[name]])) {
 
         flow$computed_outputs[[name]] <-
           switch(tools::file_ext(inputs[[name]]),
@@ -135,7 +135,11 @@ execute_flow <- function(flow, inputs = list(),
                  "function" = {
 
                    params <- flow$computed_outputs[my_inputs]
-                   names(params) <- names(formals(process))
+                   param_names <- methods::formalArgs(process)
+                   # Allow for functions with ... in its arguments
+                   if (!("..." %in% param_names))
+                     names(params) <- param_names
+
                    flow$computed_outputs[[intermediate_output]] <- do.call(what = process,
                                                                            args = params)
 
