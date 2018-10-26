@@ -177,7 +177,10 @@ load_flow <- function(filename, verbose = FALSE) {
   unlink(output_dir, recursive = TRUE, force = TRUE)
 
   final_flow <- DLflow$new(name = flow$name, inputs = flow$inputs)
+  class(flow) <- "DLflow"
   final_flow$.__enclos_env__$private <- flow
+  class(final_flow$.__enclos_env__$private) <- c("DLflow",
+                                                 class(final_flow$.__enclos_env__$private))
 
   # Return the flow
   return(final_flow)

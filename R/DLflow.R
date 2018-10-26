@@ -284,6 +284,12 @@ DLflow <- R6::R6Class(
 
     },
 
+    deep_clone = function() {
+
+      self$.__enclos_env__$private %>% clone_flow()
+
+    },
+
     subset = function(outputs) {
 
       my_flow <- self$.__enclos_env__$private
