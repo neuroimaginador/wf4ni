@@ -65,7 +65,8 @@ add_process <- function(flow,
                         proc,
                         inputs = ifelse(inherits(proc, "function"), list(names(formals(proc))), list()),
                         output,
-                        trained = TRUE) {
+                        trained = TRUE,
+                        ...) {
 
   suppressPackageStartupMessages(require(igraph))
 
@@ -99,6 +100,16 @@ add_process <- function(flow,
   }
 
   # Add the model to the list of flow models
+  additional_params <- list(...)
+
+  if (length(additional_params) > 0) {
+
+    require(pryr)
+
+    proc <- proc %>% pryr::partial(...)
+
+  }
+
   flow$processes[[output]] <- proc
   flow$outputs <- c(flow$outputs, output)
   flow$trained[[output]] <- trained

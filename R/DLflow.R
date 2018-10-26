@@ -115,7 +115,7 @@ DLflow <- R6::R6Class(
 
     },
 
-    add = function(what = NULL, inputs = NULL, output = NULL, subset = NULL) {
+    add = function(what = NULL, inputs = NULL, output = NULL, subset = NULL, ...) {
 
       my_flow <- self$.__enclos_env__$private
 
@@ -145,11 +145,11 @@ DLflow <- R6::R6Class(
 
         if (is.null(inputs)) {
 
-          my_flow %>% add_process(proc = what, output = output)
+          my_flow %>% add_process(proc = what, output = output, ...)
 
         } else {
 
-          my_flow %>% add_process(proc = what, inputs = inputs, output = output)
+          my_flow %>% add_process(proc = what, inputs = inputs, output = output, ...)
 
         }
 

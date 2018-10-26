@@ -69,11 +69,11 @@ execute_flow <- function(flow, inputs = list(),
     # Read inputs
     for (name in input_names) {
 
-      flow$log(level = "DEBUG", message = paste0("Reading input ", name,
-                                                 " from file ", inputs[[name]]))
-
       # If a file is provided as input, read it
       if (is.character(inputs[[name]]) && file.exists(inputs[[name]])) {
+
+        flow$log(level = "DEBUG", message = paste0("Reading input ", name,
+                                                   " from file ", inputs[[name]]))
 
         flow$computed_outputs[[name]] <-
           switch(tools::file_ext(inputs[[name]]),
@@ -89,6 +89,9 @@ execute_flow <- function(flow, inputs = list(),
       } else {
 
         # Another data type is provided
+
+        flow$log(level = "DEBUG", message = paste0("Using provided input ", name))
+
         flow$computed_outputs[[name]] <- inputs[[name]]
 
       }
@@ -125,7 +128,7 @@ execute_flow <- function(flow, inputs = list(),
           }
 
           flow$log(level = "DEBUG",
-                   message = paste0("Computing", intermediate_output, "..."))
+                   message = paste0("Computing ", intermediate_output, "..."))
 
           process <- flow$processes[[intermediate_output]]
           my_inputs <- flow$inmediate_inputs[[intermediate_output]]
@@ -134,14 +137,17 @@ execute_flow <- function(flow, inputs = list(),
 
                  "function" = {
 
-                   params <- flow$computed_outputs[my_inputs]
+                   params <- flow$computed_outputs[my_inputs] %>% unname()
+
                    param_names <- methods::formalArgs(process)
+
                    # Allow for functions with ... in its arguments
                    if (!("..." %in% param_names))
-                     names(params) <- param_names
+                     names(params) <- param_names[1:length(params)]
 
                    flow$computed_outputs[[intermediate_output]] <- do.call(what = process,
                                                                            args = params)
+
 
                  }
           )
