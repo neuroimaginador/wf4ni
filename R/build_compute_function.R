@@ -1,5 +1,5 @@
-build_compute_function <- function(args,
-                                   output) {
+.build_compute_function <- function(args,
+                                    output) {
 
   args_txt <- c()
 
@@ -10,16 +10,16 @@ build_compute_function <- function(args,
   }
 
   my_function_txt <- paste0("get_", output, " <- ",
-                         "function(",
-                         stringr::str_flatten(args,
-                                              collapse = ", "), ") {\n\n",
-                         "result <- flow$execute(inputs = list(",
-                         stringr::str_flatten(args_txt,
-                                              collapse = ", "),
-                         "),\n",
-                         "desired_outputs = c('", output, "'))\n",
-                         "\n", "return(result$", output, ")\n\n",
-                         "}")
+                            "function(",
+                            stringr::str_flatten(args,
+                                                 collapse = ", "), ") {\n\n",
+                            "result <- flow$execute(inputs = list(",
+                            stringr::str_flatten(args_txt,
+                                                 collapse = ", "),
+                            "),\n",
+                            "desired_outputs = c('", output, "'))\n",
+                            "\n", "return(result$", output, ")\n\n",
+                            "}")
 
   return(styler::style_text(my_function_txt))
 

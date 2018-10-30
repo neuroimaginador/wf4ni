@@ -1,4 +1,3 @@
-
 #' @title FUNCTION_TITLE
 #'
 #' @description FUNCTION_DESCRIPTION
@@ -11,9 +10,9 @@
 #' @details DETAILS
 #' @seealso
 #'  \code{\link[igraph]{add_vertices}}
-#' @export
 #' @importFrom igraph add_vertices
-add_inputs <- function(flow, inputs = list()) {
+#'
+.add_inputs <- function(flow, inputs = list()) {
 
   # Basic checks
   stopifnot(inherits(flow, "DLflow"))
@@ -58,15 +57,14 @@ add_inputs <- function(flow, inputs = list()) {
 #' @details DETAILS
 #' @seealso
 #'  \code{\link[igraph]{add_vertices}},\code{\link[igraph]{add_edges}}
-#' @export
 #' @importFrom igraph add_vertices add_edges
-#' @import
-add_process <- function(flow,
-                        proc,
-                        inputs = ifelse(inherits(proc, "function"), list(names(formals(proc))), list()),
-                        output,
-                        trained = TRUE,
-                        ...) {
+#'
+.add_process <- function(flow,
+                         proc,
+                         inputs = ifelse(inherits(proc, "function"), list(names(formals(proc))), list()),
+                         output,
+                         trained = TRUE,
+                         ...) {
 
   suppressPackageStartupMessages(require(igraph))
 
@@ -129,7 +127,7 @@ add_process <- function(flow,
   # }
 
   # Add package dependencies
-  flow$pkgs[[output]] <- get_dependencies(proc)
+  flow$pkgs[[output]] <- .get_dependencies(proc)
 
   # Add its pipeline (updating all previous pipelines)
   inputs <- which(V(flow$graph)$type == "Input")

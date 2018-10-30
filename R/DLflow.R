@@ -52,7 +52,7 @@ DLflow <- R6::R6Class(
       if (class(expr) == "call")
         inputs <- inputs[-1]
 
-      flow_env <- create_flow(name = name, inputs = inputs)
+      flow_env <- .create_flow(name = name, inputs = inputs)
 
       self$.__enclos_env__$private <- flow_env
 
@@ -164,7 +164,7 @@ DLflow <- R6::R6Class(
 
         }
 
-        my_flow %>% add_inputs(inputs = inputs)
+        my_flow %>% .add_inputs(inputs = inputs)
 
         return(invisible(self))
 
@@ -181,11 +181,11 @@ DLflow <- R6::R6Class(
 
         if (is.null(inputs)) {
 
-          my_flow %>% add_process(proc = what, output = output, ...)
+          my_flow %>% .add_process(proc = what, output = output, ...)
 
         } else {
 
-          my_flow %>% add_process(proc = what, inputs = inputs, output = output, ...)
+          my_flow %>% .add_process(proc = what, inputs = inputs, output = output, ...)
 
         }
 
@@ -207,11 +207,11 @@ DLflow <- R6::R6Class(
         desired_outputs <- desired_outputs[-1]
 
       my_flow <- self$.__enclos_env__$private
-      my_flow %>% execute_flow(inputs = inputs,
-                               desired_outputs = desired_outputs,
-                               initialize_outputs = initialize_outputs,
-                               mode = mode[1],
-                               ...)
+      my_flow %>% .execute_flow(inputs = inputs,
+                                desired_outputs = desired_outputs,
+                                initialize_outputs = initialize_outputs,
+                                mode = mode[1],
+                                ...)
 
     },
 
@@ -300,7 +300,7 @@ DLflow <- R6::R6Class(
     plot = function(interactive = FALSE) {
 
       my_flow <- self$.__enclos_env__$private
-      my_flow %>% plot_flow(interactive = interactive)
+      my_flow %>% .plot_flow(interactive = interactive)
 
     },
 
@@ -313,7 +313,7 @@ DLflow <- R6::R6Class(
         outputs <- outputs[-1]
 
       my_flow <- self$.__enclos_env__$private
-      my_flow %>% reset_flow(outputs = outputs)
+      my_flow %>% .reset_flow(outputs = outputs)
 
       return(invisible(self))
 
@@ -322,19 +322,19 @@ DLflow <- R6::R6Class(
     save = function(path = tempdir(), file_prefix = self$name()) {
 
       my_flow <- self$.__enclos_env__$private
-      my_flow %>% save_flow(path = path, file_prefix = file_prefix)
+      my_flow %>% .save_flow(path = path, file_prefix = file_prefix)
 
     },
 
     load = function(filename) {
 
-      self$.__enclos_env__$private <- load_flow(filename)
+      self$.__enclos_env__$private <- .load_flow(filename)
 
     },
 
     deep_clone = function() {
 
-      self$.__enclos_env__$private %>% clone_flow()
+      self$.__enclos_env__$private %>% .clone_flow()
 
     },
 
@@ -347,7 +347,7 @@ DLflow <- R6::R6Class(
         outputs <- outputs[-1]
 
       my_flow <- self$.__enclos_env__$private
-      new_flow_env <- my_flow %>% subset_flow(outputs = outputs)
+      new_flow_env <- my_flow %>% .subset_flow(outputs = outputs)
 
       new_flow <- DLflow$new(name = self$name())
       new_flow$.__enclos_env__$private <- new_flow_env
@@ -368,8 +368,8 @@ DLflow <- R6::R6Class(
       for (output in setdiff(my_outputs, my_inputs)) {
 
         required_inputs <- unlist(my_flow$outputs[my_flow$required_inputs[[output]]])
-        f <- build_compute_function(args = required_inputs,
-                                    output = output)
+        f <- .build_compute_function(args = required_inputs,
+                                     output = output)
 
         eval(expr = parse(text = f), envir = empty_env)
 

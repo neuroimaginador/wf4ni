@@ -6,10 +6,14 @@ with(flow_globals, {
 
 })
 
-get_flows_dir <- function() flow_globals$flow_cache_dir
+#' @export
+get_flows_dir <- function()
+  flow_globals$flow_cache_dir
 
+#' @export
 set_flows_dir <- function(dir) flow_globals$flow_cache_dir <- suppressWarnings(normalizePath(dir))
 
+#' @export
 get_flow <- function(repo_name,
                      hosts = c("github", "bitbucket"),
                      force_download = FALSE) {

@@ -14,15 +14,14 @@
 #' @details DETAILS
 #' @seealso
 #'  \code{\link[neurobase]{readnii}}
-#' @export
 #' @importFrom neurobase readnii
 #' @import igraph
-execute_flow <- function(flow, inputs = list(),
-                         given_inputs = NULL,
-                         desired_outputs = NULL,
-                         initialize_outputs = TRUE,
-                         mode = c("debug", "faster", "medium", "slower"),
-                         verbose = FALSE) {
+.execute_flow <- function(flow, inputs = list(),
+                          given_inputs = NULL,
+                          desired_outputs = NULL,
+                          initialize_outputs = TRUE,
+                          mode = c("debug", "faster", "medium", "slower"),
+                          verbose = FALSE) {
 
   require(igraph)
 
@@ -104,8 +103,8 @@ execute_flow <- function(flow, inputs = list(),
       # Define which parts of the flow must be processed
       pipeline <- flow$pipeline[[output]]
 
-      to_compute <- flow %>% which_to_compute(output = output,
-                                              given_inputs = input_names)
+      to_compute <- flow %>% .which_to_compute(output = output,
+                                               given_inputs = input_names)
 
       pipeline <- intersect(flow$outputs[pipeline], c(to_compute, output))
       pipeline <- match(pipeline, flow$outputs)
@@ -178,8 +177,7 @@ execute_flow <- function(flow, inputs = list(),
 #' @return OUTPUT_DESCRIPTION
 #'
 #' @details DETAILS
-#' @export
-reset_outputs <- function(flow) {
+.reset_outputs <- function(flow) {
 
   flow$computed_outputs <- list()
 
@@ -200,17 +198,13 @@ reset_outputs <- function(flow) {
 #' @return OUTPUT_DESCRIPTION
 #'
 #' @details DETAILS
-#' @seealso
 #'
-#' @export
-#' @import
-which_to_compute <- function(flow, output, given_inputs = NULL) {
+.which_to_compute <- function(flow, output, given_inputs = NULL) {
 
   if (output %in% given_inputs) return(c())
 
   required <- flow$inmediate_inputs[[output]]
 
-  # available <- intersect(required, given_inputs)
   to_compute <- setdiff(required, given_inputs)
 
   result <- to_compute
@@ -219,7 +213,7 @@ which_to_compute <- function(flow, output, given_inputs = NULL) {
 
     for (parent in to_compute)
 
-      result <- c(result, which_to_compute(flow, parent, given_inputs))
+      result <- c(result, .which_to_compute(flow, parent, given_inputs))
 
   }
 

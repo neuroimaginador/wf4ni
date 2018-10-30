@@ -1,4 +1,4 @@
-get_dependencies <- function(script) {
+.get_dependencies <- function(script) {
 
   r_pkgs <- unique(c(row.names(utils::installed.packages()), loadedNamespaces()))
   rInst <- paste0(r_pkgs, "::")

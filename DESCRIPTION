@@ -11,3 +11,4 @@ Enhances: dl4ni
 Suggests: testthat, ni.datasets, utils4ni, stringr
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 6.1.0

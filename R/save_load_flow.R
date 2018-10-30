@@ -11,14 +11,14 @@
 #' @details DETAILS
 #' @seealso
 #'  \code{\link[zip]{zip}}
-#' @export
 #' @importFrom zip zip
 #' @import zip
-save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
+#'
+.save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
 
   # Basic input check
   stopifnot(inherits(flow, "DLflow"))
-  flow %>% reset_outputs()
+  flow %>% .reset_outputs()
 
   flow$log(level = "DEBUG",
            message = paste0("Saving flow ", flow$name, " in ", path))
@@ -97,8 +97,8 @@ save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
 #' @return OUTPUT_DESCRIPTION
 #'
 #' @details DETAILS
-#' @export
-load_flow <- function(filename, verbose = FALSE) {
+#'
+.load_flow <- function(filename, verbose = FALSE) {
 
   stopifnot(file.exists(filename))
 
@@ -196,10 +196,10 @@ load_flow <- function(filename, verbose = FALSE) {
 #' @return OUTPUT_DESCRIPTION
 #'
 #' @details DETAILS
-#' @export
-clone_flow <- function(flow) {
+#'
+.clone_flow <- function(flow) {
 
-  new_flow <- flow %>% save_flow() %>% load_flow()
+  new_flow <- flow %>% .save_flow() %>% .load_flow()
 
   return(new_flow)
 

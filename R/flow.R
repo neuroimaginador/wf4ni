@@ -9,10 +9,9 @@
 #' @details DETAILS
 #' @seealso
 #'  \code{\link[igraph]{make_empty_graph}},\code{\link[igraph]{add_vertices}}
-#' @export
 #' @importFrom igraph make_empty_graph add_vertices
 #' @import igraph
-create_flow <- function(name = "", inputs = list()) {
+.create_flow <- function(name = "", inputs = list()) {
 
   require(igraph)
 
@@ -97,13 +96,12 @@ create_flow <- function(name = "", inputs = list()) {
 #'  \code{\link[igraph]{layout_with_sugiyama}}
 
 #'  \code{\link[scales]{alpha}},\code{\link[scales]{hue_pal}}
-#' @export
 #' @importFrom threejs graphjs
 #' @importFrom igraph layout_with_sugiyama
 #' @importFrom scales alpha hue_pal
 #' @import htmlwidgets
 #' @import threejs
-plot_flow <- function(flow, interactive = FALSE) {
+.plot_flow <- function(flow, interactive = FALSE) {
 
   stopifnot(inherits(flow, "DLflow"))
 
