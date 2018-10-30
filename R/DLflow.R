@@ -46,6 +46,12 @@ DLflow <- R6::R6Class(
 
     initialize = function(name = "", inputs = list()) {
 
+      expr <- substitute(inputs)
+      inputs <- as.character(expr)
+
+      if (class(expr) == "call")
+        inputs <- inputs[-1]
+
       flow_env <- create_flow(name = name, inputs = inputs)
 
       self$.__enclos_env__$private <- flow_env
@@ -80,6 +86,12 @@ DLflow <- R6::R6Class(
 
     get_process = function(output) {
 
+      expr <- substitute(output)
+      output <- as.character(expr)
+
+      if (class(expr) == "call")
+        output <- output[-1]
+
       my_flow <- self$.__enclos_env__$private
 
       return(my_flow$processes[[output]])
@@ -103,6 +115,12 @@ DLflow <- R6::R6Class(
 
     replace = function(output, with) {
 
+      expr <- substitute(output)
+      output <- as.character(expr)
+
+      if (class(expr) == "call")
+        output <- output[-1]
+
       if (!(output %in% self$get_outputs())) {
 
         message <- paste0("No current definition for output = ", output)
@@ -118,6 +136,24 @@ DLflow <- R6::R6Class(
     add = function(what = NULL, inputs = NULL, output = NULL, subset = NULL, ...) {
 
       my_flow <- self$.__enclos_env__$private
+
+      expr <- substitute(inputs)
+      inputs <- as.character(expr)
+
+      if (class(expr) == "call")
+        inputs <- inputs[-1]
+
+      expr <- substitute(output)
+      output <- as.character(expr)
+
+      if (class(expr) == "call")
+        output <- output[-1]
+
+      if (length(output) == 0L) {
+
+        output <- NULL
+
+      }
 
       # Add an input
       if (is.null(what) & is.null(output)) {
@@ -163,6 +199,12 @@ DLflow <- R6::R6Class(
                        initialize_outputs = TRUE,
                        mode = c("debug", "faster", "medium", "slower"),
                        ...) {
+
+      expr <- substitute(desired_outputs)
+      desired_outputs <- as.character(expr)
+
+      if (class(expr) == "call")
+        desired_outputs <- desired_outputs[-1]
 
       my_flow <- self$.__enclos_env__$private
       my_flow %>% execute_flow(inputs = inputs,
@@ -264,6 +306,12 @@ DLflow <- R6::R6Class(
 
     reset = function(outputs = "all") {
 
+      expr <- substitute(outputs)
+      outputs <- as.character(expr)
+
+      if (class(expr) == "call")
+        outputs <- outputs[-1]
+
       my_flow <- self$.__enclos_env__$private
       my_flow %>% reset_flow(outputs = outputs)
 
@@ -291,6 +339,12 @@ DLflow <- R6::R6Class(
     },
 
     subset = function(outputs) {
+
+      expr <- substitute(outputs)
+      outputs <- as.character(expr)
+
+      if (class(expr) == "call")
+        outputs <- outputs[-1]
 
       my_flow <- self$.__enclos_env__$private
       new_flow_env <- my_flow %>% subset_flow(outputs = outputs)
