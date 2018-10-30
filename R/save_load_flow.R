@@ -1,14 +1,13 @@
-#' @title FUNCTION_TITLE
+#' @title Save a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function saves a flow to a file.
 #'
-#' @param flow           (name) PARAM_DESCRIPTION
-#' @param path           (call) PARAM_DESCRIPTION, Default: tempdir()
-#' @param file_prefix    (call) PARAM_DESCRIPTION, Default: flow$name
+#' @param flow           (a DLflow object) The flow to save.
+#' @param path           (character) Path where to save the file, Default: tempdir()
+#' @param file_prefix    (character) File name, Default: the name of the \code{flow}
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return Invisibly, the name of the output file
 #'
-#' @details DETAILS
 #' @seealso
 #'  \code{\link[zip]{zip}}
 #' @importFrom zip zip
@@ -87,16 +86,14 @@
 
 }
 
-#' @title FUNCTION_TITLE
+#' @title Load a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function imports a flow from disk
 #'
-#' @param filename    (name) PARAM_DESCRIPTION
-#' @param verbose     (logical) PARAM_DESCRIPTION, Default: FALSE
+#' @param filename    (character) The path to the file to import.
+#' @param verbose     (logical) print information during process?, Default: FALSE
 #'
-#' @return OUTPUT_DESCRIPTION
-#'
-#' @details DETAILS
+#' @return A DLflow imported from the file.
 #'
 .load_flow <- function(filename, verbose = FALSE) {
 
@@ -187,15 +184,13 @@
 
 }
 
-#' @title FUNCTION_TITLE
+#' @title Clone a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This functions allows to (deep) clone a flow
 #'
-#' @param flow    (name) PARAM_DESCRIPTION
+#' @param flow    (a DLflow object) The flow to clone
 #'
-#' @return OUTPUT_DESCRIPTION
-#'
-#' @details DETAILS
+#' @return Another DLflow object which is an exact copy of the given \code{flow}.
 #'
 .clone_flow <- function(flow) {
 

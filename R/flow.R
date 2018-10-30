@@ -1,16 +1,16 @@
-#' @title FUNCTION_TITLE
+#' @title Create a Flow (internal)
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This internal function provides an environment usable from the class DLflow.
 #'
-#' @param inputs    (call) PARAM_DESCRIPTION, Default: list()
+#' @param inputs    (list of names) List of inputs used in the flow, Default: list()
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return A DLflow object.
 #'
-#' @details DETAILS
 #' @seealso
 #'  \code{\link[igraph]{make_empty_graph}},\code{\link[igraph]{add_vertices}}
 #' @importFrom igraph make_empty_graph add_vertices
 #' @import igraph
+#'
 .create_flow <- function(name = "", inputs = list()) {
 
   require(igraph)
@@ -80,16 +80,15 @@
 ##%######################################################%##
 
 
-#' @title FUNCTION_TITLE
+#' @title Plot a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function plots a flow using \link{igraph} plotting capabilities.
 #'
-#' @param flow           (name) PARAM_DESCRIPTION
-#' @param interactive    (logical) PARAM_DESCRIPTION, Default: FALSE
+#' @param flow           (a DLflow object) The flow.
+#' @param interactive    (logical) should the plot be interactive?, Default: FALSE
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return Nothing
 #'
-#' @details DETAILS
 #' @seealso
 #'  \code{\link[threejs]{graphjs}}
 
@@ -101,6 +100,7 @@
 #' @importFrom scales alpha hue_pal
 #' @import htmlwidgets
 #' @import threejs
+#'
 .plot_flow <- function(flow, interactive = FALSE) {
 
   stopifnot(inherits(flow, "DLflow"))
@@ -111,26 +111,49 @@
   V(flow$graph)$color <- colors[as.numeric(as.factor(V(flow$graph)$type))]
 
   # Graph layout
-  L <- igraph::layout_with_sugiyama(flow$graph, hgap = 30)
-  coords <- L$layout
-  L$layout <- norm_coords(coords, ymin = -1, ymax = 1, xmin = -1, xmax = 1)
+  # L <- igraph::layout_with_sugiyama(flow$graph, hgap = 30)
+  L <- layout_as_tree(flow$graph, root = which(V(flow$graph)$type == "Input"))
+  coords <- L
 
   # Graph plot
   if (interactive && require(htmlwidgets) && require(threejs)) {
 
-    warning("Not implemented yet!")
+    # L$layout <- norm_coords(coords, ymin = 0, ymax = 1, xmin = 0, xmax = 1)
 
-    # threejs::graphjs(flow$graph, main = "Network", bg = "gray10", edge.arrow.size = .4,
-    #                  vertex.label = NA, edge.curved = 0, layout = cbind(L$layout, 0), showLabels = TRUE,
-    #                  stroke = FALSE, curvature = 0.1, attraction = 0.9, repulsion = 0.8, opacity = 0.9)
+    my_layout <- cbind(layout_as_tree(flow$graph,
+                                      root = which(V(flow$graph)$type == "Input")), 0)
+
+    my_layout <- norm_coords(my_layout, ymin = 0, ymax = 500, xmin = 0, xmax = 500)
+
+    threejs::graphjs(flow$graph, main = flow$name, bg = "gray10",
+                     edge.arrow.size = .75,
+                     vertex.size = 1,
+                     vertex.shape = "sphere",
+                     vertex.label = V(flow$graph)$name,
+                     edge.curved = 0,
+                     labels = V(flow$graph)$name,
+                     layout = my_layout,
+                     # layout = layout_nicely(flow$graph, dim = 3),
+                     showLabels = TRUE,
+                     stroke = FALSE, curvature = 0.1, attraction = 0.9,
+                     repulsion = 0.8, opacity = 0.9,
+                     width = 500, height = 500,
+                     brush = TRUE) %>%
+      points3d(vertices(.),
+                        color = V(flow$graph)$color,
+                        size = 1, #8 - str_length(V(flow$graph)$name),
+                        pch = V(flow$graph)$name)
 
   } else {
+
+    L <- norm_coords(coords, ymin = -1, ymax = 1, xmin = -1, xmax = 1)
 
     plot(flow$graph,
          edge.arrow.size = .4,
          vertex.label = V(flow$graph)$name,
          edge.curved = 0,
-         layout = L$layout,
+         # layout = layout_as_tree(flow$graph),
+         layout = L,
          rescale = FALSE)
 
   }

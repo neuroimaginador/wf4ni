@@ -1,21 +1,20 @@
-#' @title FUNCTION_TITLE
+#' @title Train a DLmodel inside a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This functions allows to train a DLmodel inside a given flow.
 #'
-#' @param flow                (name) PARAM_DESCRIPTION
-#' @param output              (name) PARAM_DESCRIPTION
-#' @param input_filenames     (name) PARAM_DESCRIPTION
-#' @param output_filenames    (name) PARAM_DESCRIPTION
-#' @param given_input         (NULL) PARAM_DESCRIPTION, Default: NULL
-#' @param train_split         (numeric) PARAM_DESCRIPTION, Default: 0.75
-#' @param epochs              (numeric) PARAM_DESCRIPTION, Default: 10
-#' @param max_sub_epochs      (numeric) PARAM_DESCRIPTION, Default: 5
-#' @param mode                (call) PARAM_DESCRIPTION, Default: c("debug", "faster", "medium", "slower")
-#' @param verbose             (logical) PARAM_DESCRIPTION, Default: FALSE
+#' @param flow                (name) The flow containing the DLmodel
+#' @param output              (name) The name of the output produced by the DLmodel
+#' @param input_filenames     (list) List of filenames to be used as training / testing input data
+#' @param output_filenames    (list) List of filenames to be used as training / testing output data
+#' @param given_input         (list) List of additional inputs, Default: NULL
+#' @param train_split         (numeric) Percentage of data used to train, Default: 0.75
+#' @param epochs              (numeric) Epochs to train the DLmodel for, Default: 10
+#' @param max_sub_epochs      (numeric) MAximum number of subepochs, Default: 5
+#' @param mode                (character) Type of training, Default: c("debug", "faster", "medium", "slower")
+#' @param verbose             (logical) show informative messages?, Default: FALSE
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return The flow with the trained DLmodel.
 #'
-#' @details DETAILS
 #' @seealso
 #'  \code{\link[neurobase]{fast_readnii}}
 #'  \code{\link[oro.nifti]{as.nifti}}

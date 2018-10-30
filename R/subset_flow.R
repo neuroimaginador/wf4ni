@@ -1,13 +1,12 @@
-#' @title FUNCTION_TITLE
+#' @title Subset a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function allos to extract sub-flows from a given flow.
 #'
-#' @param flow       (name) PARAM_DESCRIPTION
-#' @param outputs    (name) PARAM_DESCRIPTION
+#' @param flow       (a DLflow object) The original flow.
+#' @param outputs    (list) Names of the outputs to keep in the new flow.
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return A new DLflow object, a copy of the original \code{flow}, but only the given \code{outputs} are kept, as well as their required inputs. That is, the result is a sub-flow whose final results are the given \code{outputs}.
 #'
-#' @details DETAILS
 #' @seealso
 #'  \code{\link[igraph]{topo_sort}},\code{\link[igraph]{make_empty_graph}},\code{\link[igraph]{add_vertices}},\code{\link[igraph]{add_edges}}
 #' @importFrom igraph topo_sort make_empty_graph add_vertices add_edges

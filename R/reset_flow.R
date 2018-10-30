@@ -1,13 +1,11 @@
-#' @title FUNCTION_TITLE
+#' @title Reset Flow DLmodels
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This functions resets the specified DLmodels to its original state.
 #'
-#' @param flow       (name) PARAM_DESCRIPTION
-#' @param outputs    (name) PARAM_DESCRIPTION
+#' @param flow       (a DLflow object) The flow.
+#' @param outputs    (list) List of the names assigned to the DLmodels to reset.
 #'
-#' @return OUTPUT_DESCRIPTION
-#'
-#' @details DETAILS
+#' @return The flow with the DLmodels resetted.
 #'
 .reset_flow <- function(flow, outputs = "all") {
 

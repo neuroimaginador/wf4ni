@@ -1,20 +1,18 @@
-#' @title FUNCTION_TITLE
+#' @title Add a Trainable Model
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function is used to add a (trainable) DLmodel to the flow.
 #'
-#' @param flow       (name) PARAM_DESCRIPTION
-#' @param scheme     (NULL) PARAM_DESCRIPTION, Default: NULL
-#' @param inputs     (call) PARAM_DESCRIPTION, Default: list()
-#' @param output     (name) PARAM_DESCRIPTION
-#' @param subset     (NULL) PARAM_DESCRIPTION, Default: NULL
-#' @param verbose    (logical) PARAM_DESCRIPTION, Default: TRUE
+#' @param flow       (a DLflow object) The flow where to add the DLmodel
+#' @param scheme     (a DLscheme object) The DLscheme defining the DLmodel, Default: NULL
+#' @param inputs     (list) List of needed inputs (just names, with or without quotes), Default: list()
+#' @param output     (character) The expected output provided by the DLmodel.
+#' @param subset     (NULL) Subset of the problem (see DLmodel especification), Default: NULL
+#' @param verbose    (logical) verbose output?, Default: TRUE
 #'
-#' @return OUTPUT_DESCRIPTION
-#'
-#' @details DETAILS
-#' @seealso
+#' @return The flow with the DLmodel added
 #'
 #' @import igraph
+#'
 .add_trainable_model <- function(flow,
                                 scheme = NULL,
                                 inputs,

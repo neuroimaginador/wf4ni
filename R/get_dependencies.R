@@ -1,8 +1,18 @@
+#' @title Get Dependencies of a Function
+#'
+#' @description This function allows to obtain the dependencies of a given function.
+#'
+#' @param script     (a function) A function to determine its dependencies
+#'
+#' @return A vector with the package dependencies of the given function.
+#'
 .get_dependencies <- function(script) {
 
+  # Available packages
   r_pkgs <- unique(c(row.names(utils::installed.packages()), loadedNamespaces()))
   rInst <- paste0(r_pkgs, "::")
 
+  # Let us take the body of the function
   if (inherits(script, "function")) {
 
     x <- utils::capture.output(print(script))
@@ -13,10 +23,12 @@
 
   }
 
+  # Minimal cleaning of the output
   x <- gsub("^\\s+", "", x)
   x <- x[!grepl("^#", x)]
 
-  # namespace
+  # Look for required namespaces (including the namespace where the function
+  # belongs to)
   x2 <- gsub(x = x[grepl("<environment: namespace:", x = x)],
              pattern = "<environment: namespace:", replacement = "")
   t0 <- sapply(r_pkgs, grep, x = x2, value = TRUE)
@@ -60,7 +72,7 @@
 
   }
 
-  # requires
+  # Look for "requires"
   lines <- grep("(require|library)", x)
   pkgs <- c()
   if (length(lines) > 0) {
@@ -70,6 +82,7 @@
 
   }
 
+  # Concatenate all dependencies
   pkg <- c(ret, pkgs, t1)
 
   return(as.vector(pkg))

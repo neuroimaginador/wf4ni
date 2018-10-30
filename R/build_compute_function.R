@@ -1,3 +1,20 @@
+#' @title Build a Function to Compute Output from Flow
+#'
+#' @description This internal function creates the body of a function
+#' which is able to execute the current flow and obtain the given output.
+#'
+#' @param args      (character) List of arguments to be used in the function definition.
+#' @param output    (character) One of the flow's outputs, which the function will compute.
+#'
+#' @return A text that is a function definition. The function will be able to compute the given \code{output} from a flow.
+#'
+#' @seealso
+#'  \code{\link[stringr]{str_flatten}}
+#'  \code{\link[styler]{style_text}}
+#'
+#' @importFrom stringr str_flatten
+#' @importFrom styler style_text
+#'
 .build_compute_function <- function(args,
                                     output) {
 

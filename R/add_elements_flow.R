@@ -1,13 +1,12 @@
-#' @title FUNCTION_TITLE
+#' @title Add an Input to a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function adds a node of type input to a flow.
 #'
-#' @param flow      (name) PARAM_DESCRIPTION
-#' @param inputs    (call) PARAM_DESCRIPTION, Default: list()
+#' @param flow      (a flow) The flow where to add the input
+#' @param inputs    (list or vector) List of the inputs to add, can be given with or without quotes, e.g. list(A, B) or list("A", "B"). Default: list()
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return Returns (invisibly) the flow with added inputs.
 #'
-#' @details DETAILS
 #' @seealso
 #'  \code{\link[igraph]{add_vertices}}
 #' @importFrom igraph add_vertices
@@ -41,20 +40,20 @@
 
 }
 
-#' @title FUNCTION_TITLE
+#' @title Add a Function to a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function adds another function to a given flow.
 #'
-#' @param flow       (name) PARAM_DESCRIPTION
-#' @param proc       (name) PARAM_DESCRIPTION
-#' @param inputs     (call) PARAM_DESCRIPTION, Default: ifelse(inherits(proc, "function"), list(names(formals(proc))),
+#' @param flow       (a flow) The flow where to add a new function
+#' @param proc       (a function) The function itself to be added
+#' @param inputs     (list) List of the inputs needed for the function to be executed, defaults to the formal arguments of the function,
 #'    list())
-#' @param output     (name) PARAM_DESCRIPTION
-#' @param trained    (logical) PARAM_DESCRIPTION, Default: TRUE
+#' @param output     (name) The name to assign to the output of the function.
+#' @param trained    (logical) is the model already trained?, Default: TRUE
+#' @param ...        extra parameters for the function, allows to parameterize the flow.
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return The flow with the function added
 #'
-#' @details DETAILS
 #' @seealso
 #'  \code{\link[igraph]{add_vertices}},\code{\link[igraph]{add_edges}}
 #' @importFrom igraph add_vertices add_edges

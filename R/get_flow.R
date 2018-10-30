@@ -6,14 +6,42 @@ with(flow_globals, {
 
 })
 
+#' @title Get Location of Installed Flows
+#'
+#' @description This function returns the path where flows are being installed.
+#'
+#' @return The path where flows are installed.
+#'
 #' @export
+#'
 get_flows_dir <- function()
   flow_globals$flow_cache_dir
 
+#' @title Set Location to Install Flows to
+#'
+#' @description This function allows to change the default location where to install flows.
+#'
+#' @param dir    (character) The new path.
+#'
+#' @return The new path where to install flows to.
+#'
 #' @export
-set_flows_dir <- function(dir) flow_globals$flow_cache_dir <- suppressWarnings(normalizePath(dir))
+#'
+set_flows_dir <- function(dir)
+  flow_globals$flow_cache_dir <- suppressWarnings(normalizePath(dir))
 
+#' @param repo_name        (character) The name of the repository that hosts the flow.
+#' @param hosts            (character) Currently only "github" and "bitbucket" are allowed.
+#' @param force_download   (logical) force the download of the flow, even removing previous versions? Default: FALSE.
+#'
+#' @title Download and Import a Flow
+#'
+#' @description This function is used to download a flow from a repository and/or load it from the local storage.
+#'
+#' @return The imported flow.
+#'
 #' @export
+#'
 get_flow <- function(repo_name,
                      hosts = c("github", "bitbucket"),
                      force_download = FALSE) {
@@ -76,7 +104,7 @@ get_flow <- function(repo_name,
 
     file.remove(file.path(get_flows_dir(), extracted_folder))
 
-    flow <- load_flow(filename = file.path(destination_folder,
+    flow <- .load_flow(filename = file.path(destination_folder,
                                                     basename(zip_file)))
 
     cat("Flow ", flow$name(),

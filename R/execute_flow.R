@@ -1,21 +1,21 @@
-#' @title FUNCTION_TITLE
+#' @title Execute a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function allows to run a pipeline (flow) given some of its inputs.
 #'
-#' @param flow                  (name) PARAM_DESCRIPTION
-#' @param inputs                (call) PARAM_DESCRIPTION, Default: list()
-#' @param given_inputs          (NULL) PARAM_DESCRIPTION, Default: NULL
-#' @param desired_outputs       (NULL) PARAM_DESCRIPTION, Default: NULL
-#' @param initialize_outputs    (logical) PARAM_DESCRIPTION, Default: TRUE
-#' @param mode                  (call) PARAM_DESCRIPTION, Default: c("debug", "faster", "medium", "slower")
+#' @param flow                  (a DLflow) The flow to be executed.
+#' @param inputs                (list) Inputs to use, Default: list()
+#' @param given_inputs          (list) Additional inputs, Default: NULL
+#' @param desired_outputs       (character array) List of outputs to compute, Default: NULL
+#' @param initialize_outputs    (logical) initialize outputs?, Default: TRUE
+#' @param mode                  (character) Mode of execution (only used to run DLmodels), Default: c("debug", "faster", "medium", "slower")
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return A list with one (named) field for each \code{desired_output}.
 #'
-#' @details DETAILS
 #' @seealso
 #'  \code{\link[neurobase]{readnii}}
 #' @importFrom neurobase readnii
 #' @import igraph
+#'
 .execute_flow <- function(flow, inputs = list(),
                           given_inputs = NULL,
                           desired_outputs = NULL,
@@ -168,15 +168,14 @@
 
 }
 
-#' @title FUNCTION_TITLE
+#' @title Remove Previously Computed Outputs
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function deletes previously computed outputs inside the flow.
 #'
-#' @param flow    (name) PARAM_DESCRIPTION
+#' @param flow    (a DLflow object) The flow for which outputs are to be removed.
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return (Invisibly) the same flow, without pre-computed outputs.
 #'
-#' @details DETAILS
 .reset_outputs <- function(flow) {
 
   flow$computed_outputs <- list()
@@ -187,26 +186,30 @@
 
 }
 
-#' @title FUNCTION_TITLE
+#' @title Pipeline to Execute
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This internal function returns the list of steps to compute the given output.
 #'
-#' @param flow            (name) PARAM_DESCRIPTION
-#' @param output          (name) PARAM_DESCRIPTION
-#' @param given_inputs    (NULL) PARAM_DESCRIPTION, Default: NULL
+#' @param flow            (a DLflow object) The flow.
+#' @param output          (character) The name of the output to compute.
+#' @param given_inputs    (list) Additional inputs provided, Default: NULL
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return A vector with the corresponding steps needed to calculate the \code{output}.
 #'
 #' @details DETAILS
 #'
 .which_to_compute <- function(flow, output, given_inputs = NULL) {
 
+  # If it's an input, return c()
   if (output %in% given_inputs) return(c())
 
+  # Explore the inmediate inputs
   required <- flow$inmediate_inputs[[output]]
 
+  # If any of the inmediate inputs is provided, remove from the list
   to_compute <- setdiff(required, given_inputs)
 
+  # Search the pipeline recursively
   result <- to_compute
 
   if (length(to_compute) > 0) {
@@ -216,8 +219,6 @@
       result <- c(result, .which_to_compute(flow, parent, given_inputs))
 
   }
-
-  # result <- setdiff(result, flow$inputs)
 
   return(unique(result))
 
