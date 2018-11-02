@@ -46,11 +46,24 @@ DLflow <- R6::R6Class(
 
     initialize = function(name = "", inputs = list()) {
 
-      expr <- substitute(inputs)
-      inputs <- as.character(expr)
+      E <- try(eval(inputs), silent = TRUE)
 
-      if (class(expr) == "call")
-        inputs <- inputs[-1]
+      if (!inherits(E, "try-error")) {
+
+        inputs <- E
+
+      } else {
+
+        expr <- substitute(inputs)
+        inputs <- as.character(expr)
+
+        if (class(expr) == "call")
+          inputs <- inputs[-1]
+
+        env <- parent.frame(2)
+        inputs <- inputs %>% search_names(envir = env)
+
+      }
 
       flow_env <- .create_flow(name = name, inputs = inputs)
 
@@ -64,6 +77,12 @@ DLflow <- R6::R6Class(
 
     },
 
+    get_private = function() {
+
+      return(self$.__enclos_env__$private)
+
+    },
+
     set_name = function(new_name) {
 
       private$name <- new_name
@@ -72,27 +91,37 @@ DLflow <- R6::R6Class(
 
     get_inputs = function() {
 
-      my_flow <- self$.__enclos_env__$private
-      my_flow$inputs
+      self$get_private()$inputs
 
     },
 
     get_outputs = function() {
 
-      my_flow <- self$.__enclos_env__$private
-      my_flow$outputs
+      self$get_private()$outputs
 
     },
 
     get_process = function(output) {
 
-      expr <- substitute(output)
-      output <- as.character(expr)
+      E <- try(eval(output), silent = TRUE)
 
-      if (class(expr) == "call")
-        output <- output[-1]
+      if (!inherits(E, "try-error")) {
 
-      my_flow <- self$.__enclos_env__$private
+        output <- E
+
+      } else {
+
+        expr <- substitute(output)
+        output <- as.character(expr)
+
+        if (class(expr) == "call")
+          output <- output[-1]
+
+        env <- parent.frame(2)
+        output <- output %>% search_names(envir = env)
+      }
+
+      my_flow <- self$get_private()
 
       return(my_flow$processes[[output]])
 
@@ -100,7 +129,7 @@ DLflow <- R6::R6Class(
 
     get_dependencies = function() {
 
-      my_flow <- self$.__enclos_env__$private
+      my_flow <- self$get_private()
       unique(unlist(my_flow$pkgs))
 
     },
@@ -115,11 +144,24 @@ DLflow <- R6::R6Class(
 
     replace = function(output, with) {
 
-      expr <- substitute(output)
-      output <- as.character(expr)
+      E <- try(eval(output), silent = TRUE)
 
-      if (class(expr) == "call")
-        output <- output[-1]
+      if (!inherits(E, "try-error")) {
+
+        output <- E
+
+      } else {
+
+        expr <- substitute(output)
+        output <- as.character(expr)
+
+        if (class(expr) == "call")
+          output <- output[-1]
+
+        env <- parent.frame(2)
+        output <- output %>% search_names(envir = env)
+
+      }
 
       if (!(output %in% self$get_outputs())) {
 
@@ -128,26 +170,53 @@ DLflow <- R6::R6Class(
 
       }
 
-      my_flow <- self$.__enclos_env__$private
+      my_flow <- self$get_private()
       my_flow$processes[[output]] <- with
 
     },
 
     add = function(what = NULL, inputs = NULL, output = NULL, subset = NULL, ...) {
 
-      my_flow <- self$.__enclos_env__$private
+      my_flow <- self$get_private()
 
-      expr <- substitute(inputs)
-      inputs <- as.character(expr)
+      E <- try(eval(inputs), silent = TRUE)
 
-      if (class(expr) == "call")
-        inputs <- inputs[-1]
+      if (!inherits(E, "try-error")) {
 
-      expr <- substitute(output)
-      output <- as.character(expr)
+        inputs <- E
 
-      if (class(expr) == "call")
-        output <- output[-1]
+      } else {
+
+        expr <- substitute(inputs)
+        inputs <- as.character(expr)
+
+        if (class(expr) == "call")
+          inputs <- inputs[-1]
+
+        env <- parent.frame(2)
+        inputs <- inputs %>% search_names(envir = env)
+
+      }
+
+
+      E <- try(eval(output), silent = TRUE)
+
+      if (!inherits(E, "try-error")) {
+
+        output <- E
+
+      } else {
+
+        expr <- substitute(output)
+        output <- as.character(expr)
+
+        if (class(expr) == "call")
+          output <- output[-1]
+
+        env <- parent.frame(2)
+        output <- output %>% search_names(envir = env)
+
+      }
 
       if (length(output) == 0L) {
 
@@ -200,13 +269,26 @@ DLflow <- R6::R6Class(
                        mode = c("debug", "faster", "medium", "slower"),
                        ...) {
 
-      expr <- substitute(desired_outputs)
-      desired_outputs <- as.character(expr)
+      E <- try(eval(inputs), silent = TRUE)
 
-      if (class(expr) == "call")
-        desired_outputs <- desired_outputs[-1]
+      if (!inherits(E, "try-error")) {
 
-      my_flow <- self$.__enclos_env__$private
+        inputs <- E
+
+      } else {
+
+        expr <- substitute(desired_outputs)
+        desired_outputs <- as.character(expr)
+
+        if (class(expr) == "call")
+          desired_outputs <- desired_outputs[-1]
+
+        env <- parent.frame(2)
+        desired_outputs <- desired_outputs %>% search_names(envir = env)
+
+      }
+
+      my_flow <- self$get_private()
       my_flow %>% .execute_flow(inputs = inputs,
                                 desired_outputs = desired_outputs,
                                 initialize_outputs = initialize_outputs,
@@ -292,14 +374,14 @@ DLflow <- R6::R6Class(
 
     graph = function() {
 
-      my_flow <- self$.__enclos_env__$private
+      my_flow <- self$get_private()
       return(my_flow$graph)
 
     },
 
     plot = function(interactive = FALSE) {
 
-      my_flow <- self$.__enclos_env__$private
+      my_flow <- self$get_private()
       my_flow %>% .plot_flow(interactive = interactive)
 
     },
@@ -312,7 +394,7 @@ DLflow <- R6::R6Class(
       if (class(expr) == "call")
         outputs <- outputs[-1]
 
-      my_flow <- self$.__enclos_env__$private
+      my_flow <- self$get_private()
       my_flow %>% .reset_flow(outputs = outputs)
 
       return(invisible(self))
@@ -321,7 +403,7 @@ DLflow <- R6::R6Class(
 
     save = function(path = tempdir(), file_prefix = self$name()) {
 
-      my_flow <- self$.__enclos_env__$private
+      my_flow <- self$get_private()
       my_flow %>% .save_flow(path = path, file_prefix = file_prefix)
 
     },
@@ -334,7 +416,7 @@ DLflow <- R6::R6Class(
 
     deep_clone = function() {
 
-      self$.__enclos_env__$private %>% .clone_flow()
+      self$get_private() %>% .clone_flow()
 
     },
 
@@ -346,7 +428,7 @@ DLflow <- R6::R6Class(
       if (class(expr) == "call")
         outputs <- outputs[-1]
 
-      my_flow <- self$.__enclos_env__$private
+      my_flow <- self$get_private()
       new_flow_env <- my_flow %>% .subset_flow(outputs = outputs)
 
       new_flow <- DLflow$new(name = self$name())
@@ -362,7 +444,7 @@ DLflow <- R6::R6Class(
 
       my_outputs <- self$get_outputs()
       my_inputs <- self$get_inputs()
-      my_flow <- self$.__enclos_env__$private
+      my_flow <- self$get_private()
 
       # Add specific functions to compute outputs
       for (output in setdiff(my_outputs, my_inputs)) {
