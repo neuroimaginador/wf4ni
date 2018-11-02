@@ -61,7 +61,7 @@ DLflow <- R6::R6Class(
           inputs <- inputs[-1]
 
         env <- parent.frame(2)
-        inputs <- inputs %>% search_names(envir = env)
+        inputs <- inputs %>% .search_names(envir = env)
 
       }
 
@@ -118,7 +118,7 @@ DLflow <- R6::R6Class(
           output <- output[-1]
 
         env <- parent.frame(2)
-        output <- output %>% search_names(envir = env)
+        output <- output %>% .search_names(envir = env)
       }
 
       my_flow <- self$get_private()
@@ -159,7 +159,7 @@ DLflow <- R6::R6Class(
           output <- output[-1]
 
         env <- parent.frame(2)
-        output <- output %>% search_names(envir = env)
+        output <- output %>% .search_names(envir = env)
 
       }
 
@@ -194,7 +194,7 @@ DLflow <- R6::R6Class(
           inputs <- inputs[-1]
 
         env <- parent.frame(2)
-        inputs <- inputs %>% search_names(envir = env)
+        inputs <- inputs %>% .search_names(envir = env)
 
       }
 
@@ -214,7 +214,7 @@ DLflow <- R6::R6Class(
           output <- output[-1]
 
         env <- parent.frame(2)
-        output <- output %>% search_names(envir = env)
+        output <- output %>% .search_names(envir = env)
 
       }
 
@@ -284,7 +284,7 @@ DLflow <- R6::R6Class(
           desired_outputs <- desired_outputs[-1]
 
         env <- parent.frame(2)
-        desired_outputs <- desired_outputs %>% search_names(envir = env)
+        desired_outputs <- desired_outputs %>% .search_names(envir = env)
 
       }
 
