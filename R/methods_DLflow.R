@@ -7,7 +7,6 @@
 #'
 #' @return A new flow.
 #'
-#' @export 
 #' @name DLflow.initialize
 NULL
 
@@ -17,7 +16,6 @@ NULL
 #'
 #' @return The name of the flow as a string.
 #'
-#' @export 
 #' @name DLflow.name
 NULL
 
@@ -28,7 +26,6 @@ NULL
 #'
 #' @return A character vector with the names of the inputs of the flow.
 #'
-#' @export 
 #' @name DLflow.get_inputs
 NULL
 
@@ -38,7 +35,6 @@ NULL
 #'
 #' @return A character vector with the names of the available outputs.
 #'
-#' @export 
 #' @name DLflow.get_outputs
 NULL
 
@@ -50,7 +46,6 @@ NULL
 #'
 #' @return A \code{\link{DLmodel}} that is used to compute the given output.
 #'
-#' @export 
 #' @name DLflow.get_model
 NULL
 
@@ -64,7 +59,6 @@ NULL
 #'
 #' @return The flow with the replaced object.
 #'
-#' @export 
 #' @name DLflow.replace
 NULL
 
@@ -80,8 +74,7 @@ NULL
 #' @return The updated flow.
 #'
 #' @details If the item to add is an input, the only required (and used) argument is \code{what}. If it's a function or a \code{\link{DLscheme}} or a \code{\link{DLmodel}}, mandatory arguments are \code{what}, \code{inputs} and \code{output}.
-#' 
-#' @export 
+#'
 #' @name DLflow.add
 NULL
 
@@ -96,14 +89,12 @@ NULL
 #'
 #' @return A list with as many (named) fields as desired outputs. The names of the fields are those of the outputs.
 #'
-#' @export 
 #' @name DLflow.execute
 NULL
 
 #' @title Execute a Flow
 #' @description This function runs the computation graph of the flow to obtain some outputs, given input files.
 #' @describeIn DLflow.execute
-#' @export 
 #' @name DLflow.run
 NULL
 
@@ -123,8 +114,7 @@ NULL
 #'
 #' @details In case the part of the flow is currently defined by a \code{\link{DLscheme}}, a \code{\link{DLmodel}} is instatiated
 #' taking into account given inputs and output filenames. This is the model to be trained.
-#' 
-#' @export 
+#'
 #' @name DLflow.train
 NULL
 
@@ -135,7 +125,6 @@ NULL
 #'
 #' @return The graph, as an \code{\link{igraph}} object.
 #'
-#' @export 
 #' @name DLflow.graph
 NULL
 
@@ -145,7 +134,6 @@ NULL
 #'
 #' @param interactive    (logical) Use interactive JavaScript visualization?, Default: FALSE
 #'
-#' @export 
 #' @name DLflow.plot
 NULL
 
@@ -155,7 +143,6 @@ NULL
 #'
 #' @param outputs    (character) List of computed outputs to remove, Default: 'all'
 #'
-#' @export 
 #' @name DLflow.reset
 NULL
 
@@ -166,7 +153,6 @@ NULL
 #' @param path           (character) Path where to store the flow, Default: tempdir()
 #' @param file_prefix    (character) Filename, Default: the flow name.
 #'
-#' @export 
 #' @name DLflow.save
 NULL
 
@@ -178,7 +164,6 @@ NULL
 #'
 #' @return The loaded flow.
 #'
-#' @export 
 #' @name DLflow.load
 NULL
 
@@ -191,7 +176,6 @@ NULL
 #' @return A new flow which is complete in the sense that it contains the required \code{outputs} and all parts of the bigger flow
 #' which lead to those outputs.
 #'
-#' @export 
 #' @name DLflow.subset
 NULL
 
@@ -203,7 +187,6 @@ NULL
 #'
 #' @return A new flow with exactly the same information.
 #'
-#' @export 
 #' @name DLflow.clone
 NULL
 

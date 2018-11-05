@@ -1,55 +1,52 @@
-#' @title FUNCTION_TITLE
+#' @title Add a Trainable Model
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function is used to add a (trainable) DLmodel to the flow.
 #'
-#' @param flow       (name) PARAM_DESCRIPTION
-#' @param scheme     (NULL) PARAM_DESCRIPTION, Default: NULL
-#' @param inputs     (call) PARAM_DESCRIPTION, Default: list()
-#' @param output     (name) PARAM_DESCRIPTION
-#' @param subset     (NULL) PARAM_DESCRIPTION, Default: NULL
-#' @param verbose    (logical) PARAM_DESCRIPTION, Default: TRUE
+#' @param flow       (a DLflow object) The flow where to add the DLmodel
+#' @param scheme     (a DLscheme object) The DLscheme defining the DLmodel, Default: NULL
+#' @param inputs     (list) List of needed inputs (just names, with or without quotes), Default: list()
+#' @param output     (character) The expected output provided by the DLmodel.
+#' @param subset     (NULL) Subset of the problem (see DLmodel especification), Default: NULL
+#' @param verbose    (logical) verbose output?, Default: TRUE
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return The flow with the DLmodel added
 #'
-#' @details DETAILS
-#' @seealso 
-#'  
-#' @export 
 #' @import igraph
-add_trainable_model <- function(flow, 
-                                scheme = NULL, 
+#'
+.add_trainable_model <- function(flow,
+                                scheme = NULL,
                                 inputs,
                                 output,
                                 subset = NULL,
                                 verbose = FALSE) {
-  
+
   suppressPackageStartupMessages(require(igraph))
-  
+
   # Basic checks
   stopifnot(inherits(flow, "DLflow"))
   stopifnot(inherits(scheme, "DLscheme"))
-  
+
   scheme$check()
 
   # stopifnot(!is.null(scheme$vol_layers_pattern))
   # stopifnot(!is.null(scheme$last_hidden_layers))
   # stopifnot(!is.null(scheme$units) | !is.null(scheme$output_width))
-  
+
   if (is.null(scheme$units))
     scheme$units <- scheme$output_width ^ 3
-  
+
   # Remaining parameters to be computed
   params <- scheme
   params$labels_subset <- subset
-  
+
   class(params) <- c("DLscheme", class(params))
-  
+
   # Store the model in the flow
   if (verbose)
     cat("Storing configuration\n") # nocov
-  
-  flow %>% add_process(proc = params, inputs = inputs, output = output, trained = FALSE)
-  
+
+  flow %>% .add_process(proc = params, inputs = inputs, output = output, trained = FALSE)
+
   return(invisible(flow))
-  
+
 }

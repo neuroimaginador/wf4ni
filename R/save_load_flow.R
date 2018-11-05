@@ -1,33 +1,36 @@
-#' @title FUNCTION_TITLE
+#' @title Save a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function saves a flow to a file.
 #'
-#' @param flow           (name) PARAM_DESCRIPTION
-#' @param path           (call) PARAM_DESCRIPTION, Default: tempdir()
-#' @param file_prefix    (call) PARAM_DESCRIPTION, Default: flow$name
+#' @param flow           (a DLflow object) The flow to save.
+#' @param path           (character) Path where to save the file, Default: tempdir()
+#' @param file_prefix    (character) File name, Default: the name of the \code{flow}
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return Invisibly, the name of the output file
 #'
-#' @details DETAILS
 #' @seealso
 #'  \code{\link[zip]{zip}}
-#' @export
 #' @importFrom zip zip
 #' @import zip
-save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
+#'
+.save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
 
   # Basic input check
   stopifnot(inherits(flow, "DLflow"))
-  flow %>% reset_outputs()
+  flow %>% .reset_outputs()
+
+  flow$log(level = "DEBUG",
+           message = paste0("Saving flow ", flow$name, " in ", path))
 
   # Output directory
   output_dir <- file.path(path, file_prefix)
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-  # Models must be saved apart.
+  # Models/functions must be saved apart.
   processes <- flow$processes
 
-  # In the output folder, save the flow and create a specific folder for all the processes
+  # In the output folder, save the flow and create a specific
+  # folder for all the processes
   saveRDS(flow, file = file.path(output_dir, paste0(file_prefix, "_flow.rds")))
   processes_dir <- file.path(output_dir, "processes")
   dir.create(processes_dir, recursive = TRUE, showWarnings = FALSE)
@@ -44,7 +47,9 @@ save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
     } else {
 
       # The remaining objects are saved in RDS format
-      saveRDS(object = proc, file = file.path(processes_dir, paste0(names(processes)[proc_idx], ".rds")))
+      saveRDS(object = proc,
+              file = file.path(processes_dir,
+                               paste0(names(processes)[proc_idx], ".rds")))
 
     }
 
@@ -56,11 +61,19 @@ save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
 
   if (require(zip)) {
 
+    output_file <- suppressWarnings(normalizePath(output_file))
+
     setwd(dirname(output_dir))
+
+    file_list <- file.path(basename(output_dir),
+                           list.files(output_dir,
+                                      recursive = TRUE,
+                                      all.files = TRUE,
+                                      include.dirs = TRUE))
+
     suppressWarnings(
       zip::zip(zipfile = output_file,
-               files = file.path(basename(output_dir),
-                                 list.files(output_dir, recursive = TRUE, all.files = TRUE, include.dirs = TRUE)),
+               files = file_list,
                recurse = FALSE)
     )
 
@@ -73,18 +86,16 @@ save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
 
 }
 
-#' @title FUNCTION_TITLE
+#' @title Load a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This function imports a flow from disk
 #'
-#' @param filename    (name) PARAM_DESCRIPTION
-#' @param verbose     (logical) PARAM_DESCRIPTION, Default: FALSE
+#' @param filename    (character) The path to the file to import.
+#' @param verbose     (logical) print information during process?, Default: FALSE
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return A DLflow imported from the file.
 #'
-#' @details DETAILS
-#' @export
-load_flow <- function(filename, verbose = FALSE) {
+.load_flow <- function(filename, verbose = FALSE) {
 
   stopifnot(file.exists(filename))
 
@@ -115,7 +126,7 @@ load_flow <- function(filename, verbose = FALSE) {
 
   # For each process, incorporate it to the flow
   processes_dir <- file.path(output_dir, "processes")
-  
+
   # Functions and models
   functions <- list.files(processes_dir, pattern = ".rds")
   models <- list.dirs(processes_dir, full.names = FALSE)
@@ -153,7 +164,8 @@ load_flow <- function(filename, verbose = FALSE) {
     if (verbose)
       cat("Loading model:", model_name, "...\n") # nocov
 
-    flow$processes[[model_name]] <- load_model(path = processes_dir, prefix = model_name)
+    flow$processes[[model_name]] <- dl4ni::load_model(path = processes_dir,
+                                                      prefix = model_name)
 
   }
 
@@ -161,25 +173,30 @@ load_flow <- function(filename, verbose = FALSE) {
   setwd(current_dir)
   unlink(output_dir, recursive = TRUE, force = TRUE)
 
+  final_flow <- DLflow$new(name = flow$name, inputs = flow$inputs)
+  class(flow) <- "DLflow"
+  final_flow$.__enclos_env__$private <- flow
+  class(final_flow$.__enclos_env__$private) <- c("DLflow",
+                                                 class(final_flow$.__enclos_env__$private))
+
   # Return the flow
-  return(flow)
+  return(final_flow)
 
 }
 
-#' @title FUNCTION_TITLE
+#' @title Clone a Flow
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This functions allows to (deep) clone a flow
 #'
-#' @param flow    (name) PARAM_DESCRIPTION
+#' @param flow    (a DLflow object) The flow to clone
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return Another DLflow object which is an exact copy of the given \code{flow}.
 #'
-#' @details DETAILS
-#' @export
-clone_flow <- function(flow) {
+.clone_flow <- function(flow) {
 
-  new_flow <- flow %>% save_flow() %>% load_flow()
+  new_flow <- flow %>% .save_flow() %>% .load_flow()
 
   return(new_flow)
 
 }
+

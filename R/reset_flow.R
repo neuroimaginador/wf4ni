@@ -1,44 +1,41 @@
-#' @title FUNCTION_TITLE
+#' @title Reset Flow DLmodels
 #'
-#' @description FUNCTION_DESCRIPTION
+#' @description This functions resets the specified DLmodels to its original state.
 #'
-#' @param flow       (name) PARAM_DESCRIPTION
-#' @param outputs    (name) PARAM_DESCRIPTION
+#' @param flow       (a DLflow object) The flow.
+#' @param outputs    (list) List of the names assigned to the DLmodels to reset.
 #'
-#' @return OUTPUT_DESCRIPTION
+#' @return The flow with the DLmodels resetted.
 #'
-#' @details DETAILS
-#' @export 
-#' 
-reset_flow <- function(flow, outputs = "all") {
-  
+.reset_flow <- function(flow, outputs = "all") {
+
   # Basic input checks
   stopifnot(inherits(flow, "DLflow"))
-  
+
   # Actual list of outputs
   if ("all" %in% outputs) {
-    
+
     outputs <- flow$outputs
-    
+
   } else {
-    
+
     outputs <- intersect(outputs, flow$outputs)
-    
+
   }
-  
+
   # Substitute the model by its scheme
   for (output in outputs) {
-    
+
     if (inherits(flow$processes[[output]], "DLmodel")) {
-      
+
       # flow$processes[[output]] <- NULL
       flow$processes[[output]] <- flow$schemes[[output]]
       flow$trained[[output]] <- FALSE
-      
+
     }
-    
+
   }
 
   return(invisible(flow))
-  
+
 }
