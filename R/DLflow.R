@@ -386,6 +386,12 @@ DLflow <- R6::R6Class(
 
     },
 
+    memory_used = function() {
+
+      pryr::object_size(private) + pryr::object_size(self)
+
+    },
+
     reset = function(outputs = "all") {
 
       expr <- substitute(outputs)
