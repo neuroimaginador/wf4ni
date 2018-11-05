@@ -7,6 +7,7 @@
 #' @param given_inputs          (list) Additional inputs, Default: NULL
 #' @param desired_outputs       (character array) List of outputs to compute, Default: NULL
 #' @param initialize_outputs    (logical) initialize outputs?, Default: TRUE
+#' @param cleanup               (logical) perform cleanup of intermediate results?, Default: TRUE
 #' @param mode                  (character) Mode of execution (only used to run DLmodels), Default: c("debug", "faster", "medium", "slower")
 #'
 #' @return A list with one (named) field for each \code{desired_output}.
@@ -20,6 +21,7 @@
                           given_inputs = NULL,
                           desired_outputs = NULL,
                           initialize_outputs = TRUE,
+                          cleanup = TRUE,
                           mode = c("debug", "faster", "medium", "slower"),
                           verbose = FALSE) {
 
@@ -40,7 +42,6 @@
   # }
 
   input_names <- names(inputs)
-  # input_names <- input_names[input_names %in% flow$inputs]
 
   # Initialize computed_outputs
   if (initialize_outputs)
@@ -64,6 +65,14 @@
   if (length(desired_outputs) > 0) {
 
     inputs <- c(inputs, given_inputs)
+
+    # Variables needed to perform cleanup on computed (and unneeded) outputs
+    variables_cleanup <- lapply(igraph::adjacent_vertices(graph = flow$graph,
+                                                          v = V(flow$graph)),
+                                function(s) attr(s, "name"))
+
+    is_computed <- rep(FALSE, length(flow$outputs))
+    names(is_computed) <- flow$outputs
 
     # Read inputs
     for (name in input_names) {
@@ -95,9 +104,13 @@
 
       }
 
+      is_computed[name] <- TRUE
+
     }
 
     # For each output
+    pipelines <- list()
+    pipelines_names <- list()
     for (output in desired_outputs) {
 
       # Define which parts of the flow must be processed
@@ -107,8 +120,34 @@
                                                given_inputs = input_names)
 
       pipeline <- intersect(flow$outputs[pipeline], c(to_compute, output))
+      pipelines_names[[output]] <- pipeline
+
       pipeline <- match(pipeline, flow$outputs)
 
+      pipelines[[output]] <- pipeline
+
+    }
+
+    all_pipelines <- pipelines_names %>% unlist() %>% unique()
+
+    all_pipelines <- c(all_pipelines, input_names) %>% unique()
+
+    # Just variables which need to be computed in this execution.
+    is_computed[all_pipelines] <- is_computed[all_pipelines] | FALSE
+
+    all_to_remove <- c()
+
+    mem <- flow$computed_outputs %>%
+      purrr::map_dbl(pryr::object_size) %>%
+      sum() %>%
+      prettyunits::pretty_bytes()
+
+    flow$log(level = "DEBUG",
+             message = paste0("Memory used at init: ", mem))
+
+    for (output in desired_outputs) {
+
+      pipeline <- pipelines[[output]]
 
       # Execute in order
       if (length(pipeline) > 0) {
@@ -119,6 +158,7 @@
 
           # if this process is already computed, go to the next one
           if (!is.null(flow$computed_outputs[[intermediate_output]])) next
+          if (is_computed[intermediate_output]) next
 
           if (verbose) {
 
@@ -150,6 +190,70 @@
 
                  }
           )
+
+          mem <- flow$computed_outputs %>%
+            purrr::map_dbl(pryr::object_size) %>%
+            sum() %>%
+            prettyunits::pretty_bytes()
+
+          flow$log(level = "DEBUG",
+                   message = paste0("Memory used after computation: ", mem))
+
+          is_computed[intermediate_output] <- TRUE
+
+          if (verbose)
+            print(is_computed)
+
+          # Perform cleanup
+          if (cleanup) {
+
+            # Intermediate results that are not needed any more.
+            # All of their children are already computed.
+            all_computed <- sapply(variables_cleanup,
+                                        function(s) {
+
+                                          all(is_computed[s])
+
+                                        })
+
+            which_to_remove <- names(variables_cleanup)[all_computed]
+
+            which_to_remove <- setdiff(which_to_remove, desired_outputs)
+
+            which_to_remove <- setdiff(which_to_remove, all_to_remove)
+
+            if (length(which_to_remove) > 0) {
+
+              flow$log(level = "DEBUG",
+                       message = paste0("Removed intermediate outputs: ",
+                                        stringr::str_flatten(which_to_remove,
+                                                             collapse = ", ")))
+
+              if (verbose) {
+
+                cat("Removing", stringr::str_flatten(which_to_remove,
+                                                      collapse = ", "),
+                    "...\n") # nocov
+
+              }
+              flow$computed_outputs[which_to_remove] <- NULL
+
+              all_to_remove <- c(all_to_remove, which_to_remove)
+
+              # Release memory
+              invisible(gc())
+
+              mem <- flow$computed_outputs %>%
+                purrr::map_dbl(pryr::object_size) %>%
+                sum() %>%
+                prettyunits::pretty_bytes()
+
+              flow$log(level = "DEBUG",
+                       message = paste0("Memory used after cleanup: ", mem))
+            }
+
+
+          }
 
         }
 
