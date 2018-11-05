@@ -11,7 +11,13 @@
 
     if (s %in% ls(envir = envir)) {
 
-      s <- get(s, envir = envir)
+      st <- get(s, envir = envir)
+
+      if (is.character(st)) {
+
+        s <- st
+
+      }
 
     }
 
