@@ -181,7 +181,7 @@ DLflow <- R6::R6Class(
 
       E <- try(eval(inputs), silent = TRUE)
 
-      if (!inherits(E, "try-error")) {
+      if (!inherits(E, "try-error") & is.character(E)) {
 
         inputs <- E
 
@@ -201,7 +201,7 @@ DLflow <- R6::R6Class(
 
       E <- try(eval(output), silent = TRUE)
 
-      if (!inherits(E, "try-error")) {
+      if (!inherits(E, "try-error") & is.character(E)) {
 
         output <- E
 
@@ -269,24 +269,14 @@ DLflow <- R6::R6Class(
                        mode = c("debug", "faster", "medium", "slower"),
                        ...) {
 
-      E <- try(eval(inputs), silent = TRUE)
+      expr <- substitute(desired_outputs)
+      desired_outputs <- as.character(expr)
 
-      if (!inherits(E, "try-error")) {
+      if (class(expr) == "call")
+        desired_outputs <- desired_outputs[-1]
 
-        inputs <- E
-
-      } else {
-
-        expr <- substitute(desired_outputs)
-        desired_outputs <- as.character(expr)
-
-        if (class(expr) == "call")
-          desired_outputs <- desired_outputs[-1]
-
-        env <- parent.frame(2)
-        desired_outputs <- desired_outputs %>% .search_names(envir = env)
-
-      }
+      env <- parent.frame(2)
+      desired_outputs <- desired_outputs %>% .search_names(envir = env)
 
       my_flow <- self$get_private()
       my_flow %>% .execute_flow(inputs = inputs,
