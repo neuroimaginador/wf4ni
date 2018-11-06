@@ -85,7 +85,6 @@
 #' @description This function plots a flow using \link{igraph} plotting capabilities.
 #'
 #' @param flow           (a DLflow object) The flow.
-#' @param interactive    (logical) should the plot be interactive?, Default: FALSE
 #'
 #' @return Nothing
 #'
@@ -95,13 +94,10 @@
 #'  \code{\link[igraph]{layout_with_sugiyama}}
 
 #'  \code{\link[scales]{alpha}},\code{\link[scales]{hue_pal}}
-#' @importFrom threejs graphjs
-#' @importFrom igraph layout_with_sugiyama
+#' @import igraph
 #' @importFrom scales alpha hue_pal
-#' @import htmlwidgets
-#' @import threejs
 #'
-.plot_flow <- function(flow, interactive = FALSE) {
+.plot_flow <- function(flow) {
 
   stopifnot(inherits(flow, "DLflow"))
 
@@ -110,53 +106,7 @@
   colors <- scales::alpha(colour = scales::hue_pal()(num_types), alpha = 0.85)
   V(flow$graph)$color <- colors[as.numeric(as.factor(V(flow$graph)$type))]
 
-  # Graph layout
-  # L <- igraph::layout_with_sugiyama(flow$graph, hgap = 30)
-  L <- layout_as_tree(flow$graph, root = which(V(flow$graph)$type == "Input"))
-  coords <- L
-
-  # Graph plot
-  if (interactive && require(htmlwidgets) && require(threejs)) {
-
-    # L$layout <- norm_coords(coords, ymin = 0, ymax = 1, xmin = 0, xmax = 1)
-
-    my_layout <- cbind(layout_as_tree(flow$graph,
-                                      root = which(V(flow$graph)$type == "Input")), 0)
-
-    my_layout <- norm_coords(my_layout, ymin = 0, ymax = 500, xmin = 0, xmax = 500)
-
-    threejs::graphjs(flow$graph, main = flow$name, bg = "gray10",
-                     edge.arrow.size = .75,
-                     vertex.size = 1,
-                     vertex.shape = "sphere",
-                     vertex.label = V(flow$graph)$name,
-                     edge.curved = 0,
-                     labels = V(flow$graph)$name,
-                     layout = my_layout,
-                     # layout = layout_nicely(flow$graph, dim = 3),
-                     showLabels = TRUE,
-                     stroke = FALSE, curvature = 0.1, attraction = 0.9,
-                     repulsion = 0.8, opacity = 0.9,
-                     width = 500, height = 500,
-                     brush = TRUE) %>%
-      points3d(vertices(.),
-                        color = V(flow$graph)$color,
-                        size = 1, #8 - str_length(V(flow$graph)$name),
-                        pch = V(flow$graph)$name)
-
-  } else {
-
-    L <- norm_coords(coords, ymin = -1, ymax = 1, xmin = -1, xmax = 1)
-
-    plot(flow$graph,
-         edge.arrow.size = .4,
-         vertex.label = V(flow$graph)$name,
-         edge.curved = 0,
-         # layout = layout_as_tree(flow$graph),
-         layout = L,
-         rescale = FALSE)
-
-  }
+  invisible(igraph::tkplot(flow$graph, curved = TRUE))
 
 }
 

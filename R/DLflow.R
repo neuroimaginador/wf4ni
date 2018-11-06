@@ -369,10 +369,10 @@ DLflow <- R6::R6Class(
 
     },
 
-    plot = function(interactive = FALSE) {
+    plot = function() {
 
       my_flow <- self$get_private()
-      my_flow %>% .plot_flow(interactive = interactive)
+      my_flow %>% .plot_flow()
 
     },
 
