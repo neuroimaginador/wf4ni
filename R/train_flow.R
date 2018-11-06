@@ -38,7 +38,7 @@
                          verbose = FALSE) {
 
   # Basic check
-  stopifnot(inherits(flow, "DLflow"))
+  stopifnot(inherits(flow, "NIflow"))
   stopifnot(output %in% flow$outputs)
 
   # Check that files exist

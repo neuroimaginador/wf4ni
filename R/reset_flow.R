@@ -2,7 +2,7 @@
 #'
 #' @description This functions resets the specified DLmodels to its original state.
 #'
-#' @param flow       (a DLflow object) The flow.
+#' @param flow       (a NIflow object) The flow.
 #' @param outputs    (list) List of the names assigned to the DLmodels to reset.
 #'
 #' @return The flow with the DLmodels resetted.
@@ -10,7 +10,7 @@
 .reset_flow <- function(flow, outputs = "all") {
 
   # Basic input checks
-  stopifnot(inherits(flow, "DLflow"))
+  stopifnot(inherits(flow, "NIflow"))
 
   # Actual list of outputs
   if ("all" %in% outputs) {

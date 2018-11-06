@@ -2,7 +2,7 @@
 #'
 #' @description This function saves a flow to a file.
 #'
-#' @param flow           (a DLflow object) The flow to save.
+#' @param flow           (a NIflow object) The flow to save.
 #' @param path           (character) Path where to save the file, Default: tempdir()
 #' @param file_prefix    (character) File name, Default: the name of the \code{flow}
 #'
@@ -16,7 +16,7 @@
 .save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
 
   # Basic input check
-  stopifnot(inherits(flow, "DLflow"))
+  stopifnot(inherits(flow, "NIflow"))
   flow %>% .reset_outputs()
 
   flow$log(level = "DEBUG",
@@ -93,7 +93,7 @@
 #' @param filename    (character) The path to the file to import.
 #' @param verbose     (logical) print information during process?, Default: FALSE
 #'
-#' @return A DLflow imported from the file.
+#' @return A NIflow imported from the file.
 #'
 .load_flow <- function(filename, verbose = FALSE) {
 
@@ -173,10 +173,10 @@
   setwd(current_dir)
   unlink(output_dir, recursive = TRUE, force = TRUE)
 
-  final_flow <- DLflow$new(name = flow$name, inputs = flow$inputs)
-  class(flow) <- "DLflow"
+  final_flow <- NIflow$new(name = flow$name, inputs = flow$inputs)
+  class(flow) <- "NIflow"
   final_flow$.__enclos_env__$private <- flow
-  class(final_flow$.__enclos_env__$private) <- c("DLflow",
+  class(final_flow$.__enclos_env__$private) <- c("NIflow",
                                                  class(final_flow$.__enclos_env__$private))
 
   # Return the flow
@@ -188,9 +188,9 @@
 #'
 #' @description This functions allows to (deep) clone a flow
 #'
-#' @param flow    (a DLflow object) The flow to clone
+#' @param flow    (a NIflow object) The flow to clone
 #'
-#' @return Another DLflow object which is an exact copy of the given \code{flow}.
+#' @return Another NIflow object which is an exact copy of the given \code{flow}.
 #'
 .clone_flow <- function(flow) {
 

@@ -8,7 +8,7 @@
   subset = NULL, verbose = FALSE)
 }
 \arguments{
-\item{flow}{(a DLflow object) The flow where to add the DLmodel}
+\item{flow}{(a NIflow object) The flow where to add the DLmodel}
 
 \item{scheme}{(a DLscheme object) The DLscheme defining the DLmodel, Default: NULL}
 

@@ -1,10 +1,10 @@
 #' @title Create a Flow (internal)
 #'
-#' @description This internal function provides an environment usable from the class DLflow.
+#' @description This internal function provides an environment usable from the class NIflow.
 #'
 #' @param inputs    (list of names) List of inputs used in the flow, Default: list()
 #'
-#' @return A DLflow object.
+#' @return A NIflow object.
 #'
 #' @seealso
 #'  \code{\link[igraph]{make_empty_graph}},\code{\link[igraph]{add_vertices}}
@@ -68,7 +68,7 @@
 
   })
 
-  class(flow) <- "DLflow"
+  class(flow) <- "NIflow"
   return(flow)
 
 }
@@ -84,7 +84,7 @@
 #'
 #' @description This function plots a flow using \link{igraph} plotting capabilities.
 #'
-#' @param flow           (a DLflow object) The flow.
+#' @param flow           (a NIflow object) The flow.
 #'
 #' @return Nothing
 #'
@@ -99,7 +99,7 @@
 #'
 .plot_flow <- function(flow) {
 
-  stopifnot(inherits(flow, "DLflow"))
+  stopifnot(inherits(flow, "NIflow"))
 
   # Define color of each node as its type
   num_types <- length(unique(V(flow$graph)$type))

@@ -5,11 +5,11 @@
 \title{Execute a Flow}
 \usage{
 .execute_flow(flow, inputs = list(), given_inputs = NULL,
-  desired_outputs = NULL, initialize_outputs = TRUE,
+  desired_outputs = NULL, initialize_outputs = TRUE, cleanup = TRUE,
   mode = c("debug", "faster", "medium", "slower"), verbose = FALSE)
 }
 \arguments{
-\item{flow}{(a DLflow) The flow to be executed.}
+\item{flow}{(a NIflow) The flow to be executed.}
 
 \item{inputs}{(list) Inputs to use, Default: list()}
 
@@ -18,6 +18,8 @@
 \item{desired_outputs}{(character array) List of outputs to compute, Default: NULL}
 
 \item{initialize_outputs}{(logical) initialize outputs?, Default: TRUE}
+
+\item{cleanup}{(logical) perform cleanup of intermediate results?, Default: TRUE}
 
 \item{mode}{(character) Mode of execution (only used to run DLmodels), Default: c("debug", "faster", "medium", "slower")}
 }

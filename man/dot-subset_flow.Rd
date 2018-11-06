@@ -7,12 +7,12 @@
 .subset_flow(flow, outputs)
 }
 \arguments{
-\item{flow}{(a DLflow object) The original flow.}
+\item{flow}{(a NIflow object) The original flow.}
 
 \item{outputs}{(list) Names of the outputs to keep in the new flow.}
 }
 \value{
-A new DLflow object, a copy of the original \code{flow}, but only the given \code{outputs} are kept, as well as their required inputs. That is, the result is a sub-flow whose final results are the given \code{outputs}.
+A new NIflow object, a copy of the original \code{flow}, but only the given \code{outputs} are kept, as well as their required inputs. That is, the result is a sub-flow whose final results are the given \code{outputs}.
 }
 \description{
 This function allos to extract sub-flows from a given flow.

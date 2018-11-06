@@ -2,10 +2,10 @@
 #'
 #' @description This function allos to extract sub-flows from a given flow.
 #'
-#' @param flow       (a DLflow object) The original flow.
+#' @param flow       (a NIflow object) The original flow.
 #' @param outputs    (list) Names of the outputs to keep in the new flow.
 #'
-#' @return A new DLflow object, a copy of the original \code{flow}, but only the given \code{outputs} are kept, as well as their required inputs. That is, the result is a sub-flow whose final results are the given \code{outputs}.
+#' @return A new NIflow object, a copy of the original \code{flow}, but only the given \code{outputs} are kept, as well as their required inputs. That is, the result is a sub-flow whose final results are the given \code{outputs}.
 #'
 #' @seealso
 #'  \code{\link[igraph]{topo_sort}},\code{\link[igraph]{make_empty_graph}},\code{\link[igraph]{add_vertices}},\code{\link[igraph]{add_edges}}
@@ -17,7 +17,7 @@
   suppressPackageStartupMessages(require(igraph))
 
   # Basic input checks
-  stopifnot(inherits(flow, "DLflow"))
+  stopifnot(inherits(flow, "NIflow"))
 
   # For each required output, get the nodes required for its computation.
   needed_nodes <- c()
@@ -111,7 +111,7 @@
   }
 
   # Create a deep copy of the flow to remove dependencies between keras models
-  class(new_flow) <- "DLflow"
+  class(new_flow) <- "NIflow"
 
   for (proc_id in seq_along(new_flow$processes)) {
 

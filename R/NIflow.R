@@ -1,4 +1,4 @@
-#' DLflow Class
+#' NIflow Class
 #'
 #' @docType class
 #' @importFrom R6 R6Class
@@ -6,40 +6,40 @@
 #' @export
 #' @keywords data
 #'
-#' @return Object of \code{\link{R6Class}} and \code{DLflow}.
+#' @return Object of \code{\link{R6Class}} and \code{NIflow}.
 #'
 #' @format \code{\link{R6Class}} object.
 #'
 #' @examples
-#' DLflow$new()
+#' NIflow$new()
 #'
 #' @section Methods:
 #' \describe{
 #'   \item{Documentation}{For full documentation of each method follow the corresponding link. }
-#'   \item{\code{initialize(name, inputs = list())}}{Create a new flow with the given name and inputs. Documented in \link{DLflow.initialize}.}
-#'   \item{\code{name()}}{Returns the name of the flow. Documented in \link{DLflow.name}.}
-#'   \item{\code{get_inputs()}}{Returns the inputs of the flow. Documented in \link{DLflow.get_inputs}.}
-#'   \item{\code{get_outputs()}}{Returns the outputs of the flow. Documented in \link{DLflow.get_outputs}.}
+#'   \item{\code{initialize(name, inputs = list())}}{Create a new flow with the given name and inputs. Documented in \link{NIflow.initialize}.}
+#'   \item{\code{name()}}{Returns the name of the flow. Documented in \link{NIflow.name}.}
+#'   \item{\code{get_inputs()}}{Returns the inputs of the flow. Documented in \link{NIflow.get_inputs}.}
+#'   \item{\code{get_outputs()}}{Returns the outputs of the flow. Documented in \link{NIflow.get_outputs}.}
 #'   \item{\code{get_model(output)}}{Returns the \code{\link{DLmodel}} that computes the given output.
-#'   Documented in \link{DLflow.get_model}.}
+#'   Documented in \link{NIflow.get_model}.}
 #'   \item{\code{replace(output, with)}}{Replace a function, scheme or model that computes an output
-#'   with another function, scheme or model. Documented in \link{DLflow.replace}.}
+#'   with another function, scheme or model. Documented in \link{NIflow.replace}.}
 #'   \item{\code{add(what = NULL, inputs = NULL, output = NULL, subset = NULL)}}{Adds a function, scheme or model to the flow,
-#'   that transforms the given inputs into the given output. Documented in \link{DLflow.add}.}
-#'   \item{\code{execute(inputs = list(), desired_outputs = NULL, initialize_outputs = TRUE, mode = c("debug", "faster", "medium", "slower"))}}{Execute the flow to obtain some outputs, given input files. Documented in \link{DLflow.execute}.}
-#'   \item{\code{run(...)}}{Just a wrapper for \code{execute}. Documented in \link{DLflow.run}.}
-#'   \item{\code{train(output, input_filenames, output_filenames, train_split = 0.75, epochs = 10, target_windows_per_file = 1024, mode = c("debug", "faster", "medium", "slower"))}}{Train the model to compute an output. Documented in \link{DLflow.train}.}
-#'   \item{\code{graph()}}{Returns the graph of the flow. Documented in \link{DLflow.graph}.}
-#'   \item{\code{plot(interactive = FALSE)}}{Plots the graph of the flow. Documented in \link{DLflow.plot}.}
-#'   \item{\code{reset(outputs = 'all')}}{Remove the specified computed outputs. Documented in \link{DLflow.reset}.}
-#'   \item{\code{save(path = tempdir(), file_prefix = self$name())}}{Save the flow to disk. Documented in \link{DLflow.save}.}
-#'   \item{\code{load(filename)}}{Load a flow from disk. Documented in \link{DLflow.load}.}
-#'   \item{\code{subset(outputs)}}{Take a subset of the flow, for given outputs. Documented in \link{DLflow.subset}.}
-#'   \item{\code{clone(deep = FALSE)}}{Clone a flow. Documented in \link{DLflow.clone}.}
+#'   that transforms the given inputs into the given output. Documented in \link{NIflow.add}.}
+#'   \item{\code{execute(inputs = list(), desired_outputs = NULL, initialize_outputs = TRUE, mode = c("debug", "faster", "medium", "slower"))}}{Execute the flow to obtain some outputs, given input files. Documented in \link{NIflow.execute}.}
+#'   \item{\code{run(...)}}{Just a wrapper for \code{execute}. Documented in \link{NIflow.run}.}
+#'   \item{\code{train(output, input_filenames, output_filenames, train_split = 0.75, epochs = 10, target_windows_per_file = 1024, mode = c("debug", "faster", "medium", "slower"))}}{Train the model to compute an output. Documented in \link{NIflow.train}.}
+#'   \item{\code{graph()}}{Returns the graph of the flow. Documented in \link{NIflow.graph}.}
+#'   \item{\code{plot(interactive = FALSE)}}{Plots the graph of the flow. Documented in \link{NIflow.plot}.}
+#'   \item{\code{reset(outputs = 'all')}}{Remove the specified computed outputs. Documented in \link{NIflow.reset}.}
+#'   \item{\code{save(path = tempdir(), file_prefix = self$name())}}{Save the flow to disk. Documented in \link{NIflow.save}.}
+#'   \item{\code{load(filename)}}{Load a flow from disk. Documented in \link{NIflow.load}.}
+#'   \item{\code{subset(outputs)}}{Take a subset of the flow, for given outputs. Documented in \link{NIflow.subset}.}
+#'   \item{\code{clone(deep = FALSE)}}{Clone a flow. Documented in \link{NIflow.clone}.}
 #'  }
-DLflow <- R6::R6Class(
+NIflow <- R6::R6Class(
 
-  classname = "DLflow",
+  classname = "NIflow",
 
 
   public = list(
@@ -427,7 +427,7 @@ DLflow <- R6::R6Class(
       my_flow <- self$get_private()
       new_flow_env <- my_flow %>% .subset_flow(outputs = outputs)
 
-      new_flow <- DLflow$new(name = self$name())
+      new_flow <- NIflow$new(name = self$name())
       new_flow$.__enclos_env__$private <- new_flow_env
 
       return(new_flow)

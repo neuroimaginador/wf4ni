@@ -2,7 +2,7 @@
 #'
 #' @description This function allows to run a pipeline (flow) given some of its inputs.
 #'
-#' @param flow                  (a DLflow) The flow to be executed.
+#' @param flow                  (a NIflow) The flow to be executed.
 #' @param inputs                (list) Inputs to use, Default: list()
 #' @param given_inputs          (list) Additional inputs, Default: NULL
 #' @param desired_outputs       (character array) List of outputs to compute, Default: NULL
@@ -27,7 +27,7 @@
 
   require(igraph)
 
-  stopifnot(inherits(flow, "DLflow"))
+  stopifnot(inherits(flow, "NIflow"))
 
   # Check that inputs is a named list of files and that all of them exist
   # all_exist <- all(sapply(inputs, file.exists))
@@ -276,7 +276,7 @@
 #'
 #' @description This function deletes previously computed outputs inside the flow.
 #'
-#' @param flow    (a DLflow object) The flow for which outputs are to be removed.
+#' @param flow    (a NIflow object) The flow for which outputs are to be removed.
 #'
 #' @return (Invisibly) the same flow, without pre-computed outputs.
 #'
@@ -294,7 +294,7 @@
 #'
 #' @description This internal function returns the list of steps to compute the given output.
 #'
-#' @param flow            (a DLflow object) The flow.
+#' @param flow            (a NIflow object) The flow.
 #' @param output          (character) The name of the output to compute.
 #' @param given_inputs    (list) Additional inputs provided, Default: NULL
 #'

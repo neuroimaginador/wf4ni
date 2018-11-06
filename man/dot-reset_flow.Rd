@@ -7,7 +7,7 @@
 .reset_flow(flow, outputs = "all")
 }
 \arguments{
-\item{flow}{(a DLflow object) The flow.}
+\item{flow}{(a NIflow object) The flow.}
 
 \item{outputs}{(list) List of the names assigned to the DLmodels to reset.}
 }

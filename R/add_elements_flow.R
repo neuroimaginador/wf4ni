@@ -14,7 +14,7 @@
 .add_inputs <- function(flow, inputs = list()) {
 
   # Basic checks
-  stopifnot(inherits(flow, "DLflow"))
+  stopifnot(inherits(flow, "NIflow"))
 
   suppressPackageStartupMessages(require(stringr))
 
@@ -68,7 +68,7 @@
   suppressPackageStartupMessages(require(igraph))
 
   # Basic checks
-  stopifnot(inherits(flow, "DLflow"))
+  stopifnot(inherits(flow, "NIflow"))
   stopifnot(inherits(proc, "function"))
   output <- as.character(output)
 

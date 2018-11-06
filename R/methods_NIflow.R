@@ -1,13 +1,13 @@
 #' @title Flow Creation
 #'
-#' @description This function creates a new \code{DLflow}, with given name and inputs.
+#' @description This function creates a new \code{NIflow}, with given name and inputs.
 #'
 #' @param name      (character) Name of the flow, Default: ''
 #' @param inputs    (list) Character vector or list with the names of the inputs, Default: list()
 #'
 #' @return A new flow.
 #'
-#' @name DLflow.initialize
+#' @name NIflow.initialize
 NULL
 
 #' @title Name of a Flow
@@ -16,7 +16,7 @@ NULL
 #'
 #' @return The name of the flow as a string.
 #'
-#' @name DLflow.name
+#' @name NIflow.name
 NULL
 
 #' @title Flow Inputs
@@ -26,7 +26,7 @@ NULL
 #'
 #' @return A character vector with the names of the inputs of the flow.
 #'
-#' @name DLflow.get_inputs
+#' @name NIflow.get_inputs
 NULL
 
 #' @title Flow Outputs
@@ -35,7 +35,7 @@ NULL
 #'
 #' @return A character vector with the names of the available outputs.
 #'
-#' @name DLflow.get_outputs
+#' @name NIflow.get_outputs
 NULL
 
 #' @title Models from a Flow
@@ -46,7 +46,7 @@ NULL
 #'
 #' @return A \code{\link{DLmodel}} that is used to compute the given output.
 #'
-#' @name DLflow.get_model
+#' @name NIflow.get_model
 NULL
 
 #' @title Replace Part of a Flow
@@ -59,7 +59,7 @@ NULL
 #'
 #' @return The flow with the replaced object.
 #'
-#' @name DLflow.replace
+#' @name NIflow.replace
 NULL
 
 #' @title Add an Item to a Flow
@@ -75,7 +75,7 @@ NULL
 #'
 #' @details If the item to add is an input, the only required (and used) argument is \code{what}. If it's a function or a \code{\link{DLscheme}} or a \code{\link{DLmodel}}, mandatory arguments are \code{what}, \code{inputs} and \code{output}.
 #'
-#' @name DLflow.add
+#' @name NIflow.add
 NULL
 
 #' @title Execute a Flow
@@ -89,13 +89,13 @@ NULL
 #'
 #' @return A list with as many (named) fields as desired outputs. The names of the fields are those of the outputs.
 #'
-#' @name DLflow.execute
+#' @name NIflow.execute
 NULL
 
 #' @title Execute a Flow
 #' @description This function runs the computation graph of the flow to obtain some outputs, given input files.
-#' @describeIn DLflow.execute
-#' @name DLflow.run
+#' @describeIn NIflow.execute
+#' @name NIflow.run
 NULL
 
 #' @title Train Part of a Flow
@@ -115,7 +115,7 @@ NULL
 #' @details In case the part of the flow is currently defined by a \code{\link{DLscheme}}, a \code{\link{DLmodel}} is instatiated
 #' taking into account given inputs and output filenames. This is the model to be trained.
 #'
-#' @name DLflow.train
+#' @name NIflow.train
 NULL
 
 #' @title Flow Graph
@@ -125,7 +125,7 @@ NULL
 #'
 #' @return The graph, as an \code{\link{igraph}} object.
 #'
-#' @name DLflow.graph
+#' @name NIflow.graph
 NULL
 
 #' @title Plot a Flow
@@ -134,7 +134,7 @@ NULL
 #'
 #' @param interactive    (logical) Use interactive JavaScript visualization?, Default: FALSE
 #'
-#' @name DLflow.plot
+#' @name NIflow.plot
 NULL
 
 #' @title Reset Outputs of a Flow
@@ -143,7 +143,7 @@ NULL
 #'
 #' @param outputs    (character) List of computed outputs to remove, Default: 'all'
 #'
-#' @name DLflow.reset
+#' @name NIflow.reset
 NULL
 
 #' @title Save a Flow
@@ -153,7 +153,7 @@ NULL
 #' @param path           (character) Path where to store the flow, Default: tempdir()
 #' @param file_prefix    (character) Filename, Default: the flow name.
 #'
-#' @name DLflow.save
+#' @name NIflow.save
 NULL
 
 #' @title Load a Flow
@@ -164,7 +164,7 @@ NULL
 #'
 #' @return The loaded flow.
 #'
-#' @name DLflow.load
+#' @name NIflow.load
 NULL
 
 #' @title Flow Subsetting
@@ -176,7 +176,7 @@ NULL
 #' @return A new flow which is complete in the sense that it contains the required \code{outputs} and all parts of the bigger flow
 #' which lead to those outputs.
 #'
-#' @name DLflow.subset
+#' @name NIflow.subset
 NULL
 
 #' @title Clone Flow
@@ -187,6 +187,6 @@ NULL
 #'
 #' @return A new flow with exactly the same information.
 #'
-#' @name DLflow.clone
+#' @name NIflow.clone
 NULL
 

@@ -7,7 +7,7 @@
 .save_flow(flow, path = tempdir(), file_prefix = flow$name)
 }
 \arguments{
-\item{flow}{(a DLflow object) The flow to save.}
+\item{flow}{(a NIflow object) The flow to save.}
 
 \item{path}{(character) Path where to save the file, Default: tempdir()}
 

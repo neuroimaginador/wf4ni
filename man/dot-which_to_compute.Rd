@@ -7,7 +7,7 @@
 .which_to_compute(flow, output, given_inputs = NULL)
 }
 \arguments{
-\item{flow}{(a DLflow object) The flow.}
+\item{flow}{(a NIflow object) The flow.}
 
 \item{output}{(character) The name of the output to compute.}
 

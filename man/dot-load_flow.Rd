@@ -12,7 +12,7 @@
 \item{verbose}{(logical) print information during process?, Default: FALSE}
 }
 \value{
-A DLflow imported from the file.
+A NIflow imported from the file.
 }
 \description{
 This function imports a flow from disk

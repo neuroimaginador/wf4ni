@@ -7,7 +7,7 @@
 .reset_outputs(flow)
 }
 \arguments{
-\item{flow}{(a DLflow object) The flow for which outputs are to be removed.}
+\item{flow}{(a NIflow object) The flow for which outputs are to be removed.}
 }
 \value{
 (Invisibly) the same flow, without pre-computed outputs.

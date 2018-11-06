@@ -1,15 +1,15 @@
-context("DLflow")
+context("NIflow")
 
 expect_works <- function(object) testthat::expect_error(object, NA)
 
-test_that("DLflow initializes as expected", {
+test_that("NIflow initializes as expected", {
 
   # Create flow
-  flow <- DLflow$new(name = "foo", inputs = c("A", "B"))
+  flow <- NIflow$new(name = "foo", inputs = c("A", "B"))
 
   # Expectations
   # Class
-  expect_is(flow, "DLflow")
+  expect_is(flow, "NIflow")
 
   # Correct name
   expect_true(flow$name() == "foo")
@@ -22,10 +22,10 @@ test_that("DLflow initializes as expected", {
 
 })
 
-test_that("DLflow adds inputs", {
+test_that("NIflow adds inputs", {
 
   # Create flow
-  flow <- DLflow$new(name = "foo", inputs = c("A", "B"))
+  flow <- NIflow$new(name = "foo", inputs = c("A", "B"))
   original_inputs <- flow$get_inputs()
 
   # Add a new input
@@ -36,10 +36,10 @@ test_that("DLflow adds inputs", {
 
 })
 
-test_that("DLflow adds schemes as output", {
+test_that("NIflow adds schemes as output", {
 
   # Create the flow
-  flow <- DLflow$new(name = "foo", inputs = c("A", "B"))
+  flow <- NIflow$new(name = "foo", inputs = c("A", "B"))
 
   # Create simplest scheme
   scheme <- DLscheme$new()
@@ -65,12 +65,12 @@ test_that("DLflow adds schemes as output", {
 
 })
 
-test_that("DLflow adds models as output", {
+test_that("NIflow adds models as output", {
 
   skip_if_not(length(installed_datasets()) > 0)
 
   # Create flow
-  flow <- DLflow$new(name = "foo", inputs = c("A", "B"))
+  flow <- NIflow$new(name = "foo", inputs = c("A", "B"))
 
   # Create simplest scheme to build a model
   scheme <- DLscheme$new()
@@ -102,7 +102,7 @@ test_that("DLflow adds models as output", {
 
 })
 
-test_that("A DLflow can do basic operations", {
+test_that("A NIflow can do basic operations", {
 
   # Model scheme
   scheme <- DLscheme$new()
@@ -125,7 +125,7 @@ test_that("A DLflow can do basic operations", {
   scheme$add(memory_limit = "2G")
 
   # Create new flow
-  flow <- DLflow$new(name = "brain_extraction", inputs = c("T1"))
+  flow <- NIflow$new(name = "brain_extraction", inputs = c("T1"))
 
   # Scale the T1 image
   flow$add(what = scale_z,
@@ -162,7 +162,7 @@ test_that("A DLflow can do basic operations", {
 
 })
 
-test_that("A DLflow works for a fully-connected model", {
+test_that("A NIflow works for a fully-connected model", {
 
   # We'll use a modified BET (non-convolutional) demo
   load_keras()
@@ -195,7 +195,7 @@ test_that("A DLflow works for a fully-connected model", {
   scheme$add(memory_limit = "1G")
 
   # Create new flow
-  flow <- DLflow$new(name = "brain_extraction", inputs = c("T1"))
+  flow <- NIflow$new(name = "brain_extraction", inputs = c("T1"))
 
   # Scale the T1 image
   flow$add(what = scale_z,
@@ -230,7 +230,7 @@ test_that("A DLflow works for a fully-connected model", {
 
 })
 
-test_that("DLflow trains correctly", {
+test_that("NIflow trains correctly", {
 
   load_keras()
 
@@ -254,7 +254,7 @@ test_that("DLflow trains correctly", {
   scheme_bigger$add(memory_limit = "1G")
 
   # Create new flow
-  flow <- DLflow$new(name = "parcellation", inputs = c("T1"))
+  flow <- NIflow$new(name = "parcellation", inputs = c("T1"))
 
   # Scale the T1 image
   flow$add(what = scale_z,

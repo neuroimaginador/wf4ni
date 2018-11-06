@@ -7,10 +7,10 @@
 .clone_flow(flow)
 }
 \arguments{
-\item{flow}{(a DLflow object) The flow to clone}
+\item{flow}{(a NIflow object) The flow to clone}
 }
 \value{
-Another DLflow object which is an exact copy of the given \code{flow}.
+Another NIflow object which is an exact copy of the given \code{flow}.
 }
 \description{
 This functions allows to (deep) clone a flow

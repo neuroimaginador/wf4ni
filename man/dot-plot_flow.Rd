@@ -4,12 +4,10 @@
 \alias{.plot_flow}
 \title{Plot a Flow}
 \usage{
-.plot_flow(flow, interactive = FALSE)
+.plot_flow(flow)
 }
 \arguments{
-\item{flow}{(a DLflow object) The flow.}
-
-\item{interactive}{(logical) should the plot be interactive?, Default: FALSE}
+\item{flow}{(a NIflow object) The flow.}
 }
 \value{
 Nothing

@@ -2,7 +2,7 @@
 #'
 #' @description This function is used to add a (trainable) DLmodel to the flow.
 #'
-#' @param flow       (a DLflow object) The flow where to add the DLmodel
+#' @param flow       (a NIflow object) The flow where to add the DLmodel
 #' @param scheme     (a DLscheme object) The DLscheme defining the DLmodel, Default: NULL
 #' @param inputs     (list) List of needed inputs (just names, with or without quotes), Default: list()
 #' @param output     (character) The expected output provided by the DLmodel.
@@ -23,7 +23,7 @@
   suppressPackageStartupMessages(require(igraph))
 
   # Basic checks
-  stopifnot(inherits(flow, "DLflow"))
+  stopifnot(inherits(flow, "NIflow"))
   stopifnot(inherits(scheme, "DLscheme"))
 
   scheme$check()

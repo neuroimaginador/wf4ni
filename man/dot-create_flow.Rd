@@ -10,10 +10,10 @@
 \item{inputs}{(list of names) List of inputs used in the flow, Default: list()}
 }
 \value{
-A DLflow object.
+A NIflow object.
 }
 \description{
-This internal function provides an environment usable from the class DLflow.
+This internal function provides an environment usable from the class NIflow.
 }
 \seealso{
 \code{\link[igraph]{make_empty_graph}},\code{\link[igraph]{add_vertices}}
