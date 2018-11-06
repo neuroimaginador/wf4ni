@@ -39,19 +39,10 @@
   for (proc_idx in seq_along(processes)) {
 
     proc <- processes[[proc_idx]]
-    if (inherits(proc, "DLmodel")) {
 
-      # A DLmodel should be saved with its own function
-      proc$save(path = processes_dir, prefix = names(processes)[proc_idx])
-
-    } else {
-
-      # The remaining objects are saved in RDS format
-      saveRDS(object = proc,
-              file = file.path(processes_dir,
-                               paste0(names(processes)[proc_idx], ".rds")))
-
-    }
+    flow$export_process(process = proc,
+                        path = processes_dir,
+                        prefix = names(processes)[proc_idx])
 
   }
 
@@ -99,21 +90,16 @@
 
   stopifnot(file.exists(filename))
 
-  # print(filename)
-
   # Unzip the file, if it exists
   flow_folder <- gsub(basename(filename), pattern = ".zip", replacement = "")
-  # print(flow_folder)
 
   output_dir <- file.path(dirname(filename), paste0("unzipped_", flow_folder))
-  # print(output_dir)
 
   current_dir <- getwd()
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
   setwd(output_dir)
-  # print("Unzipping")
+
   unzip(zipfile = filename, exdir = output_dir)
-  # print("Unzipped")
 
   output_dir <- file.path(output_dir, flow_folder)
 
@@ -127,45 +113,14 @@
   # For each process, incorporate it to the flow
   processes_dir <- file.path(output_dir, "processes")
 
-  # Functions and models
-  functions <- list.files(processes_dir, pattern = ".rds")
-  models <- list.dirs(processes_dir, full.names = FALSE)
-  models <- models[nzchar(models) > 0]
+  # Processes
+  processes_files <- list.files(path = processes_dir, include.dirs = TRUE)
 
-  for (file_f in functions) {
+  for (file_f in processes_files) {
 
-    function_name <- gsub(x = file_f, pattern = ".rds", replacement = "")
+    import_res <- flow$import_process(filename = file.path(processes_dir, file_f))
 
-    f <- readRDS(file.path(processes_dir, file_f))
-
-    if (inherits(f, "function")) {
-
-      if (verbose)
-        cat("Loading function:", function_name, "...\n") # nocov
-
-    }
-
-    if (inherits(f, "list")) {
-
-      if (verbose)
-        cat("Loading model scheme:", function_name, "...\n") # nocov
-
-      class(f) <- c("DLscheme", class(f))
-      flow$schemes[[function_name]] <- f
-
-    }
-
-    flow$processes[[function_name]] <- f
-
-  }
-
-  for (model_name in models) {
-
-    if (verbose)
-      cat("Loading model:", model_name, "...\n") # nocov
-
-    flow$processes[[model_name]] <- dl4ni::load_model(path = processes_dir,
-                                                      prefix = model_name)
+    flow$processes[[import_res[[1]]]] <- import_res[[2]]
 
   }
 

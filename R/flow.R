@@ -25,8 +25,8 @@
 
   # List of flow processes (both models and functions)
   flow$processes <- list()
-  flow$schemes <- list()
-  flow$trained <- list()
+  # flow$schemes <- list()
+  # flow$trained <- list()
   flow$pkgs <- list()
 
   # List of pipelines to execute for each process and of required inputs
@@ -63,6 +63,54 @@
                             message)
 
       log_lines <<- c(log_lines, line_to_add)
+
+    }
+
+  })
+
+  # Add function to execute processes (this way it can be extended to non-function objects)
+  with(flow, expr = {
+
+    execute_process <- function(what, args) {
+
+      do.call(what = what, args = args)
+
+    }
+
+  })
+
+  # Add a function to clone processes included in the flow
+  with(flow, expr = {
+
+
+    clone_process <- function(process) {
+
+      return(process)
+
+    }
+
+  })
+
+  # Add a function to save and load a process
+  with(flow, expr = {
+
+    export_process <- function(process, path, prefix) {
+
+      saveRDS(object = process,
+              file = file.path(path,
+                               paste0(prefix, ".rds")))
+
+      return(invisible(TRUE))
+
+    }
+
+    import_process <- function(filename) {
+
+      output_name <- gsub(x = basename(filename), pattern = ".rds", replacement = "")
+
+      output_process <- readRDS(filename)
+
+      return(list(output_name, output_process))
 
     }
 

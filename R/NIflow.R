@@ -266,7 +266,6 @@ NIflow <- R6::R6Class(
     execute = function(inputs = list(),
                        desired_outputs = NULL,
                        initialize_outputs = TRUE,
-                       mode = c("debug", "faster", "medium", "slower"),
                        ...) {
 
       expr <- substitute(desired_outputs)
@@ -282,7 +281,6 @@ NIflow <- R6::R6Class(
       my_flow %>% .execute_flow(inputs = inputs,
                                 desired_outputs = desired_outputs,
                                 initialize_outputs = initialize_outputs,
-                                mode = mode[1],
                                 ...)
 
     },
@@ -379,21 +377,6 @@ NIflow <- R6::R6Class(
     memory_used = function() {
 
       pryr::object_size(private) + pryr::object_size(self)
-
-    },
-
-    reset = function(outputs = "all") {
-
-      expr <- substitute(outputs)
-      outputs <- as.character(expr)
-
-      if (class(expr) == "call")
-        outputs <- outputs[-1]
-
-      my_flow <- self$get_private()
-      my_flow %>% .reset_flow(outputs = outputs)
-
-      return(invisible(self))
 
     },
 

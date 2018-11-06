@@ -4,11 +4,9 @@
 #'
 #' @param flow                  (a NIflow) The flow to be executed.
 #' @param inputs                (list) Inputs to use, Default: list()
-#' @param given_inputs          (list) Additional inputs, Default: NULL
 #' @param desired_outputs       (character array) List of outputs to compute, Default: NULL
 #' @param initialize_outputs    (logical) initialize outputs?, Default: TRUE
 #' @param cleanup               (logical) perform cleanup of intermediate results?, Default: TRUE
-#' @param mode                  (character) Mode of execution (only used to run DLmodels), Default: c("debug", "faster", "medium", "slower")
 #'
 #' @return A list with one (named) field for each \code{desired_output}.
 #'
@@ -17,29 +15,17 @@
 #' @importFrom neurobase readnii
 #' @import igraph
 #'
-.execute_flow <- function(flow, inputs = list(),
-                          given_inputs = NULL,
+.execute_flow <- function(flow,
+                          inputs = list(),
                           desired_outputs = NULL,
                           initialize_outputs = TRUE,
                           cleanup = TRUE,
-                          mode = c("debug", "faster", "medium", "slower"),
-                          verbose = FALSE) {
+                          verbose = FALSE,
+                          ...) {
 
   require(igraph)
 
   stopifnot(inherits(flow, "NIflow"))
-
-  # Check that inputs is a named list of files and that all of them exist
-  # all_exist <- all(sapply(inputs, file.exists))
-  #
-  # if (!all_exist) {
-  #
-  #   stop("Not all input files exist.")
-  #
-  #   flow$log(level = "ERROR",
-  #            message = "Not all input files exist.")
-  #
-  # }
 
   input_names <- names(inputs)
 
@@ -63,8 +49,6 @@
   results <- list()
 
   if (length(desired_outputs) > 0) {
-
-    inputs <- c(inputs, given_inputs)
 
     # Variables needed to perform cleanup on computed (and unneeded) outputs
     variables_cleanup <- lapply(igraph::adjacent_vertices(graph = flow$graph,
@@ -172,24 +156,24 @@
           process <- flow$processes[[intermediate_output]]
           my_inputs <- flow$inmediate_inputs[[intermediate_output]]
 
-          switch(V(flow$graph)$type[process_idx],
+          # Execute the corresponding process
+          params <- flow$computed_outputs[my_inputs] %>% unname()
 
-                 "function" = {
+          if (inherits(process, "function")) {
 
-                   params <- flow$computed_outputs[my_inputs] %>% unname()
+            param_names <- methods::formalArgs(process)
 
-                   param_names <- methods::formalArgs(process)
+            # Allow for functions with ... in its arguments
+            if (!("..." %in% param_names))
+              names(params) <- param_names[1:length(params)]
 
-                   # Allow for functions with ... in its arguments
-                   if (!("..." %in% param_names))
-                     names(params) <- param_names[1:length(params)]
+          }
 
-                   flow$computed_outputs[[intermediate_output]] <- do.call(what = process,
-                                                                           args = params)
+          extra_args <- list(...)
 
+          flow$computed_outputs[[intermediate_output]] <-
+            flow$execute_process(what = process, args = c(params, extra_args))
 
-                 }
-          )
 
           mem <- flow$computed_outputs %>%
             purrr::map_dbl(pryr::object_size) %>%

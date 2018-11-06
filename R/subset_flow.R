@@ -1,6 +1,6 @@
 #' @title Subset a Flow
 #'
-#' @description This function allos to extract sub-flows from a given flow.
+#' @description This function allows to extract sub-flows from a given flow.
 #'
 #' @param flow       (a NIflow object) The original flow.
 #' @param outputs    (list) Names of the outputs to keep in the new flow.
@@ -43,8 +43,8 @@
 
   # List of flow processes (both models and functions)
   new_flow$processes <- flow$processes[only_output]
-  new_flow$schemes <- flow$schemes[only_output]
-  new_flow$trained <- list()
+  # new_flow$schemes <- flow$schemes[only_output]
+  # new_flow$trained <- list()
 
   # List of pipelines to execute for each process and of required inputs
   new_flow$pipeline <- list()
@@ -110,17 +110,42 @@
 
   }
 
-  # Create a deep copy of the flow to remove dependencies between keras models
+  # Add ability to log:
+  new_flow$log_lines <- c()
+
+  with(new_flow, expr = {
+
+    log <- function(level = c("DEBUG", "INFO", "WARNING", "ERROR"),
+                    message = "...") {
+
+      line_to_add <- paste0("(", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ") [",
+                            level[1], "] ",
+                            message)
+
+      log_lines <<- c(log_lines, line_to_add)
+
+    }
+
+  })
+
+  # Inherit function to execute a process from its parent.
+  new_flow$execute_process <- flow$execute_process
+
+  # Inherit a function to clone a process from its parent
+  new_flow$clone_process <- flow$clone_process
+
+  # Inherit functions to export and import processes, from its parent
+  new_flow$export_process <- flow$export_process
+  new_flow$import_process <- flow$import_process
+
+  # Create a deep copy of the flow processes (in case we want to extend to non-function objects)
   class(new_flow) <- "NIflow"
 
   for (proc_id in seq_along(new_flow$processes)) {
 
     proc <- new_flow$processes[[proc_id]]
-    if (inherits(proc, "DLscheme") | inherits(proc, "DLmodel")) {
 
-      proc <- proc$clone()
-
-    }
+    proc <- new_flow$clone_process(process = proc)
 
     new_flow$processes[[proc_id]] <- proc
 

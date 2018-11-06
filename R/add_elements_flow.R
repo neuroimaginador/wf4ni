@@ -62,7 +62,6 @@
                          proc,
                          inputs = ifelse(inherits(proc, "function"), list(names(formals(proc))), list()),
                          output,
-                         trained = TRUE,
                          ...) {
 
   suppressPackageStartupMessages(require(igraph))
@@ -74,7 +73,6 @@
 
   if (length(inputs) > 0) inputs <- unlist(inputs)
 
-  type <- "DLmodel"
   if (inherits(proc, "function")) type <- "function"
 
   flow$log(level = "DEBUG",
@@ -109,21 +107,6 @@
 
   flow$processes[[output]] <- proc
   flow$outputs <- c(flow$outputs, output)
-  flow$trained[[output]] <- trained
-  # if (inherits(proc, "DLscheme")) {
-  #
-  #   flow$schemes[[output]] <- proc
-  #
-  # }
-  #
-  # if (inherits(proc, "DLmodel")) {
-  #
-  #   scheme <- DLscheme$new()
-  #
-  #   scheme$from_model(proc)
-  #   flow$schemes[[output]] <- scheme
-  #
-  # }
 
   # Add package dependencies
   flow$pkgs[[output]] <- .get_dependencies(proc)
