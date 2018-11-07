@@ -2,6 +2,11 @@ context("NIflow")
 
 expect_works <- function(object) testthat::expect_error(object, NA)
 
+# Download external nifti file
+t1_file <- tempfile(fileext = ".nii.gz")
+download.file(url = "http://www.jannin.org/mritemplate/data/Template-T1-U8-RALPFH-BR.nii.gz",
+              destfile = t1_file, quiet = TRUE)
+
 test_that("NIflow initializes as expected", {
 
   # Create flow
@@ -103,6 +108,10 @@ test_that(desc = "A NIflow can be executed", code = {
   expect_is(res, "list")
   expect_named(res, expected = c("suma", "suma2", "suma3"))
 
+  # Unavailable outputs should warn the user
+  expect_warning(flow$execute(inputs = list(A = 1, B = 2, c = 3),
+                              desired_outputs = suma6))
+
 })
 
 
@@ -191,7 +200,7 @@ test_that(desc = "A Niflow logs things", code = {
   flow$add(what = f, inputs = c(suma3, C), output = suma4)
 
   res <- flow$execute(inputs = list(A = 1, B = 2, C = 3),
-                                   desired_outputs = c(suma, suma2, suma3))
+                      desired_outputs = c(suma, suma2, suma3))
 
   # Printing log
   expect_works(capture.output(flow$print_log()))
@@ -259,16 +268,22 @@ test_that(desc = "A NIflow accepts parameterizable functions", code = {
 test_that(desc = "A NIflow accepts strings as input names", code = {
 
   # Use of programatically defined variable names
-  a <- "A"
-  b <- "B"
+  a <- "A1"
+  b <- "B1"
   expect_works(flow <- NIflow$new(name = "test", inputs = c(a, b)))
 
-  expect_equivalent(flow$get_inputs(), expected = c("A", "B"))
+  expect_equivalent(flow$get_inputs(), expected = c("A1", "B1"))
+
+  # Use of mixed variable names
+  expect_works(flow <- NIflow$new(name = "test", inputs = c(a, r)))
+
+  expect_equivalent(flow$get_inputs(), expected = c("A1", "r"))
 
 })
 
 test_that(desc = "A NIflow can be exported to an R package", code = {
 
+  # Auxiliary functions
   f <- function(...) {
 
     L <- list(...);
@@ -277,6 +292,7 @@ test_that(desc = "A NIflow can be exported to an R package", code = {
 
   }
 
+  # Test flow
   flow <- NIflow$new(name = "test", inputs = c(A, B))
 
   flow$add(what = f, inputs = c(A, B), output = suma)
@@ -293,5 +309,69 @@ test_that(desc = "A NIflow can be exported to an R package", code = {
   expect_true(file.exists(file.path(path, flow$name())))
   expect_works(res <- devtools::as.package(x = file.path(path, flow$name())))
   expect_is(res, "package")
+
+})
+
+test_that(desc = "NIflow can read NIFTI(gz) files as input", code = {
+
+
+  # Sample flow
+  flow <- NIflow$new(name = "test", inputs = T1)
+  flow$add(what = function(I) {-I}, inputs = T1, output = negT1)
+
+  # Input is a filename (.nii.gz)
+  expect_works(res <- flow$execute(inputs = list(T1 = t1_file),
+                                   desired_outputs = negT1))
+
+  # Is the result as expected?
+  expect_is(res, "list")
+  expect_named(res, expected = c("negT1"))
+  expect_is(res$negT1, "array")
+
+})
+
+test_that(desc = "NIflow can read RDS files as input", code = {
+
+
+  # Rewrite input as RDS file
+  nifti_img <- neurobase::readnii(t1_file)
+  tmp <- tempfile(fileext = ".rds")
+  nifti_img %>% as.array() %>% saveRDS(file = tmp)
+
+  # Sample flow
+  flow <- NIflow$new(name = "test", inputs = T1)
+  flow$add(what = function(I) {-I}, inputs = T1, output = negT1)
+
+  # Input is a filename (.rds)
+  expect_works(res <- flow$execute(inputs = list(T1 = tmp),
+                                   desired_outputs = negT1))
+
+  # Is the result as expected?
+  expect_is(res, "list")
+  expect_named(res, expected = c("negT1"))
+  expect_is(res$negT1, "array")
+
+})
+
+test_that(desc = "NIflow can read uncompressed NIFTI files as input", code = {
+
+
+  # Rewrite input as .nii (uncompressed) file.
+  nifti_img <- neurobase::readnii(t1_file)
+  tmp <- tempfile(fileext = "")
+  oro.nifti::writeNIfTI(nifti_img, filename = tmp, gzipped = FALSE)
+
+  # Sample flow
+  flow <- NIflow$new(name = "test", inputs = T1)
+  flow$add(what = function(I) {-I}, inputs = T1, output = negT1)
+
+  # Input is a filename (.nii)
+  expect_works(res <- flow$execute(inputs = list(T1 = paste0(tmp, ".nii")),
+                                   desired_outputs = negT1))
+
+  # Is the result as expected?
+  expect_is(res, "list")
+  expect_named(res, expected = c("negT1"))
+  expect_is(res$negT1, "array")
 
 })
