@@ -19,6 +19,24 @@ NULL
 #' @name NIflow.name
 NULL
 
+#' @title Private Environment of the Flow
+#'
+#' @description This function returns the private environment of the flow
+#'
+#' @return An environment with the flow internals
+#'
+#' @name NIflow.get_private
+NULL
+
+#' @title Set Name of Flow
+#'
+#' @description This function is used to change the name of a flow
+#'
+#' @param new_name    (character) New name for the flow
+#'
+#' @name NIflow.set_name
+NULL
+
 #' @title Flow Inputs
 #'
 #' @description This function returns the list of names of the inputs to this flow.
@@ -38,24 +56,52 @@ NULL
 #' @name NIflow.get_outputs
 NULL
 
-#' @title Models from a Flow
+#' @title Required Inputs
 #'
-#' @description This function returns a model that computes a specific output in a flow.
+#' @description This function is used to retrieve the necessary inputs that must be provided in order to compute a specific output.
 #'
-#' @param output    (character) The name of the output that the required model computes.
+#' @param outputs    (list of names) Outputs for which to retrieve the mandatory inputs.
 #'
-#' @return A \code{\link{DLmodel}} that is used to compute the given output.
+#' @return A list with one field for each given output, with the name of the required inputs
 #'
-#' @name NIflow.get_model
+#' @name NIflow.get_required_inputs
+NULL
+
+#' @title Processes from a Flow
+#'
+#' @description This function returns a function that computes a specific output in a flow.
+#'
+#' @param output    (character) The name of the output that the function computes.
+#'
+#' @return A function that is used to compute the given output.
+#'
+#' @name NIflow.get_process
+NULL
+
+#' @title Dependencies of a Flow
+#'
+#' @description This function provides the list of packages that are needed in order to execute a flow.#'
+#'
+#' @return A list with the names of the needed packages.
+#'
+#' @name NIflow.get_dependencies
+NULL
+
+#' @title Check Dependencies
+#'
+#' @description This function checks that all the mandatory packages needed to execute the flow are installed locally.
+#'
+#' @return A logical indicating if all packages are installed or not.
+#'
+#' @name NIflow.check_dependencies
 NULL
 
 #' @title Replace Part of a Flow
 #'
-#' @description This function is used to replace a part of the flow, such as a \code{\link{DLmodel}}, a
-#' \code{\link{DLscheme}} or a function, with another object of one these classes.
+#' @description This function is used to replace a part of the flow, such as a function, with another object of one this class.
 #'
 #' @param output    (character) Name of the output (part of the flow) to substitute.
-#' @param with      (\code{\link{DLmodel}}, \code{\link{DLscheme}} or function) The object that is replacing the previous one.
+#' @param with      (function) The object that is replacing the previous one.
 #'
 #' @return The flow with the replaced object.
 #'
@@ -64,16 +110,15 @@ NULL
 
 #' @title Add an Item to a Flow
 #'
-#' @description This function adds an item (input, \code{\link{DLscheme}}, \code{\link{DLmodel}} or function) to the flow.
+#' @description This function adds an item (an input or a function) to the flow.
 #'
-#' @param what      (character, \code{\link{DLscheme}}, \code{\link{DLmodel}} or function) Item to add, Default: NULL
+#' @param what      (character, or function) Item to add, Default: NULL
 #' @param inputs    (character) List of required inputs, Default: NULL
-#' @param output    (character) The "name " of the item inside the flow, Default: NULL
-#' @param subset    (list) PARAM_DESCRIPTION, Default: NULL
+#' @param output    (character) The "name" of the item inside the flow, Default: NULL
 #'
 #' @return The updated flow.
 #'
-#' @details If the item to add is an input, the only required (and used) argument is \code{what}. If it's a function or a \code{\link{DLscheme}} or a \code{\link{DLmodel}}, mandatory arguments are \code{what}, \code{inputs} and \code{output}.
+#' @details If the item to add is an input, the only required (and used) argument is \code{what}. If it's a function, mandatory arguments are \code{what}, \code{inputs} and \code{output}.
 #'
 #' @name NIflow.add
 NULL
@@ -85,7 +130,6 @@ NULL
 #' @param inputs                (list) List of input filenames, Default: list()
 #' @param desired_outputs       (character vector) List of names of the outputs to compute, Default: NULL
 #' @param initialize_outputs    (logical) Delete previous runs?, Default: TRUE
-#' @param mode                  (character) Inference mode, Default: c("debug", "faster", "medium", "slower")
 #'
 #' @return A list with as many (named) fields as desired outputs. The names of the fields are those of the outputs.
 #'
@@ -93,35 +137,67 @@ NULL
 NULL
 
 #' @title Execute a Flow
+#'
 #' @description This function runs the computation graph of the flow to obtain some outputs, given input files.
-#' @describeIn NIflow.execute
+#'
+#' @param inputs                (list) List of input filenames, Default: list()
+#' @param desired_outputs       (character vector) List of names of the outputs to compute, Default: NULL
+#' @param initialize_outputs    (logical) Delete previous runs?, Default: TRUE
+#'
+#' @return A list with as many (named) fields as desired outputs. The names of the fields are those of the outputs.
+#'
 #' @name NIflow.run
 NULL
 
-#' @title Train Part of a Flow
+#' @title Log a Message Interally
 #'
-#' @description This function is used to train a \code{\link{DLmodel}} that specifies an output of the flow.
+#' @description This function is used internally by the flow to log some events.
 #'
-#' @param output                     (charcater) Name of the output (model) to train.
-#' @param input_filenames            (list) List of input files to train with, that is, the X in the training phase.
-#' @param output_filenames           (list) List of output files, representing the Y in the training phase.
-#' @param train_split                (numeric) Ratio of input files used for training, the remaining are used for validation, Default: 0.75
-#' @param epochs                     (numeric) Number of epochs to train for, Default: 10
-#' @param target_windows_per_file    (numeric) Number of windows to extract, as a minimum, per file, Default: 1024
-#' @param mode                       (character) Inference mode for the required inputs of this part of the flow, in case they had to be computed, Default: c("debug", "faster", "medium", "slower")
+#' @param level      (character) Level for the message, which indicates its importance, being the most trivial "DEBUG" and the most important "ERROR", Default: c("DEBUG", "INFO", "WARNING", "ERROR")
+#' @param message    (character) The message to log, Default: '...'
 #'
-#' @return The flow with the trained model.
+#' @name NIflow.log
+NULL
+
+#' @title Print Log
 #'
-#' @details In case the part of the flow is currently defined by a \code{\link{DLscheme}}, a \code{\link{DLmodel}} is instatiated
-#' taking into account given inputs and output filenames. This is the model to be trained.
+#' @description With this function, the internal log of the flow is printed.
 #'
-#' @name NIflow.train
+#' @param level    (character) The level for which to print related messages. DEBUG prints all information, Default: c("DEBUG", "WARNING", "INFO", "ERROR")
+#'
+#' @return Prints in the console the required internal log.
+#'
+#' @name NIflow.print_log
+NULL
+
+#' @title Print Errors
+#'
+#' @description This function prints in the console just the errors contained in the log.
+#'
+#' @name NIflow.errors
+NULL
+
+#' @title Print Warnings
+#'
+#' @description This function prints in the console just the warnings contained in the log.
+#'
+#' @name NIflow.warnings
+NULL
+
+#' @title Save Log
+#'
+#' @description This function is used to save the internal log of the flow.
+#'
+#' @param filename    (character) Path to the file where to save the text log.
+#' @param level       (character) Which levels to save to disk? DEBUG stands for all, Default: c("DEBUG", "WARNING", "INFO", "ERROR")
+#'
+#'
+#' @name NIflow.save_log
 NULL
 
 #' @title Flow Graph
 #'
 #' @description This function returns the computation graph of the flow.
-#'
 #'
 #' @return The graph, as an \code{\link{igraph}} object.
 #'
@@ -132,18 +208,18 @@ NULL
 #'
 #' @description This function plots the computation graph of the flow.
 #'
-#' @param interactive    (logical) Use interactive JavaScript visualization?, Default: FALSE
-#'
 #' @name NIflow.plot
 NULL
 
-#' @title Reset Outputs of a Flow
+#' @title Memory Used
 #'
-#' @description This function deletes previous computed results in a flow.
+#' @description This function computes the amount of memory used by the flow, including its internals.
 #'
-#' @param outputs    (character) List of computed outputs to remove, Default: 'all'
+#' @return The memory size of the flow.
 #'
-#' @name NIflow.reset
+#' @seealso
+#'  \code{\link[pryr]{object_size}}
+#' @name NIflow.memory_used
 NULL
 
 #' @title Save a Flow
@@ -167,6 +243,15 @@ NULL
 #' @name NIflow.load
 NULL
 
+#' @title Clone Flow
+#'
+#' @description This function clones a flow.
+#'
+#' @return A new flow with exactly the same information.
+#'
+#' @name NIflow.deep_clone
+NULL
+
 #' @title Flow Subsetting
 #'
 #' @description This function extracts just a subflow from the parent flow, specifying the outputs to retain.
@@ -179,14 +264,16 @@ NULL
 #' @name NIflow.subset
 NULL
 
-#' @title Clone Flow
+#' @title Build Package from Flow
 #'
-#' @description This function clones a flow.
+#' @description With this function, an R package is created that includes the current flow and functions to compute all of its possible outputs.
 #'
-#' @param deep    (logical) Deep copy of the flow?, Default: FALSE
+#' @param path            (character) Path where to create a package
+#' @param package_name    (character) Name of the package to create, Default: the name of the current flow
 #'
-#' @return A new flow with exactly the same information.
+#' @seealso
+#'  \code{\link[devtools]{use_package}}
 #'
-#' @name NIflow.clone
+#' @name NIflow.to_package
 NULL
 

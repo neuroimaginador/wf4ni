@@ -7,6 +7,8 @@
 #' @param desired_outputs       (character array) List of outputs to compute, Default: NULL
 #' @param initialize_outputs    (logical) initialize outputs?, Default: TRUE
 #' @param cleanup               (logical) perform cleanup of intermediate results?, Default: TRUE
+#' @param verbose               (logical) print information of the executions?, Default: FALSE
+#' @param ...                   Other arguments passed to subfunctions.
 #'
 #' @return A list with one (named) field for each \code{desired_output}.
 #'
@@ -14,6 +16,10 @@
 #'  \code{\link[neurobase]{readnii}}
 #' @importFrom neurobase readnii
 #' @import igraph
+#' @importFrom purrr map_dbl
+#' @importFrom pryr object_size
+#' @importFrom prettyunits pretty_bytes
+#' @importFrom methods formalArgs
 #'
 .execute_flow <- function(flow,
                           inputs = list(),
@@ -23,7 +29,15 @@
                           verbose = FALSE,
                           ...) {
 
-  require(igraph)
+
+  # An auxiliary function to get a list size in memory.
+  mem_list <- function(L) {
+
+    L %>% map_dbl(object_size) %>%
+      sum() %>%
+      pretty_bytes()
+
+  }
 
   stopifnot(inherits(flow, "NIflow"))
 
@@ -51,8 +65,8 @@
   if (length(desired_outputs) > 0) {
 
     # Variables needed to perform cleanup on computed (and unneeded) outputs
-    variables_cleanup <- lapply(igraph::adjacent_vertices(graph = flow$graph,
-                                                          v = V(flow$graph)),
+    variables_cleanup <- lapply(adjacent_vertices(graph = flow$graph,
+                                                  v = V(flow$graph)),
                                 function(s) attr(s, "name"))
 
     is_computed <- rep(FALSE, length(flow$outputs))
@@ -72,9 +86,9 @@
 
                  "rds" = readRDS(inputs[[name]]),
 
-                 "nii" = neurobase::readnii(inputs[[name]]),
+                 "nii" = readnii(inputs[[name]]),
 
-                 "gz" = neurobase::readnii(inputs[[name]])
+                 "gz" = readnii(inputs[[name]])
 
           )
 
@@ -121,10 +135,7 @@
 
     all_to_remove <- c()
 
-    mem <- flow$computed_outputs %>%
-      purrr::map_dbl(pryr::object_size) %>%
-      sum() %>%
-      prettyunits::pretty_bytes()
+    mem <- flow$computed_outputs %>% mem_list()
 
     flow$log(level = "DEBUG",
              message = paste0("Memory used at init: ", mem))
@@ -161,7 +172,7 @@
 
           if (inherits(process, "function")) {
 
-            param_names <- methods::formalArgs(process)
+            param_names <- formalArgs(process)
 
             # Allow for functions with ... in its arguments
             if (!("..." %in% param_names))
@@ -175,10 +186,7 @@
             flow$execute_process(what = process, args = c(params, extra_args))
 
 
-          mem <- flow$computed_outputs %>%
-            purrr::map_dbl(pryr::object_size) %>%
-            sum() %>%
-            prettyunits::pretty_bytes()
+          mem <- flow$computed_outputs %>% mem_list()
 
           flow$log(level = "DEBUG",
                    message = paste0("Memory used after computation: ", mem))
@@ -194,11 +202,11 @@
             # Intermediate results that are not needed any more.
             # All of their children are already computed.
             all_computed <- sapply(variables_cleanup,
-                                        function(s) {
+                                   function(s) {
 
-                                          all(is_computed[s])
+                                     all(is_computed[s])
 
-                                        })
+                                   })
 
             which_to_remove <- names(variables_cleanup)[all_computed]
 
@@ -210,12 +218,12 @@
 
               flow$log(level = "DEBUG",
                        message = paste0("Removed intermediate outputs: ",
-                                        stringr::str_flatten(which_to_remove,
-                                                             collapse = ", ")))
+                                        str_flatten(which_to_remove,
+                                                    collapse = ", ")))
 
               if (verbose) {
 
-                str_remove <- stringr::str_flatten(which_to_remove, collapse = ", ") #nocov
+                str_remove <- str_flatten(which_to_remove, collapse = ", ") #nocov
                 cat("Removing", str_remove, "...\n") # nocov
 
               }
@@ -226,13 +234,11 @@
               # Release memory
               invisible(gc())
 
-              mem <- flow$computed_outputs %>%
-                purrr::map_dbl(pryr::object_size) %>%
-                sum() %>%
-                prettyunits::pretty_bytes()
+              mem <- flow$computed_outputs %>% mem_list()
 
               flow$log(level = "DEBUG",
                        message = paste0("Memory used after cleanup: ", mem))
+
             }
 
 

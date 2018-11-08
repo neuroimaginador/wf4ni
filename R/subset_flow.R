@@ -14,8 +14,6 @@
 #'
 .subset_flow <- function(flow, outputs) {
 
-  suppressPackageStartupMessages(require(igraph))
-
   # Basic input checks
   stopifnot(inherits(flow, "NIflow"))
 
@@ -28,7 +26,7 @@
   }
 
   # Ensure needed nodes are in correct topological order
-  needed_nodes <- intersect(igraph::topo_sort(flow$graph), needed_nodes)
+  needed_nodes <- intersect(topo_sort(flow$graph), needed_nodes)
   needed_nodes <- flow$outputs[unique(needed_nodes)]
 
   # Create new flow
@@ -43,8 +41,6 @@
 
   # List of flow processes (both models and functions)
   new_flow$processes <- flow$processes[only_output]
-  # new_flow$schemes <- flow$schemes[only_output]
-  # new_flow$trained <- list()
 
   # List of pipelines to execute for each process and of required inputs
   new_flow$pipeline <- list()
@@ -61,29 +57,29 @@
   new_flow$inmediate_inputs <- flow$inmediate_inputs[new_flow$outputs]
 
   # Create graph of dependencies
-  new_flow$graph <- igraph::make_empty_graph(directed = TRUE)
+  new_flow$graph <- make_empty_graph(directed = TRUE)
 
   # Add inputs to the graph
   if (length(new_flow$inputs) > 0) {
 
-    new_flow$graph <- new_flow$graph %>% igraph::add_vertices(nv = length(new_flow$inputs),
-                                                              name = unlist(new_flow$inputs),
-                                                              type = rep("Input", length(new_flow$inputs)))
+    new_flow$graph <- new_flow$graph %>% add_vertices(nv = length(new_flow$inputs),
+                                                      name = unlist(new_flow$inputs),
+                                                      type = rep("Input", length(new_flow$inputs)))
 
   }
 
   # Add nodes to the graph
   types <- V(flow$graph)$type[V(flow$graph)$name %in% only_output]
-  new_flow$graph <- new_flow$graph %>% igraph::add_vertices(nv = length(only_output),
-                                                            name = only_output,
-                                                            type = types)
+  new_flow$graph <- new_flow$graph %>% add_vertices(nv = length(only_output),
+                                                    name = only_output,
+                                                    type = types)
 
   for (out in only_output) {
 
     node_idx <- which(V(new_flow$graph)$name == out)
 
     inmediate_inputs <- match(new_flow$inmediate_inputs[[out]], new_flow$outputs)
-    new_flow$graph <- new_flow$graph %>% igraph::add_edges(edges = as.vector(rbind(inmediate_inputs, node_idx)))
+    new_flow$graph <- new_flow$graph %>% add_edges(edges = as.vector(rbind(inmediate_inputs, node_idx)))
 
   }
 
@@ -100,7 +96,7 @@
     nodes_for_target <- unique(unlist(paths))
 
     # Topological order of the graph
-    pipeline <- igraph::topo_sort(new_flow$graph)
+    pipeline <- topo_sort(new_flow$graph)
 
     # Restricted to nodes connected to the current node
     pipeline <- pipeline[pipeline %in% nodes_for_target]

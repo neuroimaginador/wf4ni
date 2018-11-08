@@ -3,6 +3,16 @@
 \name{NIflow.run}
 \alias{NIflow.run}
 \title{Execute a Flow}
+\arguments{
+\item{inputs}{(list) List of input filenames, Default: list()}
+
+\item{desired_outputs}{(character vector) List of names of the outputs to compute, Default: NULL}
+
+\item{initialize_outputs}{(logical) Delete previous runs?, Default: TRUE}
+}
+\value{
+A list with as many (named) fields as desired outputs. The names of the fields are those of the outputs.
+}
 \description{
 This function runs the computation graph of the flow to obtain some outputs, given input files.
 }

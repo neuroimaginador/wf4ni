@@ -5,7 +5,7 @@
 \title{Add a Function to a Flow}
 \usage{
 .add_process(flow, proc, inputs = ifelse(inherits(proc, "function"),
-  list(names(formals(proc))), list()), output, trained = TRUE, ...)
+  list(names(formals(proc))), list()), output, ...)
 }
 \arguments{
 \item{flow}{(a flow) The flow where to add a new function}
@@ -16,8 +16,6 @@
 list())}
 
 \item{output}{(name) The name to assign to the output of the function.}
-
-\item{trained}{(logical) is the model already trained?, Default: TRUE}
 
 \item{...}{extra parameters for the function, allows to parameterize the flow.}
 }

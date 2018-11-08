@@ -2,6 +2,7 @@
 #'
 #' @description This internal function provides an environment usable from the class NIflow.
 #'
+#' @param name      (character) Name of the flow
 #' @param inputs    (list of names) List of inputs used in the flow, Default: list()
 #'
 #' @return A NIflow object.
@@ -12,8 +13,6 @@
 #' @import igraph
 #'
 .create_flow <- function(name = "", inputs = list()) {
-
-  require(igraph)
 
   # A flow is an environment
   flow <- new.env()
@@ -35,15 +34,15 @@
   flow$inmediate_inputs <- list()
 
   # Create graph of dependencies
-  flow$graph <- igraph::make_empty_graph(directed = TRUE)
+  flow$graph <- make_empty_graph(directed = TRUE)
 
   # Add inputs to the graph
   if (length(inputs) > 0) {
 
     flow$inputs <- inputs
-    flow$graph <- flow$graph %>% igraph::add_vertices(nv = length(inputs),
-                                                      name = unlist(inputs),
-                                                      type = rep("Input", length(inputs)))
+    flow$graph <- flow$graph %>% add_vertices(nv = length(inputs),
+                                              name = unlist(inputs),
+                                              type = rep("Input", length(inputs)))
 
   }
 
@@ -151,10 +150,10 @@
 
   # Define color of each node as its type
   num_types <- length(unique(V(flow$graph)$type))
-  colors <- scales::alpha(colour = scales::hue_pal()(num_types), alpha = 0.85)
+  colors <- alpha(colour = hue_pal()(num_types), alpha = 0.85)
   V(flow$graph)$color <- colors[as.numeric(as.factor(V(flow$graph)$type))]
 
-  invisible(igraph::tkplot(flow$graph, curved = TRUE))
+  invisible(tkplot(flow$graph, curved = TRUE))
 
 }
 

@@ -9,7 +9,7 @@
 \arguments{
 \item{names}{(character) Variable names as strings}
 
-\item{n}{(integer) Number of generations of environments to go back. Default is 4.}
+\item{envir}{(environment) Environment where to look for variable names}
 }
 \value{
 If a variable exist in the environment with the corresponding name, its value is returned, otherwise the name is considered as a symbol as is returned as is.

@@ -4,19 +4,16 @@
 \alias{get_flow}
 \title{Download and Import a Flow}
 \usage{
-get_flow(repo_name, hosts = c("github", "bitbucket"),
-  force_download = FALSE)
+get_flow(repo_name, verbose = FALSE)
 }
 \arguments{
 \item{repo_name}{(character) The name of the repository that hosts the flow.}
 
-\item{hosts}{(character) Currently only "github" and "bitbucket" are allowed.}
-
-\item{force_download}{(logical) force the download of the flow, even removing previous versions? Default: FALSE.}
+\item{verbose}{(logical) print messages?, Default: FALSE}
 }
 \value{
 The imported flow.
 }
 \description{
-This function is used to download a flow from a repository and/or load it from the local storage.
+This function is used to download a flow from a repository and load it from the local storage. Only GitHub and Bitbucket are currently supported.
 }

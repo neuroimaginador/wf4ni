@@ -7,6 +7,8 @@
 .create_flow(name = "", inputs = list())
 }
 \arguments{
+\item{name}{(character) Name of the flow}
+
 \item{inputs}{(list of names) List of inputs used in the flow, Default: list()}
 }
 \value{

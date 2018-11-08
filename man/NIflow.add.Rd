@@ -4,20 +4,18 @@
 \alias{NIflow.add}
 \title{Add an Item to a Flow}
 \arguments{
-\item{what}{(character, \code{\link{DLscheme}}, \code{\link{DLmodel}} or function) Item to add, Default: NULL}
+\item{what}{(character, or function) Item to add, Default: NULL}
 
 \item{inputs}{(character) List of required inputs, Default: NULL}
 
-\item{output}{(character) The "name " of the item inside the flow, Default: NULL}
-
-\item{subset}{(list) PARAM_DESCRIPTION, Default: NULL}
+\item{output}{(character) The "name" of the item inside the flow, Default: NULL}
 }
 \value{
 The updated flow.
 }
 \description{
-This function adds an item (input, \code{\link{DLscheme}}, \code{\link{DLmodel}} or function) to the flow.
+This function adds an item (an input or a function) to the flow.
 }
 \details{
-If the item to add is an input, the only required (and used) argument is \code{what}. If it's a function or a \code{\link{DLscheme}} or a \code{\link{DLmodel}}, mandatory arguments are \code{what}, \code{inputs} and \code{output}.
+If the item to add is an input, the only required (and used) argument is \code{what}. If it's a function, mandatory arguments are \code{what}, \code{inputs} and \code{output}.
 }

@@ -6,12 +6,11 @@
 \arguments{
 \item{output}{(character) Name of the output (part of the flow) to substitute.}
 
-\item{with}{(\code{\link{DLmodel}}, \code{\link{DLscheme}} or function) The object that is replacing the previous one.}
+\item{with}{(function) The object that is replacing the previous one.}
 }
 \value{
 The flow with the replaced object.
 }
 \description{
-This function is used to replace a part of the flow, such as a \code{\link{DLmodel}}, a
-\code{\link{DLscheme}} or a function, with another object of one these classes.
+This function is used to replace a part of the flow, such as a function, with another object of one this class.
 }

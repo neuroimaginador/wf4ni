@@ -16,20 +16,18 @@
   # Basic checks
   stopifnot(inherits(flow, "NIflow"))
 
-  suppressPackageStartupMessages(require(stringr))
-
   # Add inputs to the graph
   if (length(inputs) > 0) {
 
     flow$log(level = "DEBUG",
              message = paste0("Adding inputs ",
-                              stringr::str_flatten(unlist(inputs),
-                                                   collapse = ", ")))
+                              str_flatten(unlist(inputs),
+                                          collapse = ", ")))
 
     flow$inputs <- c(flow$inputs, inputs)
-    flow$graph <- flow$graph %>% igraph::add_vertices(nv = length(inputs),
-                                                      name = unlist(inputs),
-                                                      type = rep("Input", length(inputs)))
+    flow$graph <- flow$graph %>% add_vertices(nv = length(inputs),
+                                              name = unlist(inputs),
+                                              type = rep("Input", length(inputs)))
 
   }
 
@@ -49,7 +47,6 @@
 #' @param inputs     (list) List of the inputs needed for the function to be executed, defaults to the formal arguments of the function,
 #'    list())
 #' @param output     (name) The name to assign to the output of the function.
-#' @param trained    (logical) is the model already trained?, Default: TRUE
 #' @param ...        extra parameters for the function, allows to parameterize the flow.
 #'
 #' @return The flow with the function added
@@ -57,6 +54,8 @@
 #' @seealso
 #'  \code{\link[igraph]{add_vertices}},\code{\link[igraph]{add_edges}}
 #' @importFrom igraph add_vertices add_edges
+#' @import stringr
+#' @importFrom pryr partial
 #'
 .add_process <- function(flow,
                          proc,
@@ -64,7 +63,6 @@
                          output,
                          ...) {
 
-  suppressPackageStartupMessages(require(igraph))
 
   # Basic checks
   stopifnot(inherits(flow, "NIflow"))
@@ -77,12 +75,12 @@
 
   flow$log(level = "DEBUG",
            message = paste0("Adding process with inputs: ",
-                            stringr::str_flatten(unlist(inputs), collapse = ", "),
+                            str_flatten(unlist(inputs), collapse = ", "),
                             " and output(s): ",
-                            stringr::str_flatten(unlist(output), collapse = ", ")))
+                            str_flatten(unlist(output), collapse = ", ")))
 
   # Add a node to the graph, with edges from its inputs to it.
-  flow$graph <- flow$graph %>% igraph::add_vertices(nv = 1, name = output, type = type)
+  flow$graph <- flow$graph %>% add_vertices(nv = 1, name = output, type = type)
   new_vertex_idx <- length(V(flow$graph))
 
   if (length(inputs) > 0) {
@@ -90,7 +88,8 @@
     input_ids <- match(inputs, flow$outputs)
     flow$inmediate_inputs[[output]] <- flow$outputs[input_ids]
 
-    flow$graph <- flow$graph %>% igraph::add_edges(edges = as.vector(rbind(input_ids, new_vertex_idx)))
+    flow$graph <- flow$graph %>%
+      add_edges(edges = as.vector(rbind(input_ids, new_vertex_idx)))
 
   }
 
@@ -99,9 +98,7 @@
 
   if (length(additional_params) > 0) {
 
-    require(pryr)
-
-    proc <- proc %>% pryr::partial(...)
+    proc <- proc %>% partial(...)
 
   }
 

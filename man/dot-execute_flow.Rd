@@ -4,16 +4,13 @@
 \alias{.execute_flow}
 \title{Execute a Flow}
 \usage{
-.execute_flow(flow, inputs = list(), given_inputs = NULL,
-  desired_outputs = NULL, initialize_outputs = TRUE, cleanup = TRUE,
-  mode = c("debug", "faster", "medium", "slower"), verbose = FALSE)
+.execute_flow(flow, inputs = list(), desired_outputs = NULL,
+  initialize_outputs = TRUE, cleanup = TRUE, verbose = FALSE, ...)
 }
 \arguments{
 \item{flow}{(a NIflow) The flow to be executed.}
 
 \item{inputs}{(list) Inputs to use, Default: list()}
-
-\item{given_inputs}{(list) Additional inputs, Default: NULL}
 
 \item{desired_outputs}{(character array) List of outputs to compute, Default: NULL}
 
@@ -21,7 +18,9 @@
 
 \item{cleanup}{(logical) perform cleanup of intermediate results?, Default: TRUE}
 
-\item{mode}{(character) Mode of execution (only used to run DLmodels), Default: c("debug", "faster", "medium", "slower")}
+\item{verbose}{(logical) print information of the executions?, Default: FALSE}
+
+\item{...}{Other arguments passed to subfunctions.}
 }
 \value{
 A list with one (named) field for each \code{desired_output}.

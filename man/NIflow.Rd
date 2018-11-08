@@ -18,26 +18,63 @@ NIflow Class
 
 \describe{
   \item{Documentation}{For full documentation of each method follow the corresponding link. }
+
   \item{\code{initialize(name, inputs = list())}}{Create a new flow with the given name and inputs. Documented in \link{NIflow.initialize}.}
+
   \item{\code{name()}}{Returns the name of the flow. Documented in \link{NIflow.name}.}
+
+  \item{\code{get_private()}}{Returns the private environment inside the class object. Documented in \link{NIflow.get_private}.}
+
+  \item{\code{set_name(new_name)}}{Changes the name of the flow. Documented in \link{NIflow.set_name}.}
+
   \item{\code{get_inputs()}}{Returns the inputs of the flow. Documented in \link{NIflow.get_inputs}.}
+
   \item{\code{get_outputs()}}{Returns the outputs of the flow. Documented in \link{NIflow.get_outputs}.}
-  \item{\code{get_model(output)}}{Returns the \code{\link{DLmodel}} that computes the given output.
-  Documented in \link{NIflow.get_model}.}
-  \item{\code{replace(output, with)}}{Replace a function, scheme or model that computes an output
-  with another function, scheme or model. Documented in \link{NIflow.replace}.}
-  \item{\code{add(what = NULL, inputs = NULL, output = NULL, subset = NULL)}}{Adds a function, scheme or model to the flow,
+
+  \item{\code{get_required_inputs(outputs)}}{Returns the inputs required to compute given outputs. Documented in \link{NIflow.get_required_inputs}.}
+
+  \item{\code{get_process(output)}}{Returns the function that computes the given output. Documented in \link{NIflow.get_process}.}
+
+  \item{\code{get_dependencies()}}{Returns the list of package dependencies of the flow. Documented in \link{NIflow.get_dependencies}.}
+
+  \item{\code{check_dependencies()}}{Checks if all flow dependencies are installed. Documented in \link{NIflow.check_dependencies}.}
+
+  \item{\code{replace(output, with)}}{Replace a function that computes an output
+  with another function. Documented in \link{NIflow.replace}.}
+
+  \item{\code{add(what = NULL, inputs = NULL, output = NULL, ...)}}{Adds a function to the flow,
   that transforms the given inputs into the given output. Documented in \link{NIflow.add}.}
-  \item{\code{execute(inputs = list(), desired_outputs = NULL, initialize_outputs = TRUE, mode = c("debug", "faster", "medium", "slower"))}}{Execute the flow to obtain some outputs, given input files. Documented in \link{NIflow.execute}.}
+
+  \item{\code{execute(inputs = list(), desired_outputs = NULL, initialize_outputs = TRUE, ...)}}{Execute the flow to obtain some outputs, given input files. Documented in \link{NIflow.execute}.}
+
   \item{\code{run(...)}}{Just a wrapper for \code{execute}. Documented in \link{NIflow.run}.}
-  \item{\code{train(output, input_filenames, output_filenames, train_split = 0.75, epochs = 10, target_windows_per_file = 1024, mode = c("debug", "faster", "medium", "slower"))}}{Train the model to compute an output. Documented in \link{NIflow.train}.}
+
+  \item{\code{log(level = c("DEBUG", "INFO", "WARNING", "ERROR"), message = '...')}}{Add a message to the flow log, including the level of the message and a timestamp. Documented in \link{NIflow.log}.}
+
+  \item{\code{print_log(level = c("DEBUG", "WARNING", "INFO", "ERROR"))}}{Prints the log of the flow. Documented in \link{NIflow.print_log}.}
+
+  \item{\code{errors()}}{Just prints the errors in the flow log. Documented in \link{NIflow.errors}.}
+
+  \item{\code{warnings()}}{Just prints the warnings in the flow log. Documented in \link{NIflow.warnings}.}
+
+  \item{\code{save_log(filename, level = c("DEBUG", "WARNING", "INFO", "ERROR"))}}{Saves a the flow log to file. Documented in \link{NIflow.save_log}.}
+
   \item{\code{graph()}}{Returns the graph of the flow. Documented in \link{NIflow.graph}.}
-  \item{\code{plot(interactive = FALSE)}}{Plots the graph of the flow. Documented in \link{NIflow.plot}.}
-  \item{\code{reset(outputs = 'all')}}{Remove the specified computed outputs. Documented in \link{NIflow.reset}.}
+
+  \item{\code{plot()}}{Plots the graph of the flow. Documented in \link{NIflow.plot}.}
+
+  \item{\code{memory_used()}}{Total memory used by the flow, including its internal variables. Documented in \link{NIflow.memory_used}.}
+
   \item{\code{save(path = tempdir(), file_prefix = self$name())}}{Save the flow to disk. Documented in \link{NIflow.save}.}
+
   \item{\code{load(filename)}}{Load a flow from disk. Documented in \link{NIflow.load}.}
+
+  \item{\code{deep_clone()}}{Clone a flow. Documented in \link{NIflow.deep_clone}.}
+
   \item{\code{subset(outputs)}}{Take a subset of the flow, for given outputs. Documented in \link{NIflow.subset}.}
-  \item{\code{clone(deep = FALSE)}}{Clone a flow. Documented in \link{NIflow.clone}.}
+
+  \item{\code{to_package(path, package_name = self$name())}}{Creates a package with functions provided by the execution of the flow. Documented in \link{NIflow.to_package}.}
+
  }
 }
 

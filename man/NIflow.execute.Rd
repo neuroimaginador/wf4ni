@@ -9,8 +9,6 @@
 \item{desired_outputs}{(character vector) List of names of the outputs to compute, Default: NULL}
 
 \item{initialize_outputs}{(logical) Delete previous runs?, Default: TRUE}
-
-\item{mode}{(character) Inference mode, Default: c("debug", "faster", "medium", "slower")}
 }
 \value{
 A list with as many (named) fields as desired outputs. The names of the fields are those of the outputs.

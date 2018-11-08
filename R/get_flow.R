@@ -39,6 +39,11 @@ set_flows_dir <- function(dir)
 #'
 #' @return The imported flow.
 #'
+#' @import crayon
+#' @importFrom stringr str_split
+#' @importFrom RCurl url.exists
+#' @importFrom utils unzip untar download.file installed.packages
+#'
 #' @export
 #'
 get_flow <- function(repo_name, verbose = FALSE) {
@@ -54,7 +59,7 @@ get_flow <- function(repo_name, verbose = FALSE) {
   }
 
   # Extract username and repo from given repo_name
-  remote <- stringr::str_split(repo_name, pattern = "/")[[1]] %>% as.list()
+  remote <- str_split(repo_name, pattern = "/")[[1]] %>% as.list()
   names(remote) <- c("username", "repo")
 
   # Check both remotes for the repo
@@ -62,8 +67,8 @@ get_flow <- function(repo_name, verbose = FALSE) {
   url_git <- paste("api.github.com/repos", remote$username, remote$repo,
                    "tarball/master", sep = "/")
 
-  exist_bit <- RCurl::url.exists(url_bit)
-  exist_git <- RCurl::url.exists(url_git)
+  exist_bit <- url.exists(url_bit)
+  exist_git <- url.exists(url_git)
 
   if (!exist_bit & !exist_git) {
 
@@ -82,7 +87,9 @@ get_flow <- function(repo_name, verbose = FALSE) {
   if (exist_bit) {
 
     destfile <- tempfile(fileext = ".tar.gz")
-    final_url <- paste("https://bitbucket.org", remote$username, remote$repo, "get/master.tar.gz",
+    final_url <- paste("https://bitbucket.org",
+                       remote$username, remote$repo,
+                       "get/master.tar.gz",
                        sep = "/")
     uncompress <- untar
 
@@ -122,18 +129,18 @@ get_flow <- function(repo_name, verbose = FALSE) {
   # Final messages
   if (verbose) {
 
-    has_crayon <- suppressPackageStartupMessages(require(crayon))
+    has_crayon <- requireNamespace("crayon", quietly = TRUE)
 
     if (has_crayon) {
 
-      flow_name <- crayon::bold(flow$name())
-      destination_folder <- crayon::bold(destination_folder)
-      deps <- stringr::str_flatten(crayon::bold(flow$get_dependencies()), collapse = ", ")
+      flow_name <- bold(flow$name())
+      destination_folder <- bold(destination_folder)
+      deps <- str_flatten(bold(flow$get_dependencies()), collapse = ", ")
 
     } else {
 
       flow_name <- paste0("'", flow$name(), "'")
-      deps <- stringr::str_flatten(flow$get_dependencies(), collapse = ", ")
+      deps <- str_flatten(flow$get_dependencies(), collapse = ", ")
 
     }
 
@@ -152,8 +159,8 @@ get_flow <- function(repo_name, verbose = FALSE) {
       pkgs <- flow$get_dependencies() #nocov
       missing <- pkgs[!(pkgs %in% installed.packages())] #nocov
 
-      missing_deps <- stringr::str_flatten(missing, collapse = ", ") #nocov
-      if (has_crayon) missing_deps <- stringr::str_flatten(crayon::red(missing), collapse = ", ") #nocov
+      missing_deps <- str_flatten(missing, collapse = ", ") #nocov
+      if (has_crayon) missing_deps <- str_flatten(red(missing), collapse = ", ") #nocov
 
       cat(missing_deps, "\n\n") #nocov
 

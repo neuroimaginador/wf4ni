@@ -3,9 +3,6 @@
 \name{NIflow.plot}
 \alias{NIflow.plot}
 \title{Plot a Flow}
-\arguments{
-\item{interactive}{(logical) Use interactive JavaScript visualization?, Default: FALSE}
-}
 \description{
 This function plots the computation graph of the flow.
 }

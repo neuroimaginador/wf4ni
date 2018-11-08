@@ -50,7 +50,7 @@
   output_file <- file.path(path, paste0(file_prefix, ".zip"))
   current_dir <- getwd()
 
-  if (require(zip)) {
+  if (requireNamespace("zip", quietly = TRUE)) {
 
     output_file <- suppressWarnings(normalizePath(output_file))
 
@@ -63,9 +63,9 @@
                                       include.dirs = TRUE))
 
     suppressWarnings(
-      zip::zip(zipfile = output_file,
-               files = file_list,
-               recurse = FALSE)
+      zip(zipfile = output_file,
+          files = file_list,
+          recurse = FALSE)
     )
 
   }
@@ -85,6 +85,8 @@
 #' @param verbose     (logical) print information during process?, Default: FALSE
 #'
 #' @return A NIflow imported from the file.
+#'
+#' @importFrom utils unzip installed.packages
 #'
 .load_flow <- function(filename, verbose = FALSE) {
 
