@@ -49,7 +49,7 @@ get_flow <- function(repo_name, verbose = FALSE) {
   # What happens when the output directory exists?
   if (!dir.exists(destination_folder)) {
 
-    dir.create(destination_folder, showWarnings = FALSE, recursive = TRUE)
+    dir.create(destination_folder, showWarnings = FALSE, recursive = TRUE) #nocov
 
   }
 
@@ -147,16 +147,15 @@ get_flow <- function(repo_name, verbose = FALSE) {
     # Check dependencies of loaded flow.
     if (!flow$check_dependencies()) {
 
-      cat("Currently, not all required packages are installed. Please install\n",
-          "them before executing this flow:\n")
+      cat("Currently, not all required packages are installed. Please install\n them before executing this flow:\n") #nocov
 
-      pkgs <- flow$get_dependencies()
-      missing <- pkgs[!(pkgs %in% installed.packages())]
+      pkgs <- flow$get_dependencies() #nocov
+      missing <- pkgs[!(pkgs %in% installed.packages())] #nocov
 
-      missing_deps <- stringr::str_flatten(missing, collapse = ", ")
-      if (has_crayon) missing_deps <- stringr::str_flatten(crayon::red(missing), collapse = ", ")
+      missing_deps <- stringr::str_flatten(missing, collapse = ", ") #nocov
+      if (has_crayon) missing_deps <- stringr::str_flatten(crayon::red(missing), collapse = ", ") #nocov
 
-      cat(missing_deps, "\n\n")
+      cat(missing_deps, "\n\n") #nocov
 
     }
 

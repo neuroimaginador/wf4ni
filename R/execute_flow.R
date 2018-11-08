@@ -186,7 +186,7 @@
           is_computed[intermediate_output] <- TRUE
 
           if (verbose)
-            print(is_computed)
+            print(is_computed) #nocov
 
           # Perform cleanup
           if (cleanup) {
@@ -215,9 +215,8 @@
 
               if (verbose) {
 
-                cat("Removing", stringr::str_flatten(which_to_remove,
-                                                      collapse = ", "),
-                    "...\n") # nocov
+                str_remove <- stringr::str_flatten(which_to_remove, collapse = ", ") #nocov
+                cat("Removing", str_remove, "...\n") # nocov
 
               }
               flow$computed_outputs[which_to_remove] <- NULL

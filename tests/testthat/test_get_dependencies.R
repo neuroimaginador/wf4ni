@@ -14,7 +14,6 @@ test_that(desc = "NIflow determines dependencies correctly", code = {
 
   }
 
-
   # Flow in which we add the function in two different ways
   flow <- NIflow$new(name = "test", inputs = T1)
 
