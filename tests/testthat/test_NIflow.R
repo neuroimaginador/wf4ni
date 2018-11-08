@@ -168,6 +168,12 @@ test_that(desc = "NIflow get/sets", code = {
   expect_works(f2 <- flow$get_process(suma))
   expect_identical(object = f2, expected = f)
 
+  # Get list of required inputs for given outputs
+  expect_works(res <- flow$get_required_inputs(c(suma, suma3, suma2)))
+  expect_is(res, "list")
+  expect_named(res, expected = c("suma", "suma3", "suma2"))
+  expect_equivalent(res, list(suma = c("A", "B"), suma3 = c("A", "B", "C"), suma2 = c("B", "C")))
+
   # Get and check dependencies
   expect_works(flow$get_dependencies())
   expect_works(flow$check_dependencies())

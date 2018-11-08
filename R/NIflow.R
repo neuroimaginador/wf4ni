@@ -101,6 +101,34 @@ NIflow <- R6::R6Class(
 
     },
 
+    get_required_inputs = function(outputs) {
+
+      my_flow <- self$get_private()
+
+      E <- try(eval(outputs), silent = TRUE)
+
+      if (!inherits(E, "try-error") & is.character(E)) {
+
+        outputs <- E
+
+      } else {
+
+        expr <- substitute(outputs)
+        outputs <- as.character(expr)
+
+        if (class(expr) == "call")
+          outputs <- outputs[-1]
+
+        env <- parent.frame(2)
+        outputs <- outputs %>% .search_names(envir = env)
+
+      }
+
+      lapply(my_flow$required_inputs[outputs],
+             function(s) my_flow$outputs[s] %>% unname())
+
+    },
+
     get_process = function(output) {
 
       E <- try(eval(output), silent = TRUE)
