@@ -117,6 +117,9 @@ Original inputs in the *flow* are *I1*, *I2* and *I3* (in green). Other
 nodes represent the output of a given function, using the incident nodes
 as inputs for that function.
 
+A *flow* object stores information about the functions used and their
+relationships, building what is called a *computation graph*.
+
 ## Examples
 
 A simple example:

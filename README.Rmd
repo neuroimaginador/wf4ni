@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   out.width = "100%"
 )
 ```
+
 # The `wf4ni` package
 
 There are a lot of packages in the R ecosystem focused on several aspects of Neuroimage processing, many of them listed in the [CRAN Task View: Medical Imaging](https://CRAN.R-project.org/view=MedicalImaging) section: `oro.nifti`, `oro.dicom`, `RNifti`, `fmri`, `divest` (among others) for reading/writing of images; `ANTsR`, `fslr` for more advanced processing methods; `RNiftyReg` specialized in registration, `mritc` focused in image segmentation. Many more, for DTI, fMRI, molecular imaging, and visualization are available in [CRAN](https://CRAN.R-project.org).
@@ -70,6 +71,8 @@ By defining the appropriate functions, one can model the pipeline in the correct
 ![A sample workflow](img/flow.png)
 
 Original inputs in the _flow_ are _I1_, _I2_ and _I3_ (in green). Other nodes represent the output of a given function, using the incident nodes as inputs for that function.
+
+A _flow_ object stores information about the functions used and their relationships, building what is called a _computation graph_.
 
 ## Examples
 
