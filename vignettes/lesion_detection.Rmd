@@ -1,0 +1,34 @@
+---
+title: "Using `wf4ni` to Build a Lesion Detection Flow"
+author: "Domingo López-Rodríguez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using `wf4ni` to Build a Lesion Detection Flow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Objective
+
+# Requirements
+
+## Packages
+
+## Other Resources
+
+# FLAIR Preprocessing
+
+# Use of Anatomical Images
+
+# Lesion Detection and Cleanup
+
+# Quantification
+

@@ -1,0 +1,32 @@
+---
+title: "Using `wf4ni` to Build a Connectome Flow"
+author: "Domingo López-Rodríguez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using `wf4ni` to Build a Connectome Flow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Objective
+
+# Requirements
+
+## Packages
+
+## Other Resources
+
+# DTI Processing
+
+# Use of Anatomical Images
+
+# Computation of the Connectome
+

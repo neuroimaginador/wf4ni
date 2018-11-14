@@ -1,0 +1,39 @@
+---
+title: "Using `wf4ni` to Train a Machine Learning Classifier"
+author: "Domingo López-Rodríguez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using `wf4ni` to Train a Machine Learning Classifier}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Objective
+
+# Requirements
+
+## Packages
+
+## Other Resources
+
+# Generation of Feature Images
+
+# Image Sampling
+
+# Concatenation of Samples
+
+# Training
+
+## Random Forest
+
+## xgboost
+
+## Deep Learning
