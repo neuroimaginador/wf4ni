@@ -42,7 +42,7 @@ stringr, styler, devtools, igraph, RCurl, R6, RNifti, neurobase, oro.nifti, scal
 
 Please, install them before attempting the installation of `wf4ni`:
 
-```
+```{r, eval = FALSE, echo = TRUE}
 install.packages(c("stringr", "styler", "devtools", "igraph", "RCurl",
                    "R6", "RNifti", "neurobase", "oro.nifti", "scales",
                    "zip", "crayon", "prettyunits", "pryr", "purrr"))
@@ -52,7 +52,7 @@ install.packages(c("stringr", "styler", "devtools", "igraph", "RCurl",
 
 Currently, this package is not in CRAN. The only way to get this package installed is by using the `devtools` package and installing `wf4ni` from GitHub:
 
-```
+```{r, eval = FALSE, echo = TRUE}
 devtools::install_github("neuroimaginador/wf4ni")
 ``` 
 

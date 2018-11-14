@@ -78,12 +78,13 @@ The following packages are imported by `wf4ni`:
 > oro.nifti, scales, zip, crayon, prettyunits, pryr, purrr, methods,
 > utils
 
-Please, install them before attempting the installation of
-    `wf4ni`:
+Please, install them before attempting the installation of `wf4ni`:
 
-    install.packages(c("stringr", "styler", "devtools", "igraph", "RCurl",
-                       "R6", "RNifti", "neurobase", "oro.nifti", "scales",
-                       "zip", "crayon", "prettyunits", "pryr", "purrr"))
+``` r
+install.packages(c("stringr", "styler", "devtools", "igraph", "RCurl",
+                   "R6", "RNifti", "neurobase", "oro.nifti", "scales",
+                   "zip", "crayon", "prettyunits", "pryr", "purrr"))
+```
 
 ## Installation
 
@@ -91,7 +92,9 @@ Currently, this package is not in CRAN. The only way to get this package
 installed is by using the `devtools` package and installing `wf4ni` from
 GitHub:
 
-    devtools::install_github("neuroimaginador/wf4ni")
+``` r
+devtools::install_github("neuroimaginador/wf4ni")
+```
 
 <!-- You can install the released version of wf4ni from [CRAN](https://CRAN.R-project.org) with: -->
 
