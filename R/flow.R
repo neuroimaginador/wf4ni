@@ -144,7 +144,7 @@
 #' @import igraph
 #' @importFrom scales alpha hue_pal
 #'
-.plot_flow <- function(flow) {
+.plot_flow <- function(flow, to_file = "") {
 
   stopifnot(inherits(flow, "NIflow"))
 
@@ -153,7 +153,17 @@
   colors <- alpha(colour = hue_pal()(num_types), alpha = 0.85)
   V(flow$graph)$color <- colors[as.numeric(as.factor(V(flow$graph)$type))]
 
-  invisible(tkplot(flow$graph, curved = TRUE))
+  if (nzchar(to_file)) {
+
+    png(filename = to_file)
+    plot.igraph(flow$graph)
+    invisible(dev.off())
+
+  } else {
+
+    invisible(tkplot(flow$graph, curved = TRUE))
+
+  }
 
 }
 
