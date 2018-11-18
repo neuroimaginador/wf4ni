@@ -40,9 +40,8 @@ set_flows_dir <- function(dir)
 #' @return The imported flow.
 #'
 #' @import crayon
-#' @importFrom stringr str_split
-#' @importFrom RCurl url.exists
-#' @importFrom utils unzip untar download.file installed.packages
+#' @importFrom stringr str_flatten
+#' @importFrom utils installed.packages
 #'
 #' @export
 #'
@@ -51,80 +50,12 @@ get_flow <- function(repo_name, verbose = FALSE) {
   # Where the dataset is stored
   destination_folder <- get_flows_dir()
 
-  # What happens when the output directory exists?
-  if (!dir.exists(destination_folder)) {
-
-    dir.create(destination_folder, showWarnings = FALSE, recursive = TRUE) #nocov
-
-  }
-
-  # Extract username and repo from given repo_name
-  remote <- str_split(repo_name, pattern = "/")[[1]] %>% as.list()
-  names(remote) <- c("username", "repo")
-
-  # Check both remotes for the repo
-  url_bit <- paste("api.bitbucket.org/2.0", "repositories", remote$username, remote$repo, sep = "/")
-  url_git <- paste("api.github.com/repos", remote$username, remote$repo,
-                   "tarball/master", sep = "/")
-
-  exist_bit <- url.exists(url_bit)
-  exist_git <- url.exists(url_git)
-
-  if (!exist_bit & !exist_git) {
-
-    stop("Flow not found in repositories.")
-
-  }
-
-  # At least in one of the remotes the repo exists.
-  # Get the download URL.
-  # If it is from GitHub
-  destfile <- tempfile(fileext = ".zip")
-  final_url <- url_git
-  uncompress <- unzip
-
-  # Or if there is an alternate repo in BitBucket
-  if (exist_bit) {
-
-    destfile <- tempfile(fileext = ".tar.gz")
-    final_url <- paste("https://bitbucket.org",
-                       remote$username, remote$repo,
-                       "get/master.tar.gz",
-                       sep = "/")
-    uncompress <- untar
-
-  }
-
-  # Download the file
-  download.file(url = final_url, destfile = destfile, quiet = !verbose)
-
-  # Ok, unzip the dataset and create destination folder if it does not exist.
-  L <- uncompress(destfile, exdir = get_flows_dir(), list = TRUE)
-  uncompress(destfile, exdir = get_flows_dir())
-
-  # Get folder and zipfile names
-  if (is.list(L)) {
-
-    extracted_folder <- L$Name[1]
-    zip_file <- L$Name[2]
-
-
-  } else {
-
-    extracted_folder <- L[1]
-    zip_file <- L[2]
-
-  }
-
-  # Move files to final destination
-  file.rename(from = file.path(get_flows_dir(), zip_file),
-              to = file.path(destination_folder, basename(zip_file)))
-
-  file.remove(file.path(get_flows_dir(), extracted_folder))
+  # Download flow
+  flow_file <- download_repo(repo_name = repo_name,
+                             destination_folder = destination_folder)
 
   # Load flow
-  flow <- .load_flow(filename = file.path(destination_folder,
-                                          basename(zip_file)))
+  flow <- .load_flow(filename = flow_file)
 
   # Final messages
   if (verbose) {
@@ -154,7 +85,8 @@ get_flow <- function(repo_name, verbose = FALSE) {
     # Check dependencies of loaded flow.
     if (!flow$check_dependencies()) {
 
-      cat("Currently, not all required packages are installed. Please install\n them before executing this flow:\n") #nocov
+      cat("Currently, not all required packages are installed. ",
+          "Please install\n them before executing this flow:\n") #nocov
 
       pkgs <- flow$get_dependencies() #nocov
       missing <- pkgs[!(pkgs %in% installed.packages())] #nocov
