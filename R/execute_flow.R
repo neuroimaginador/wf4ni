@@ -51,10 +51,13 @@
   all_computable <- all(desired_outputs %in% flow$outputs)
   if (!all_computable) {
 
+    not_computable <- desired_outputs[!(desired_outputs %in% flow$outputs)]
+
     warning("Some of the outputs cannot be computed.")
 
     flow$log(level = "WARNING",
-             message = "Some of the outputs cannot be computed.")
+             message = paste0("Some of the outputs cannot be computed: ",
+                              str_flatten(not_computable, collapse = ", ")))
 
   }
 
