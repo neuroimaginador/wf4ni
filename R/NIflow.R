@@ -374,6 +374,27 @@ NIflow <- R6::R6Class(
 
     },
 
+    compute = function(what = NULL,
+                       from = list(),
+                       ...) {
+
+      expr <- substitute(what)
+      what <- as.character(expr)
+
+      if (class(expr) == "call")
+        what <- what[-1]
+
+      env <- parent.frame(2)
+      what <- what %>% .search_names(envir = env)
+
+      my_flow <- self$get_private()
+      my_flow %>% .execute_flow(inputs = from,
+                                desired_outputs = what,
+                                initialize_outputs = TRUE,
+                                ...)
+
+    },
+
     log = function(level = c("DEBUG", "INFO", "WARNING", "ERROR"),
                    message = "...") {
 
