@@ -53,19 +53,29 @@ merge <- function(flow1, flow2, rename = TRUE) {
   for (out_id in seq_along(res_outputs)) {
 
     out <- res_outputs[out_id]
-    old_out <- new_outputs[out_id]
 
-    res$add(what = flow2$get_process(old_out),
-            inputs = res_outputs[match(inmediate_inputs[old_out], new_outputs)],
-            output = out)
+    if (!out %in% res_inputs) {
+
+      # If we're not adding an input
+      old_out <- new_outputs[out_id]
+
+      res$add(what = flow2$get_process(old_out),
+              inputs = res_outputs[match(inmediate_inputs[old_out], new_outputs)],
+              output = out)
+
+    }
 
   }
 
   # We have to merge the dependencies
   new_pkgs <- internal_flow$pkgs
-  names(new_pkgs) <- res_outputs
+  names(new_pkgs) <- setdiff(res_outputs, res_inputs)
 
-  res$get_private()$pkgs <- c(res$get_private()$pkgs, new_pkgs)
+  internal_res <- res$get_private()
+  internal_res$new_pkgs <- new_pkgs
+
+  with(internal_res,
+       pkgs <- c(pkgs, new_pkgs))
 
   return(res)
 
