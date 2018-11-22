@@ -141,7 +141,7 @@
 
     has_crayon <- requireNamespace("crayon", quietly = TRUE)
 
-    cat("Currently, not all required packages for this flow are installed. Please install\n them before executing this flow:\n") #nocov
+    cat("Currently, not all required packages for this flow are installed. Please install\nthem before executing this flow:\n") #nocov
 
     pkgs <- final_flow$get_dependencies() #nocov
     missing <- pkgs[!(pkgs %in% installed.packages())] #nocov

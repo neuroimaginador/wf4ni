@@ -473,8 +473,8 @@ NIflow <- R6::R6Class(
 
     plot = function(to_file = "") {
 
-        my_flow <- self$get_private()
-        my_flow %>% .plot_flow(to_file)
+      my_flow <- self$get_private()
+      my_flow %>% .plot_flow(to_file)
 
     },
 

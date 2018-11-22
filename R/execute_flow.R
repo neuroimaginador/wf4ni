@@ -186,8 +186,8 @@
           extra_args <- list(...)
 
           flow$computed_outputs[[intermediate_output]] <-
-            flow$execute_process(what = process, args = c(params, extra_args))
-
+            flow$execute_process(what = process,
+                                 args = c(params, extra_args))
 
           mem <- flow$computed_outputs %>% mem_list()
 
