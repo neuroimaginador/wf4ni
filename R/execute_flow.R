@@ -196,8 +196,8 @@
 
           is_computed[intermediate_output] <- TRUE
 
-          if (verbose)
-            print(is_computed) #nocov
+          # if (verbose)
+          #   print(is_computed) #nocov
 
           # Perform cleanup
           if (cleanup) {
