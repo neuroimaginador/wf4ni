@@ -137,21 +137,7 @@
                                                  class(final_flow$.__enclos_env__$private))
 
   # Check dependencies of loaded flow.
-  if (!final_flow$check_dependencies()) {
-
-    has_crayon <- requireNamespace("crayon", quietly = TRUE)
-
-    cat("Currently, not all required packages for this flow are installed. Please install\nthem before executing this flow:\n") #nocov
-
-    pkgs <- final_flow$get_dependencies() #nocov
-    missing <- pkgs[!(pkgs %in% installed.packages())] #nocov
-
-    missing_deps <- str_flatten(missing, collapse = ", ") #nocov
-    if (has_crayon) missing_deps <- str_flatten(red(missing), collapse = ", ") #nocov
-
-    cat(missing_deps, "\n\n") #nocov
-
-  }
+  final_flow$check_dependencies()
 
   # Return the flow
   return(final_flow)
