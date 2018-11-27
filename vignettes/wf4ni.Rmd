@@ -54,10 +54,10 @@ install.packages(c("stringr", "styler", "devtools", "igraph", "RCurl",
 
 ## Installation
 
-Currently, this package is not in CRAN. The only way to get this package installed is by using the `devtools` package and installing `wf4ni` from GitHub:
+Currently, this package is not in CRAN. The only way to get this package installed is by using the `remotes` package and installing `wf4ni` from GitHub:
 
 ```{r, eval = FALSE, echo = TRUE}
-devtools::install_github("neuroimaginador/wf4ni")
+remotes::install_github("neuroimaginador/wf4ni")
 ``` 
 
 <!-- You can install the released version of wf4ni from [CRAN](https://CRAN.R-project.org) with: -->
