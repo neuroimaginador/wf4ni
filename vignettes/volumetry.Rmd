@@ -108,37 +108,45 @@ make_brain_extraction <- function(image, num_subjects = NULL) {
     
   }
   
-  L <- utils4ni::register_malf(image = oro2ants(image), 
-                               template_files = inputs, 
-                               label_files = outputs)
-  
-  templates <- L$templates
-  labels <- L$labels
-  
-  rm(L)
-  gc()
+  system.time({
+    
+    L <- register_malf(image = oro2ants(image), 
+                       template_files = inputs, 
+                       label_files = outputs)
+    
+    templates <- L$templates
+    labels <- L$labels
+    
+    rm(L)
+    gc()
+    
+  })
   
   label_ids <- c(0, 1)
   
-  M <- max(templates[, , , 1])
+  # Let us normalize each template
+  for (i in seq(num_subjects)) {
+    
+    templates[, , , i] <- templates[, , , i] / max(templates[, , , i])
+    
+  }
   
-  image <- image / (max(image, na.rm = TRUE)) * M
+  # And the input image  
+  image <- new_image / (max(image, na.rm = TRUE))
   
-  res <- utils4ni::fast_malf(input_image = image,
+  res <- utils4ni::malf(input_image = image,
                              mask = NULL,
                              template4D = templates,
                              labels4D = labels, 
                              label_ids = label_ids, 
                              patch_size = 9, 
                              kernel_width = 3, 
-                             max_iter = 10,
-                             method = "mi", 
+                             max_iter = 10, 
                              ncores = parallel::detectCores())
   
   return(res)
   
 }
-
 
 ```
 
@@ -172,7 +180,7 @@ volumetry_flow$add(what = bfc,
 volumetry_flow$add(what = make_brain_extraction, 
                    inputs = "T1_bfc", 
                    output = "brain_mask", 
-                   num_subjects = 5)
+                   num_subjects = 10)
 
 volumetry_flow$add(what = function(A, B) {A * B}, 
                    inputs = c("T1_bfc", "brain_mask"), 
@@ -250,11 +258,13 @@ volumetry_flow$add(what = get_segmentation,
 # Uses MALF technique with a previously labelled dataset
 make_parcellation <- function(image, mask, num_subjects = NULL) {
   
+  require(extrantsr)
+  
   problem <- "parcellation"
   problem_path <- problem %>% get_dataset()
   
   inputs <- list.files(file.path(problem_path, "inputs", "T1"), full.names = TRUE)
-  outputs <- list.files(file.path(problem_path, "outputs", "transformed"), full.names = TRUE)
+  outputs <- list.files(file.path(problem_path, "outputs", "original"), full.names = TRUE)
   
   if (!is.null(num_subjects) && is.numeric(num_subjects)) {
     
@@ -271,11 +281,17 @@ make_parcellation <- function(image, mask, num_subjects = NULL) {
   
   # Only brain tissue
   image[mask == 0] <- 0
+  image[image < 0] <- 0
   
-  L <- utils4ni::register_malf(image = oro2ants(image), 
-                               template_files = inputs, 
-                               label_files = outputs)
-  
+  L <- register_malf(image = oro2ants(image), 
+                     template_files = inputs, 
+                     label_files = outputs,
+                     typeofTransform = "SyN",
+                     regIterations = c(20, 10, 0),
+                     synMetric = "meansquares",
+                     flowSigma = 1,
+                     gradstep = 1.5) #SyN
+
   templates <- L$templates
   labels <- L$labels
   
@@ -285,9 +301,9 @@ make_parcellation <- function(image, mask, num_subjects = NULL) {
   label_ids <- labels %>% as.vector() %>% unique() %>% sort()
   label_ids <- label_ids[-1]
   
-  labels <- utils4ni::map_ids_cpp(image = labels,
-                                  remap_classes = list(source = label_ids, 
-                                                       target = seq_along(label_ids)))
+  labels <- map_ids_cpp(image = labels,
+                        remap_classes = list(source = label_ids, 
+                                             target = seq_along(label_ids)))
   
   # Let us normalize each template
   for (i in seq(num_subjects)) {
@@ -296,80 +312,43 @@ make_parcellation <- function(image, mask, num_subjects = NULL) {
     
   }
   
-  # And the input image  
-  image <- image / (max(image, na.rm = TRUE))
+  # mean_template <- sum_4d(templates) / dim(templates)[4]
+  # new_image <- map_images(source = image, target = mean_template)
   
-  R <- utils4ni::fast_malf(input_image = image,
-                           mask = mask,
-                           template4D = templates,
-                           labels4D = labels, 
-                           label_ids = c(0, seq_along(label_ids)), 
-                           patch_size = 9,
-                           max_iter = 10,
-                           kernel_width = 3,
-                           kernel_sigma = 1)
+  # And the input image  
+  image <- new_image / (max(image, na.rm = TRUE))
+  
+  # subcortical_ids <- c(0, seq_along(label_ids[label_ids < 1000]))
+  # cortex_ids <- c(0, setdiff(seq_along(label_ids), subcortical_ids))
+  
+  R <- utils4ni::malf(input_image = image,
+                      mask = mask,
+                      template4D = templates,
+                      labels4D = labels, 
+                      label_ids = c(0, seq_along(label_ids)), 
+                      patch_size = 11,##
+                      stride = 5,
+                      max_iter = 25, 
+                      search_size = 7, 
+                      max_random_neighbours = 5,
+                      early_stopping = list(tol = 1.e-4),
+                      kernel_width = 3,
+                      kernel_sigma = 1, 
+                      ncores = parallel::detectCores())
   
   rm(list = c("templates", "labels"))
   gc()
   
-  res <- utils4ni::map_ids_cpp(image = R,
-                               remap_classes = list(source = seq_along(label_ids),
-                                                    target = label_ids))
+  res <- map_ids_cpp(image = R,
+                     remap_classes = list(source = seq_along(label_ids),
+                                          target = label_ids))
+  
+  res[res == 1] <- 0
   
   return(res)
   
 }
 
-# Let us make the parcellation smooth 
-smooth_parcellation <- function(parcellation, 
-                                kernel_width = 3, 
-                                kernel_sigma = 1) {
-  
-  kernel_width <- 2 * floor(kernel_width / 2) + 1
-  
-  kernel <- utils4ni::gaussian_kernel(sigma = kernel_sigma,
-                                      dim = 3,
-                                      size = kernel_width,
-                                      normalised = TRUE)
-  
-  
-  label_ids <- parcellation %>% as.vector() %>% unique() %>% sort()
-  label_ids <- label_ids[-1]
-  parcellation <- utils4ni::map_ids_cpp(image = parcellation,
-                                        remap_classes = list(source = label_ids, 
-                                                             target = seq_along(label_ids)))
-  
-  max_labels <- max(parcellation)
-  
-  result <- array(0, dim = dim(parcellation))
-  best <- array(0, dim = dim(parcellation))
-  
-  tmp <- array(0, dim = dim(parcellation))
-  
-  for (i in seq(max_labels + 1)) {
-    
-    cat("Image", i, "\n")
-    
-    tmp[which(parcellation == i - 1)] <- 1
-    tmp <- utils4ni::regularize(image = tmp, 
-                                kernel = kernel, 
-                                ncores = parallel::detectCores())
-    
-    idx <- which(tmp > best)
-    best[idx] <- tmp[idx]
-    result[idx] <- i - 1
-    
-    tmp[] <- 0
-    
-  }
-  
-  res <- utils4ni::map_ids_cpp(image = result,
-                               remap_classes = list(source = seq_along(label_ids),
-                                                    target = label_ids))
-  
-  return(res)
-  
-}
 ```
 
 
@@ -378,12 +357,8 @@ smooth_parcellation <- function(parcellation,
 ```{r}
 volumetry_flow$add(what = make_parcellation, 
                    inputs = c("T1_bfc", "brain_mask"), 
-                   output = "parcellation_raw",
+                   output = "parcellation",
                    num_subjects = 10)
-
-volumetry_flow$add(what = smooth_parcellation,
-                   inputs = "parcellation_raw",
-                   output = "parcellation")
 
 ```
 
