@@ -144,7 +144,9 @@
 #' @import igraph
 #' @importFrom scales alpha hue_pal
 #'
-.plot_flow <- function(flow, to_file = "") {
+.plot_flow <- function(flow,
+                       as_interactive = interactive(),
+                       to_file = "") {
 
   stopifnot(inherits(flow, "NIflow"))
 
@@ -161,7 +163,25 @@
 
   } else {
 
-    invisible(tkplot(flow$graph, curved = TRUE))
+    if (as_interactive) {
+
+      invisible(tkplot(flow$graph, curved = TRUE))
+
+    } else {
+
+      if (require(hasseDiagram)) {
+
+        M <- flow$graph %>% as_adj() %>% as.matrix()
+        M1 <- matrix(FALSE,
+                     nrow = nrow(M),
+                     ncol = ncol(M))
+
+        M1[M > 0] <- TRUE
+
+        hasse(data = M1, labels = flow$outputs)
+      }
+
+    }
 
   }
 
