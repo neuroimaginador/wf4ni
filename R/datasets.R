@@ -1,3 +1,9 @@
+##%######################################################%##
+#                                                          #
+####                 Dataset Management                 ####
+#                                                          #
+##%######################################################%##
+
 data_globals <- new.env()
 
 with(data_globals, {
@@ -55,6 +61,13 @@ get_dataset <- function(dataset,
   return(invisible(dataset_path))
 
 }
+
+
+##%######################################################%##
+#                                                          #
+####                  Atlas Management                  ####
+#                                                          #
+##%######################################################%##
 
 
 get_atlases_dir <- function() data_globals$atlas_cache_dir

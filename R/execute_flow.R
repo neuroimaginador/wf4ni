@@ -6,6 +6,52 @@
 #' @param inputs                (list) Inputs to use, Default: list()
 #' @param desired_outputs       (character array) List of outputs to compute, Default: NULL
 #' @param initialize_outputs    (logical) initialize outputs?, Default: TRUE
+#' @param ...                   Other arguments passed to subfunctions.
+#'
+#' @return A list with one (named) field for each \code{desired_output}.
+#'
+#' @seealso
+#'  \code{\link[neurobase]{readnii}}
+#' @importFrom neurobase readnii
+#' @import igraph
+#' @importFrom purrr map_dbl
+#' @importFrom pryr object_size
+#' @importFrom prettyunits pretty_bytes
+#' @importFrom methods formalArgs
+#'
+#' @export
+#'
+execute <- function(flow,
+                    inputs = list(),
+                    desired_outputs = NULL,
+                    initialize_outputs = TRUE,
+                    ...) {
+
+  expr <- substitute(desired_outputs)
+  desired_outputs <- as.character(expr)
+
+  if (class(expr) == "call")
+    desired_outputs <- desired_outputs[-1]
+
+  env <- parent.frame(2)
+  desired_outputs <- desired_outputs %>% .search_names(envir = env)
+
+  my_flow <- flow$get_private()
+  my_flow %>% .execute_flow(inputs = inputs,
+                            desired_outputs = desired_outputs,
+                            initialize_outputs = initialize_outputs,
+                            ...)
+
+}
+
+#' @title Execute a Flow
+#'
+#' @description This function allows to run a pipeline (flow) given some of its inputs.
+#'
+#' @param flow                  (a NIflow) The flow to be executed.
+#' @param inputs                (list) Inputs to use, Default: list()
+#' @param desired_outputs       (character array) List of outputs to compute, Default: NULL
+#' @param initialize_outputs    (logical) initialize outputs?, Default: TRUE
 #' @param cleanup               (logical) perform cleanup of intermediate results?, Default: TRUE
 #' @param verbose               (logical) print information of the executions?, Default: FALSE
 #' @param ...                   Other arguments passed to subfunctions.

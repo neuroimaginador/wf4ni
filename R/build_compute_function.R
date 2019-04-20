@@ -18,6 +18,7 @@
 .build_compute_function <- function(args,
                                     output) {
 
+  # Required arguments
   args_txt <- c()
 
   for (i in seq_along(args)) {
@@ -26,6 +27,7 @@
 
   }
 
+  # Definition of the function
   my_function_txt <- paste0("get_", output, " <- ",
                             "function(",
                             str_flatten(args, collapse = ", "), ") {\n\n",

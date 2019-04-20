@@ -1,3 +1,108 @@
+#' Add a new Node to a Flow (input or function)
+#'
+#' @param flow   (a \code{NIflow} object) The flow where to add the new node
+#' @param what   (a function, optional) If present, the function to add as a node to the flow.
+#' @param inputs (a vector of names, required) The names of new inputs to add to the flow, or the required inputs for the \code{what} function.
+#' @param output (a character string) The name of the output provided by the \code{what} function.
+#' @param ...    named parameters to pass to \code{what}.
+#'
+#' @return An invisible instance of the flow, with the node added.
+#'
+#' @export
+#'
+add <- function(flow,
+                what = NULL,
+                inputs = NULL,
+                output = NULL,
+                ...) {
+
+  my_flow <- flow$get_private()
+
+  E <- try(eval(inputs), silent = TRUE)
+
+  if (!inherits(E, "try-error") & is.character(E)) {
+
+    inputs <- E
+
+  } else {
+
+    expr <- substitute(inputs)
+    inputs <- as.character(expr)
+
+    if (class(expr) == "call")
+      inputs <- inputs[-1]
+
+    env <- parent.frame(2)
+    inputs <- inputs %>% .search_names(envir = env)
+
+  }
+
+
+  E <- try(eval(output), silent = TRUE)
+
+  if (!inherits(E, "try-error") & is.character(E)) {
+
+    output <- E
+
+  } else {
+
+    expr <- substitute(output)
+    output <- as.character(expr)
+
+    if (class(expr) == "call")
+      output <- output[-1]
+
+    env <- parent.frame(2)
+    output <- output %>% .search_names(envir = env)
+
+  }
+
+  if (length(output) == 0L) {
+
+    output <- NULL
+
+  }
+
+  # Add an input
+  if (is.null(what) & is.null(output)) {
+
+    if (is.null(inputs)) {
+
+      stop("At least inputs must be specified.")
+
+    }
+
+    my_flow %>% .add_inputs(inputs = inputs)
+
+    return(invisible(flow))
+
+  }
+
+  # Add a function
+  if (inherits(what, "function")) {
+
+    if (is.null(output)) {
+
+      stop("An output name must be provided to add a function.")
+
+    }
+
+    if (is.null(inputs)) {
+
+      my_flow %>% .add_process(proc = what, output = output, ...)
+
+    } else {
+
+      my_flow %>% .add_process(proc = what, inputs = inputs, output = output, ...)
+
+    }
+
+    return(invisible(flow))
+
+  }
+
+}
+
 #' @title Add an Input to a Flow
 #'
 #' @description This function adds a node of type input to a flow.
