@@ -322,12 +322,12 @@ NIflow <- R6::R6Class(
 
       }
 
-      # Add a DLmodel or a function
+      # Add a function
       if (inherits(what, "function")) {
 
         if (is.null(output)) {
 
-          stop("An output must be provided to add a DLmodel or a function.")
+          stop("An output name must be provided to add a function.")
 
         }
 
