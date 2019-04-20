@@ -60,12 +60,6 @@ Currently, this package is not in CRAN. The only way to get this package install
 remotes::install_github("neuroimaginador/wf4ni")
 ``` 
 
-<!-- You can install the released version of wf4ni from [CRAN](https://CRAN.R-project.org) with: -->
-
-<!-- ``` r -->
-<!-- install.packages("wf4ni") -->
-<!-- ``` -->
-
 ## The `wf4ni` model
 
 In `wf4ni`, a _flow_ is an ordered collection of processes that convert inputs into outputs, such that the output of a process may be the input to another one.
