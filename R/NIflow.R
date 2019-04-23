@@ -472,12 +472,10 @@ NIflow <- R6::R6Class(
 
     },
 
-    plot = function(as_interactive = interactive(),
-                    to_file = "") {
+    plot = function(to_file = "") {
 
       my_flow <- self$get_private()
-      my_flow %>% .plot_flow(as_interactive,
-                             to_file)
+      my_flow %>% .plot_flow(to_file)
 
     },
 
