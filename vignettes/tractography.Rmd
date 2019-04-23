@@ -1,0 +1,261 @@
+---
+title: "Using `wf4ni` to Compute Tractography"
+author: "Domingo López-Rodríguez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+ %\VignetteIndexEntry{Using `wf4ni` to Compute Tractography}
+ %\VignetteEngine{knitr::rmarkdown}
+ %\VignetteEncoding{UTF-8}
+---
+  
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = nzchar(Sys.getenv("MY_EVAL_VARIABLE"))
+)
+```
+
+```{r}
+library(wf4ni)
+library(tidyverse)
+```
+
+# Objective
+
+# Requirements
+
+## Packages
+
+## Other Resources
+
+# DTI Processing
+
+```{r dti_flow}
+dti_flow <- NIflow$new(name = "dti", 
+                       inputs = c("dwi", "grads", "bvals"))
+```
+
+
+## Eddy Current Correction
+
+```{r eddy}
+correct_dwi <- function(image) {
+  
+  library(neurobase)
+  library(oro.nifti)
+  library(fslr)
+  
+  my_dwi_file <- tempimg(as.nifti(image))
+  
+  dwi_corrected <- fslr::eddy_correct(infile = my_dwi_file)
+  
+  return(dwi_corrected)
+  
+}
+```
+
+```{r eddy_flow}
+dti_flow %>% 
+  add(what = correct_dwi,
+      inputs = "dwi",
+      output = "dwi_corrected")
+```
+
+
+## Tensor Computation
+
+```{r tensor}
+read_data <- function(image, grads, bvals) {
+  
+  library(neurobase)
+  library(dti)
+  
+  my_dwi_corrected_file <- tempimg(image)
+  
+  dwi_data <- readDWIdata(gradient = grads, 
+                          dirlist = my_dwi_corrected_file, 
+                          bvalue = bvals,
+                          format = "NIFTI")
+  
+  return(dwi_data)
+  
+}
+
+compute_tensors <- function(dwi_data) {
+  
+  library(dti)
+  
+  tensors <- dtiTensor(dwi_data)
+  
+  return(tensors)
+  
+}
+
+```
+
+```{r tensor_flow}
+dti_flow %>% 
+  add(what = read_data,
+      inputs = c("dwi_corrected", "grads", "bvals"),
+      output = "dwiData") %>% 
+  add(what = compute_tensors,
+      inputs = "dwiData",
+      output = "tensors") 
+```
+
+## Mask Computation
+
+```{r mask}
+get_S0 <- function(tensors) {
+  
+  return(as.nifti(tensors@th0))
+  
+}
+
+compute_mask <- function(S0) {
+  
+  S0_file <- tempimg(S0)
+  
+  brain_mask <- fslr::fslbet(infile = S0_file)
+  
+  return(brain_mask > 0)
+  
+}
+```
+
+```{r mask_flow}
+dti_flow %>% 
+  add(what = get_S0,
+      inputs = "tensors",
+      output = "S0") %>% 
+  add(what = compute_mask,
+      inputs = "S0",
+      output = "mask")
+
+```
+
+
+## Fiber Tracking
+
+```{r fibertracking}
+fibertracking <- function(tensors, mask) {
+  
+  library(dti)
+  
+  fibers <- tracking(tensors, 
+                     mask = mask)
+  
+  return(fibers)
+  
+}
+
+```
+
+```{r fibertracking_flow}
+dti_flow %>% 
+  add(what = fibertracking,
+      inputs = c("tensors", "mask"),
+      output = "fibers")
+
+```
+
+## FA Map
+
+```{r fa}
+compute_FA <- function(tensors, mask) {
+  
+  indices <- dtiIndices(tensors)
+  
+  FA_map <- indices@fa * mask
+  
+  return(FA_map)
+  
+}
+```
+
+```{r fa_flow}
+dti_flow %>% 
+  add(what = compute_FA,
+      inputs = c("tensors", "mask"),
+      output = "FA_map")
+
+```
+
+# Final Flow
+
+```{r flow_plot, echo=TRUE, fig.show='asis', fig.width = 7, fig.asp = 1}
+dti_flow$plot()
+```
+
+# Example
+
+```{r echo = FALSE}
+lag <- stats::lag
+```
+
+```{r example}
+# # Download sample data
+# tdir <- tempdir()
+# tfile <- file.path(tdir, "example_dwi.zip")
+# download.file("http://cmic.cs.ucl.ac.uk/camino//uploads/Tutorials/example_dwi.zip", 
+#               destfile = tfile)
+# out <- unzip(zipfile = tfile, 
+#              exdir = tdir, 
+#              overwrite = TRUE)
+# 
+# # Read bvecs
+# b_data_file <- grep("[.]txt$", out, value = TRUE)
+# b_vecs <- read.delim2(b_data_file, header = FALSE)
+# b_vecs <- as.matrix(b_vecs)
+# class(b_vecs) <- "numeric"
+# 
+# # Associate bvals
+# b_vals <- rep(1000, nrow(b_vecs))
+# all_zero <- apply(b_vecs  == 0, 1, all)
+# b_vals[all_zero] <- 0
+# 
+# # Read image
+# img <- grep("4Ddwi_b1000", out, value = TRUE)
+# dwi <- readnii(img)
+
+
+dwi_file <- "./resources/dti_example.nii.gz"
+bvals_file <- "./resources/dti_bvals.csv"
+grads_file <- "./resources/dti_gradients.csv"
+
+dwi <- neurobase::readnii(dwi_file)
+bvals <- read_csv(bvals_file,
+                  col_names = FALSE,
+                  col_types = cols()) %>% unlist()
+gradients <- read_csv(grads_file,
+                      col_names = FALSE,
+                      col_types = cols()) %>%
+  as.matrix()
+
+res <- dti_flow$execute(inputs = list(dwi = dwi,
+                                      grads = gradients,
+                                      bvals = bvals),
+                        desired_outputs = c("S0", 
+                                            "fibers", 
+                                            "FA_map"))
+
+```
+
+```{r dti_res, fig.width=7, fig.asp=1} 
+
+neurobase::ortho2(res$S0)
+
+neurobase::ortho2(res$FA_map)
+
+```
+
+
+## Full Flow Log
+
+```{r print_log}
+dti_flow$print_log()
+```
+
+# Availability
