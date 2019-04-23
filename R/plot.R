@@ -73,6 +73,8 @@
 
   nrNodes <- length(flow$outputs)
 
+  nAttrs$fontsize <- rep(16, nrNodes)
+
   nAttrs$fixedsize <- rep(TRUE, nrNodes)
   nAttrs <- lapply(nAttrs, function(x) {
     names(x) <- flow$outputs
