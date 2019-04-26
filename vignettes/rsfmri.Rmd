@@ -28,6 +28,15 @@ suppressPackageStartupMessages(library(tidyverse))
 
 ## Packages
 
+```{r}
+library(neurobase)
+library(fslr)
+library(readr)
+library(oro.nifti)
+library(ANTsR)
+```
+
+
 ## Other Resources
 
 # fMRI Processing
@@ -46,7 +55,7 @@ correct_slice_time <- function(bold) {
   
   my_bold <- checkimg(bold)
   
-  bold_corrected <- fslr::fslslicetimer(file = my_bold)
+  bold_corrected <- fslslicetimer(file = my_bold)
   
   return(bold_corrected)
   
@@ -173,7 +182,7 @@ skull_strip <- function(image) {
   
   
   my_file <- checkimg(image)
-  res <- fslr::fslbet(infile = my_file, opts = "-m")
+  res <- fslbet(infile = my_file, opts = "-m")
   
   return(res)
   
@@ -227,7 +236,7 @@ normalize_data <- function(t1_ss, bold_ss) {
   my_t1 <- checkimg(t1_ss)
   my_bold <- checkimg(bold_ss)
   
-  res <- fslr::fslsplit(infile = my_bold, direction = "t")
+  res <- fslsplit(infile = my_bold, direction = "t")
   my_bold1 <- checkimg(res[[1]])
   
   func2t1_mat <- tempfile(fileext = ".mat")
@@ -237,14 +246,14 @@ normalize_data <- function(t1_ss, bold_ss) {
   func2standard_mat  <- tempfile(fileext = ".mat")
   
   #first flirt the func to the t1
-  tmp <- fslr::flirt(infile = my_bold1, 
+  tmp <- flirt(infile = my_bold1, 
                      reffile = my_t1, 
                      omat = func2t1_mat, 
                      opts = "-cost corratio -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -interp trilinear")
 
   #invert the mat
   
-  cmd_base <- fslr::get.fsl()
+  cmd_base <- get.fsl()
   
   cmd <- paste0(cmd_base, 
                 "convert_xfm -inverse ", func2t1_mat,
@@ -253,7 +262,7 @@ normalize_data <- function(t1_ss, bold_ss) {
   system(cmd, intern = TRUE)
   
   #flirt the t1 to standard
-  t12std_img <- fslr::flirt(infile = my_t1, 
+  t12std_img <- flirt(infile = my_t1, 
                      reffile = flirtref, 
                      omat = t12standard_mat, 
                      opts = " -cost corratio -dof 12 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -interp trilinear")
@@ -274,7 +283,7 @@ normalize_data <- function(t1_ss, bold_ss) {
   system(cmd, intern = TRUE)
   
   #apply the transform
-  func2std_img <- fslr::flirt_apply(infile = my_bold,
+  func2std_img <- flirt_apply(infile = my_bold,
                                     reffile = flirtref,
                                     initmat = func2standard_mat,
                                     opts = " -interp trilinear")
@@ -316,7 +325,7 @@ regress_out_wm_csf <- function(func2std_img) {
   wmout <- tempfile(fileext = ".txt")
   csfout <- tempfile(fileext = ".txt")
   
-  cmd_base <- fslr::get.fsl()
+  cmd_base <- get.fsl()
   
   img <- checkimg(func2std_img)
   
@@ -385,7 +394,6 @@ filter_func <- function(func, tr) {
   dim(func_mat) <- c(dims[1] * dims[2] * dims[3], dims[4])
   func_mat <- t(func_mat)
   
-  library(ANTsR)
   func_mat <- frequencyFilterfMRI(func_mat, tr)
   
   func_mat <- t(func_mat)
@@ -408,18 +416,21 @@ fmri_flow %>%
 
 ```{r correlation}
 # do the parcellation
-extract_time_series <- function(bold) {
+extract_time_series <- function(bold, corr_label = NULL) {
   
-  cmd_base <- fslr::get.fsl()
+  cmd_base <- get.fsl()
   
   img <- checkimg(bold)
   
   corrtxt <- tempfile(fileext = ".txt")
   
-  basedir <- "./vignettes/resources/rsfMRI/"
-  
-  corr_label <- file.path(basedir, 'data', 'aal_MNI_V4.nii')
-  corr_text <- file.path(basedir, 'data', 'aal_MNI_V4.txt')
+  if (is.null(corr_label)) {
+    
+    basedir <- "./vignettes/resources/rsfMRI/"
+    
+    corr_label <- file.path(basedir, 'data', 'aal_MNI_V4.nii')
+    
+  }
   
   cmd <- paste0(cmd_base,
                 "fslmeants -i ", img,
@@ -452,7 +463,9 @@ compute_correlation <- function(time_series) {
 fmri_flow %>% 
   add(what = extract_time_series,
       inputs = "func_filtered", 
-      output = "ts") %>% 
+      output = "ts",
+      corr_label = file.path("./vignettes/resources/rsfMRI/", 
+                             'data', 'aal_MNI_V4.nii')) %>% 
   add(what = compute_correlation,
       inputs = "ts",
       output = "cormat")
@@ -470,8 +483,18 @@ fmri_flow$plot()
 
 ```{r example}
 
+T1_file <- "./resources/rsfMRI/anat.nii.gz"
+BOLD_file <- "./resources/rsfMRI/func.nii.gz"
 
+TR <- 2
 
+res <- fmri_flow$execute(inputs = list(T1 = T1_file,
+                                       BOLD = BOLD_file,
+                                       TR = TR),
+                         desired_outputs = c("mean_func",
+                                             "ts",
+                                             "cormat",
+                                             "t12std"))
 ```
 
 ## Results
@@ -491,9 +514,12 @@ plot_matrix <- function(M) {
 ```
 
 
-```{r fmri_res, fig.width=7, fig.asp=1} 
+```{r fmri_res, fig.width = 7, fig.asp = 1} 
+ortho2(res$mean_func)
 
+ortho2(res$t12std)
 
+plot_matrix(res$cormat)
 ```
 
 

@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r}
+```{r messages = FALSE}
 library(wf4ni)
 library(tidyverse)
 ```
