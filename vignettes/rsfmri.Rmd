@@ -34,6 +34,7 @@ library(fslr)
 library(readr)
 library(oro.nifti)
 library(ANTsR)
+library(signal)
 ```
 
 
@@ -42,8 +43,8 @@ library(ANTsR)
 # fMRI Processing
 
 ```{r fmri_flow}
-fmri_flow <- NIflow$new(name = "fmri", 
-                        inputs = c("T1", "BOLD", "TR"))
+fmri_flow <- NIflow$new(name = "fmri",
+                        inputs = c("T1", "BOLD", "TR", "atlas"))
 ```
 
 
@@ -52,19 +53,18 @@ fmri_flow <- NIflow$new(name = "fmri",
 ```{r slice_time}
 # slice time correction
 correct_slice_time <- function(bold) {
-  
-  my_bold <- checkimg(bold)
-  
-  bold_corrected <- fslslicetimer(file = my_bold)
-  
-  return(bold_corrected)
-  
-}
 
+  my_bold <- checkimg(bold)
+
+  bold_corrected <- fslslicetimer(file = my_bold)
+
+  return(bold_corrected)
+
+}
 ```
 
 ```{r slice_time_flow}
-fmri_flow %>% 
+fmri_flow %>%
   add(what = correct_slice_time,
       inputs = "BOLD",
       output = "bold_slice_time")
@@ -75,81 +75,81 @@ fmri_flow %>%
 ```{r motion_correction}
 # run motion correction
 correct_motion <- function(bold) {
-  
+
   my_bold <- checkimg(bold)
-  
+
   outfile <- tempfile()
-  
-  res <- fslr::mcflirt(file = my_bold, 
-                       outfile = outfile, 
+
+  res <- fslr::mcflirt(file = my_bold,
+                       outfile = outfile,
                        opts = "-plots")
-  
+
   pars <- read_delim(file = paste0(outfile, ".par"),
                      delim = " ",
-                     col_names = FALSE, 
+                     col_names = FALSE,
                      trim_ws = TRUE,
                      col_types = cols())
-  
-  pars_file <- gsub(pattern = "  ", 
-                    replacement = " ", 
-                    x = read_file(paste0(outfile, ".par"))) 
-  
-  pars <- read_delim(pars_file, 
-                     delim = " ", 
-                     col_names = FALSE)[, 1:6] %>% 
+
+  pars_file <- gsub(pattern = "  ",
+                    replacement = " ",
+                    x = read_file(paste0(outfile, ".par")))
+
+  pars <- read_delim(pars_file,
+                     delim = " ",
+                     col_names = FALSE)[, 1:6] %>%
     as.matrix()
-  
+
   return(list(image = res, pars = pars))
-  
+
 }
 
 # regressing out motion correction parameters
 regress_out_motion <- function(L) {
-  
-  bold <- L$image 
+
+  bold <- L$image
   params <- L$pars
-  
+
   dims <- dim(bold)
   my_fit <- array(0, dim = dims)
-  
+
   dim(bold) <- c(dims[1] * dims[2] * dims[3], dims[4])
   tmp_mean <- apply(bold, 1, mean)
   dim(tmp_mean) <- dims[1:3]
   dim(bold) <- dims
-  
+
   for (z in seq(dims[3])) {
-    
+
     tmp_data <- bold[, , z, ]
-    
+
     dim(tmp_data) <- c(dims[1] * dims[2], dims[4])
-    
+
     tmp_data <- t(tmp_data)
-    
+
     fit <- lm(tmp_data ~ params)
-    
+
     my_fit[, , z, ] <- t(fit$residuals)
-    
+
   }
-  
+
   for (t in seq(dims[4])) {
-    
+
     my_fit[, , , t] <- my_fit[, , , t] + tmp_mean
-    
+
   }
-  
+
   my_fit <- my_fit - min(my_fit)
   my_fit <- my_fit / max(my_fit) * 30000
-  
+
   return(as.nifti(my_fit, value = bold))
-  
+
 }
 ```
 
 ```{r motion_correction_flow}
-fmri_flow %>% 
+fmri_flow %>%
   add(what = correct_motion,
       inputs = "bold_slice_time",
-      output = "motion_estimation") %>% 
+      output = "motion_estimation") %>%
   add(what = regress_out_motion,
       inputs = "motion_estimation",
       output = "bold_motion_regressed")
@@ -160,63 +160,56 @@ fmri_flow %>%
 ```{r skull_strip}
 #first create mean_func
 compute_mean_func <- function(image) {
-  
+
   dims <- dim(image)
-  
+
   res <- array(0, dim = dims[1:3])
-  
+
   for (t in seq(dims[4])) {
-    
+
     res <- res + image[, , , t]
-    
+
   }
-  
+
   res <- res / dims[4]
-  
+
   return(as.nifti(res, value = image))
-  
+
 }
 
-#now skull strip the mean 
+#now skull strip the mean
 skull_strip <- function(image) {
-  
-  
+
+
   my_file <- checkimg(image)
   res <- fslbet(infile = my_file, opts = "-m")
-  
+
   return(res)
-  
+
 }
 
 #now mask full run by results
 mask_run <- function(image, mask) {
-  
-  dims <- dim(image)
-  
-  res <- image
-  
-  for (t in seq(dims[4])) {
-    
-    res[, , , t] <- res[, , , t] * (mask > 0)
-    
-  }
-  
-  return(res)
-  
+
+  masked <- fslmask(file = checkimg(image),
+                    mask = checkimg(mask > 0))
+
+  return(masked)
+
 }
 ```
 
 ```{r skull_strip_flow}
-fmri_flow %>% 
+fmri_flow %>%
   add(what = compute_mean_func,
       inputs = "bold_motion_regressed",
-      output = "mean_func") %>% 
+      output = "mean_func") %>%
   add(what = skull_strip,
       inputs = "mean_func",
-      output = "mean_func_brain") %>% 
+      output = "mean_func_brain") %>%
   add(what = mask_run,
       inputs = c("bold_motion_regressed", "mean_func_brain"),
-      output = "bold_masked") %>% 
+      output = "bold_masked") %>%
   add(what = skull_strip,
       inputs = "T1",
       output = "T1_brain")
@@ -228,68 +221,69 @@ fmri_flow %>%
 ```{r normalization}
 # normalize the data
 normalize_data <- function(t1_ss, bold_ss) {
-  
+
   fsldir <- getOption("fsl.path")
   flirtref <- file.path(fsldir, 'data', 'standard',
                         'MNI152_T1_2mm_brain.nii.gz')
-  
+
   my_t1 <- checkimg(t1_ss)
   my_bold <- checkimg(bold_ss)
-  
+
   res <- fslsplit(infile = my_bold, direction = "t")
   my_bold1 <- checkimg(res[[1]])
-  
+
   func2t1_mat <- tempfile(fileext = ".mat")
   t12standard_mat <- tempfile(fileext = ".mat")
   t12func_mat <- tempfile(fileext = ".mat")
   standard2t1_mat <- tempfile(fileext = ".mat")
   func2standard_mat  <- tempfile(fileext = ".mat")
-  
+
   #first flirt the func to the t1
-  tmp <- flirt(infile = my_bold1, 
-                     reffile = my_t1, 
-                     omat = func2t1_mat, 
+  tmp <- flirt(infile = my_bold1,
+                     reffile = my_t1,
+                     omat = func2t1_mat,
                      opts = "-cost corratio -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -interp trilinear")
 
   #invert the mat
-  
+
   cmd_base <- get.fsl()
-  
-  cmd <- paste0(cmd_base, 
+
+  cmd <- paste0(cmd_base,
                 "convert_xfm -inverse ", func2t1_mat,
                 " -omat ", t12func_mat)
-  
+
   system(cmd, intern = TRUE)
-  
+
   #flirt the t1 to standard
-  t12std_img <- flirt(infile = my_t1, 
-                     reffile = flirtref, 
-                     omat = t12standard_mat, 
+  t12std_img <- flirt(infile = my_t1,
+                     reffile = flirtref,
+                     omat = t12standard_mat,
                      opts = " -cost corratio -dof 12 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -interp trilinear")
-  
+
   #invert the mat
-  cmd <- paste0(cmd_base, 
+  cmd <- paste0(cmd_base,
                 "convert_xfm -inverse ", t12standard_mat,
                 " -omat ", standard2t1_mat)
-  
+
   system(cmd, intern = TRUE)
-  
+
   #compute the func2standard mat
-  
-  cmd <- paste0(cmd_base, 
+
+  cmd <- paste0(cmd_base,
                 "convert_xfm -omat ", func2standard_mat,
                 " -concat ", t12standard_mat, " ", func2t1_mat)
-  
+
   system(cmd, intern = TRUE)
-  
+
   #apply the transform
   func2std_img <- flirt_apply(infile = my_bold,
                                     reffile = flirtref,
                                     initmat = func2standard_mat,
                                     opts = " -interp trilinear")
-  
-  return(list(t12std_img, func2std_img))
-  
+
+  return(list(t12std_img = t12std_img,
+              func2std_img = func2std_img))
+
 }
 
 get_t12std <- function(L) L$t12std_img
@@ -297,13 +291,13 @@ get_func2std <- function(L) L$func2std_img
 ```
 
 ```{r normalization_flow}
-fmri_flow %>% 
+fmri_flow %>%
   add(what = normalize_data,
       inputs = c("T1_brain", "bold_masked"),
-      output = "all_normalized") %>% 
+      output = "all_normalized") %>%
   add(what = get_t12std,
       inputs = "all_normalized",
-      output = "t12std") %>% 
+      output = "t12std") %>%
   add(what = get_func2std,
       inputs = "all_normalized",
       output = "func2std")
@@ -314,69 +308,75 @@ fmri_flow %>%
 ```{r regress_wm_csf}
 # regress out WM/CSF
 regress_out_wm_csf <- function(func2std_img) {
-  
+
   base_dir <- "./vignettes/resources/rsfMRI/"
-  
+
   refwm <- file.path(base_dir, 'data',
                      'MNI152_T1_2mm_brain_pve_2.nii.gz')
   refcsf <- file.path(base_dir, 'data',
                       'MNI152_T1_2mm_brain_pve_0.nii.gz')
-  
+
   wmout <- tempfile(fileext = ".txt")
   csfout <- tempfile(fileext = ".txt")
-  
+
   cmd_base <- get.fsl()
-  
-  img <- checkimg(func2std_img)
-  
+
+  if (is.nifti(func2std_img)) {
+
+    img <- tempfile(fileext = ".nii.gz")
+    writenii(func2std_img, filename = img, dtype = FALSE)
+
+  }
+  # img <- checkimg(func2std_img)
+
   #mean time series for wm
   cmd <- paste0(cmd_base,
                 "fslmeants -i ", img,
                 " -m ", refwm, " -o ", wmout)
-  
+
   system(cmd, intern = TRUE)
 
   #mean time series for csf
   cmd <- paste0(cmd_base,
                 "fslmeants -i ", img,
                 " -m ", refcsf, " -o ", csfout)
-  
+
   system(cmd, intern = TRUE)
-  
+
   wm_ts <- read.csv(wmout, header = FALSE) %>% unlist()
   csf_ts <- read.csv(csfout, header = FALSE) %>% unlist()
-  
+
   dims <- dim(func2std_img)
-  
+
   my_fit <- array(0, dim = dims)
-  
+
   #slice by slice:
   for (z in seq(dims[3])) {
-    
+
     tmp_data <- func2std_img[, , z, ]
-    
+
     dim(tmp_data) <- c(dims[1] * dims[2], dims[4])
     tmp_data <- t(tmp_data)
-    
+
     # regress out wm
     fit <- lm(tmp_data ~ wm_ts)
-    
+
     tmp_data <- fit$residuals
-    
+
     # regress out csf
     fit <- lm(tmp_data ~ csf_ts)
-    
+
     my_fit[, , z, ] <- t(fit$residuals)
-    
+
   }
-  
-  return(my_fit)
-  
+
+  return(as.nifti(my_fit, value = func2std_img))
+
 }
 ```
 
 ```{r regress_wm_csf_flow}
-fmri_flow %>% 
+fmri_flow %>%
   add(what = regress_out_wm_csf,
       inputs = "func2std",
       output = "func2std_out_wm_csf")
@@ -387,26 +387,38 @@ fmri_flow %>%
 ```{r filter}
 # lowpass filter (slice by slice)
 filter_func <- function(func, tr) {
-  
+
   dims <- dim(func)
-  
+
   func_mat <- func
   dim(func_mat) <- c(dims[1] * dims[2] * dims[3], dims[4])
   func_mat <- t(func_mat)
-  
-  func_mat <- frequencyFilterfMRI(func_mat, tr)
-  
+
+  chunks <- seq(1, dim(func_mat)[2], by = 10000)
+
+  for (i in seq_along(chunks)) {
+
+    init <- chunks[i]
+    end <- ifelse(i < length(chunks),
+                  chunks[i + 1],
+                  dim(func_mat)[2])
+
+    func_mat[, init:end] <- frequencyFilterfMRI(func_mat[, init:end],
+                                               tr)
+
+  }
+
+
   func_mat <- t(func_mat)
   dim(func_mat) <- dims
 
-  return(func_mat)  
-  
-}
+  return(as.nifti(func_mat, value = func))
 
+}
 ```
 
 ```{r filter_flow}
-fmri_flow %>% 
+fmri_flow %>%
   add(what = filter_func,
       inputs = c("func2std_out_wm_csf", "TR"),
       output = "func_filtered")
@@ -416,56 +428,50 @@ fmri_flow %>%
 
 ```{r correlation}
 # do the parcellation
-extract_time_series <- function(bold, corr_label = NULL) {
-  
+extract_time_series <- function(bold, corr_label) {
+
   cmd_base <- get.fsl()
-  
-  img <- checkimg(bold)
-  
-  corrtxt <- tempfile(fileext = ".txt")
-  
-  if (is.null(corr_label)) {
-    
-    basedir <- "./vignettes/resources/rsfMRI/"
-    
-    corr_label <- file.path(basedir, 'data', 'aal_MNI_V4.nii')
-    
+
+  if (is.nifti(bold)) {
+
+    img <- tempfile(fileext = ".nii.gz")
+    writenii(bold, filename = img, dtype = FALSE)
+
   }
-  
+
+  corrtxt <- tempfile(fileext = ".txt")
+
   cmd <- paste0(cmd_base,
                 "fslmeants -i ", img,
                 " --label=", corr_label, " -o ", corrtxt)
-  
+
   system(cmd, intern = TRUE)
-  
+
   ts <- read.table(corrtxt, header = FALSE) %>% as.matrix()
-  
+
   return(ts)
-  
+
 }
 
 # do the correlation
 compute_correlation <- function(time_series) {
-  
-  r <- cor(time_series)
-  
-  zr <- 0.5 * log((1 + r) / (1 - r))
-  
-  zr[!is.finite(zr)] <- 0
-  
-  return(zr)
-  
-}
 
+  r <- cor(time_series)
+
+  zr <- 0.5 * log((1 + r) / (1 - r))
+
+  zr[!is.finite(zr)] <- 0
+
+  return(zr)
+
+}
 ```
 
 ```{r correlation_flow}
-fmri_flow %>% 
+fmri_flow %>%
   add(what = extract_time_series,
-      inputs = "func_filtered", 
-      output = "ts",
-      corr_label = file.path("./vignettes/resources/rsfMRI/", 
-                             'data', 'aal_MNI_V4.nii')) %>% 
+      inputs = c("func_filtered", "atlas"),
+      output = "ts") %>%
   add(what = compute_correlation,
       inputs = "ts",
       output = "cormat")
@@ -482,15 +488,17 @@ fmri_flow$plot()
 
 
 ```{r example}
-
-T1_file <- "./resources/rsfMRI/anat.nii.gz"
-BOLD_file <- "./resources/rsfMRI/func.nii.gz"
+T1_file <- "./vignettes/resources/rsfMRI/anat.nii.gz"
+BOLD_file <- "./vignettes/resources/rsfMRI/func.nii.gz"
+atlas_file <- file.path("./vignettes/resources/rsfMRI/",
+                        'data', 'aal_MNI_V4.nii')
 
 TR <- 2
 
 res <- fmri_flow$execute(inputs = list(T1 = T1_file,
                                        BOLD = BOLD_file,
-                                       TR = TR),
+                                       TR = TR,
+                                       atlas = atlas_file),
                          desired_outputs = c("mean_func",
                                              "ts",
                                              "cormat",
