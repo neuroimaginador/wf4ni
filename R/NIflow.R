@@ -82,7 +82,9 @@ NIflow <- R6::R6Class(
 
   public = list(
 
-    initialize = function(name = "", inputs = list()) {
+    initialize = function(name = "",
+                          work_dir = tempdir(),
+                          inputs = list()) {
 
       E <- try(eval(inputs), silent = TRUE)
 
@@ -103,7 +105,9 @@ NIflow <- R6::R6Class(
 
       }
 
-      flow_env <- .create_flow(name = name, inputs = inputs)
+      flow_env <- .create_flow(name = name,
+                               work_dir = work_dir,
+                               inputs = inputs)
 
       self$.__enclos_env__$private <- flow_env
 
@@ -112,6 +116,46 @@ NIflow <- R6::R6Class(
     name = function() {
 
       private$name
+
+    },
+
+    get_workdir = function() {
+
+      private$work_dir
+
+    },
+
+    clean_workdir <- function(all = FALSE) {
+
+      my_dir <- private$work_dir
+
+      if (all && dir.exists(my_dir)) {
+
+        unlink(my_dir, recursive = TRUE, force = TRUE)
+
+        return(invisible(TRUE))
+
+      }
+
+      names_to_keep <- self$get_outputs()
+
+      all_files <- list.files(path = my_dir,
+                              full.names = TRUE)
+
+      output_files <- lapply(names_to_keep,
+                             function(s) {
+
+                               list.files(path = my_dir,
+                                          pattern = s,
+                                          full.names = TRUE)
+
+                             })
+
+      output_files <- unlist(output_files)
+
+      files_to_remove <- setdiff(all_files, output_files)
+
+      unlink(files_to_remove)
 
     },
 

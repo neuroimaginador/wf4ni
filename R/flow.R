@@ -12,11 +12,14 @@
 #' @importFrom igraph make_empty_graph add_vertices
 #' @import igraph
 #'
-.create_flow <- function(name = "", inputs = list()) {
+.create_flow <- function(name = "",
+                         work_dir = tempdir(),
+                         inputs = list()) {
 
   # A flow is an environment
   flow <- new.env()
   flow$name <- as.character(name)
+  flow$work_dir <- work_dir
 
   # List of flow inputs and outputs
   flow$inputs <- list()
@@ -24,8 +27,6 @@
 
   # List of flow processes (both models and functions)
   flow$processes <- list()
-  # flow$schemes <- list()
-  # flow$trained <- list()
   flow$pkgs <- list()
 
   # List of pipelines to execute for each process and of required inputs
