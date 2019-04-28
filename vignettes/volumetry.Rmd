@@ -15,10 +15,11 @@ knitr::opts_chunk$set(
   comment = "#>",
   eval = nzchar(Sys.getenv("MY_EVAL_VARIABLE"))
 )
+```
 
-library(wf4ni)
-library(tidyverse)
-
+```{r messages = FALSE, warning=FALSE}
+suppressPackageStartupMessages(library(wf4ni))
+suppressPackageStartupMessages(library(tidyverse))
 ```
 
 # Objective
@@ -27,43 +28,29 @@ library(tidyverse)
 
 ## Packages
 
+```{r needed_packages}
+library(ANTsRCore)
+library(ANTsR)
+library(extrantsr)
+library(neurobase)
+library(oro.nifti)
+library(fslr)
+```
+
+
 ## Other Resources
 
-# Segmentation
+# Volumetry
 
-## Preprocessing
+```{r v_flow}
+volumetry_flow <- NIflow$new(name = "volumetry",
+                             inputs = "T1")
+```
 
-### Auxiliary Functions
+## Auxiliary Conversion Functions
 
-```{r aux_preproc}
-
-num_subjects <- 4
-
-remap_labels <- function(img, values = NULL) {
-
-  if (is.null(values)) {
-
-    values <- img %>% as.vector() %>% unique() %>% sort()
-    values <- values[values > 0]
-
-  }
-
-  res <- 0 * img
-
-  for (k in seq_along(values)) {
-
-    res[img == values[k]] <- k
-
-  }
-
-  return(res)
-
-}
-
+```{r conversion_functions}
 get_as_antsImage <- function(img) {
-
-  suppressPackageStartupMessages(library(ANTsR))
-  suppressPackageStartupMessages(library(neurobase))
 
   if (is.character(img) && file.exists(img)) {
 
@@ -89,9 +76,6 @@ get_as_antsImage <- function(img) {
 
 get_as_nifti <- function(img) {
 
-  library(ANTsR)
-  library(neurobase)
-
   if (is.character(img) && file.exists(img)) {
 
     return(readnii(img))
@@ -114,18 +98,19 @@ get_as_nifti <- function(img) {
   }
 
 }
+```
 
+
+## Register to Template Space
+
+```{r reg_to_template}
 # - register to a template (MNI152 in case of structural imaging)
 # Returns the transformation, as declared in the ANTsRCore package
-register_to_template <- function(image, atlas_name) {
+register_to_template <- function(image, template) {
+
+  image <- check_ants(image)
   
-  suppressPackageStartupMessages(require(ANTsRCore))
-  suppressPackageStartupMessages(require(ANTsR))
-  suppressPackageStartupMessages(require(extrantsr))
-  
-  image <- get_as_antsImage(image)
-  
-  template <- get_as_antsImage(get_atlas(atlas_name))
+  template <- check_ants(template)
   
   transform <- antsRegistration(fixed = template,
                                 moving = image,
@@ -152,69 +137,25 @@ get_tx_to_template <- function(tx) {
 
 }
 
-# Returns the scale parameter as the determinant of the affine trasnformation
+# Returns the scale parameter as the determinant of the affine transformation
 get_scale_parameter <- function(M) {
 
   det(M)
 
 }
 
-# - bias field correction, just a simple wrapper around
-# n4BiasFieldCorrection
-bfc <- function(img) {
-
-  image2 <- as.antsImage(img)
-
-  image2 <- ANTsRCore::n4BiasFieldCorrection(img = image2, verbose = TRUE)
-
-  return(ants2oro(image2, reference = img))
-
-}
-
-# - brain extraction
-# Uses MALF technique with a "brain extraction" dataset
-# Returns the brain mask
-make_brain_extraction <- function(image, num_subjects = NULL) {
-
-  problem <- "brain_extraction"
-  problem_path <- problem %>% get_dataset()
-
-  inputs <- list.files(file.path(problem_path, "inputs", "T1"), full.names = TRUE)
-  outputs <- list.files(file.path(problem_path, "outputs"), full.names = TRUE)
-
-  if (!is.null(num_subjects) && is.numeric(num_subjects)) {
-
-    inputs <- inputs[seq(num_subjects)]
-    outputs <- outputs[seq(num_subjects)]
-
-  } else {
-
-    num_subjects <- length(inputs)
-
-  }
-
-  res <- extrantsr::malf(infile = image,
-                         template.images = inputs,
-                         template.structs = outputs,
-                         typeofTransform = "SyN",
-                         verbose = FALSE)
-
-  return(res)
-
-}
-
 ```
 
-### Flow code
+```{r template}
+template <- file.path(".", "resources", "volumetry", "MNI152_T1_1mm.nii.gz")
+```
 
-```{r flow_preproc}
-volumetry_flow <- NIflow$new(name = "volumetry",
-                             inputs = "T1")
 
+```{r reg_to_template_flow}
 volumetry_flow$add(what = register_to_template,
                    inputs = "T1",
                    output = "transformation",
-                   atlas_name = "MNI152_T1")
+                   template = template)
 
 volumetry_flow$add(what = get_img_in_template,
                    inputs = "transformation",
@@ -227,27 +168,12 @@ volumetry_flow$add(what = get_tx_to_template,
 volumetry_flow$add(what = get_scale_parameter,
                    inputs = "affine_transform",
                    output = "scale_parameter")
-
-volumetry_flow$add(what = bfc,
-                   inputs = "T1_MNI",
-                   output = "T1_bfc")
-
-volumetry_flow$add(what = make_brain_extraction,
-                   inputs = "T1_bfc",
-                   output = "brain_mask",
-                   num_subjects = num_subjects)
-
-volumetry_flow$add(what = function(A, B) {A * B},
-                   inputs = c("T1_bfc", "brain_mask"),
-                   output = "betted")
-
 ```
 
 Alternatively, one could simply use the `%>%` (pipe) operator to concatenate the operations, as follows:
 
-```{r flow_preproc_alt, echo = TRUE, eval = FALSE}
-volumetry_flow <- NIflow$new(name = "volumetry",
-                             inputs = "T1") %>% 
+```{r reg_to_template_flow_alt, echo = TRUE, eval = FALSE}
+volumetry_flow  %>% 
   add(what = register_to_template,
       inputs = "T1",
       output = "transformation",
@@ -260,23 +186,78 @@ volumetry_flow <- NIflow$new(name = "volumetry",
       output = "affine_transform") %>% 
   add(what = get_scale_parameter,
       inputs = "affine_transform",
-      output = "scale_parameter") %>% 
-  add(what = bfc,
-      inputs = "T1_MNI",
-      output = "T1_bfc") %>% 
-  add(what = make_brain_extraction,
-      inputs = "T1_bfc",
-      output = "brain_mask",
-      num_subjects = 5) %>% 
-  add(what = function(A, B) {A * B},
-      inputs = c("T1_bfc", "brain_mask"),
-      output = "betted")
+      output = "scale_parameter")
+```
+
+## Bias Field Correction
+
+```{r bfc}
+# - bias field correction, just a simple wrapper around
+# n4BiasFieldCorrection
+bfc <- function(img) {
+
+  image2 <- as.antsImage(img)
+
+  image2 <- n4BiasFieldCorrection(img = image2, verbose = TRUE)
+
+  return(ants2oro(image2, reference = img))
+
+}
+```
+
+```{r bfc_flow}
+volumetry_flow$add(what = bfc,
+                   inputs = "T1_MNI",
+                   output = "T1_bfc")
+
+```
+
+## Brain Extraction
+
+```{r bet}
+# - brain extraction
+# Uses MALF technique with a "brain extraction" dataset
+# Returns the brain mask
+make_brain_extraction <- function(image, template_images, template_structs) {
+
+  res <- malf(infile = image,
+              template.images = template_images,
+              template.structs = template_structs,
+              typeofTransform = "SyN",
+              verbose = FALSE)
+  
+  return(res)
+  
+}
+```
+
+```{r template_images}
+template_folder <- file.path(".", "resources", "volumetry", "bet")
+template_images <- list.files(path = file.path(template_folder,
+                                               "images"),
+                              pattern = ".nii.gz")
+template_structs <- list.files(path = file.path(template_folder,
+                                               "masks"),
+                              pattern = ".nii.gz")
 ```
 
 
-## Processing
 
-### Auxiliary Functions
+```{r bet_flow}
+volumetry_flow$add(what = make_brain_extraction,
+                   inputs = "T1_bfc",
+                   output = "brain_mask",
+                   template_images = template_images,
+                   template_structs = template_structs)
+
+volumetry_flow$add(what = function(A, B) {A * B},
+                   inputs = c("T1_bfc", "brain_mask"),
+                   output = "betted")
+
+```
+
+
+## Segmentation
 
 ```{r aux_seg}
 # - segmentation (GM, WM an CSF)
@@ -298,7 +279,7 @@ get_segmentation <- function(img, mask = NULL) {
 
   my_file <- tempimg(input)
 
-  res_file <- fslr::fsl_fast_nobias(file = my_file, retimg = TRUE)
+  res_file <- fsl_fast_nobias(file = my_file, retimg = TRUE)
 
   res_file <- gsub(pattern = ".nii.gz",
                    replacement = "",
@@ -312,53 +293,63 @@ get_segmentation <- function(img, mask = NULL) {
 
 ```
 
-### Flow code
-
 ```{r flow_seg}
 volumetry_flow$add(what = get_segmentation,
                    inputs = "betted",
                    output = "segmentation")
-
 ```
 
+## Anatomical Parcellation
 
-# Parcellation
+```{r aux_preproc}
+# Remaps labels given by values = (l1, l2, l3, ...) present in the image img
+# to numbers (1, 2, 3, ...) to make MALF easier.
+remap_labels <- function(img, values = NULL) {
 
-## Auxiliary Functions
+  if (is.null(values)) {
+
+    values <- img %>% as.vector() %>% unique() %>% sort()
+    values <- values[values > 0]
+
+  }
+
+  res <- 0 * img
+
+  for (k in seq_along(values)) {
+
+    res[img == values[k]] <- k
+
+  }
+
+  return(res)
+
+}
+```
+
 
 ```{r aux_parc}
 # - parcellation
 # Uses MALF technique with a previously labelled dataset
-make_subcortical_parcellation <- function(image, mask = NULL,
-                                          num_subjects = NULL) {
+make_subcortical_parcellation <- function(image, 
+                                          mask = NULL,
+                                          template_images,
+                                          template_structs) {
   
-  problem <- "parcellation"
-  problem_path <- problem %>% get_dataset()
-  
-  inputs <- list.files(file.path(problem_path, "inputs", "T1"), full.names = TRUE)
-  outputs <- list.files(file.path(problem_path, "outputs", "original"), full.names = TRUE)
-  
-  if (!is.null(num_subjects) && is.numeric(num_subjects)) {
-    
-    inputs <- inputs[seq(num_subjects)]
-    outputs <- outputs[seq(num_subjects)]
-    
-  } else {
-    
-    num_subjects <- length(inputs)
-    
-  }
+  num_subjects <- length(template_images)
   
   # Subcortical structures labels
   retain_structs <- c(10, 11, 12, 13, 17, 18, 49:54)
   
-  out <- lapply(outputs, readnii) #read_nifti_batch_4d(outputs)
+  # Read label images
+  out <- lapply(template_structs, readnii) 
   out1 <- out[[1]]
   
+  # Remap subcortical labels to 1, 2, ...
   out2 <- lapply(out, 
                  function(s) remap_labels(s@.Data, 
                                           values = retain_structs))
   
+  # Save the remapped images to file
   my_outputs <- sapply(seq(num_subjects),
                        function(i) {
                          
@@ -379,9 +370,9 @@ make_subcortical_parcellation <- function(image, mask = NULL,
     
   }
   
-  
-  res <- extrantsr::malf(infile = input,
-                         template.images = inputs,
+  # Apply MALF
+  res <- malf(infile = input,
+                         template.images = template_images,
                          template.structs = my_outputs,
                          typeofTransform = "SyN",
                          verbose = FALSE)
@@ -402,23 +393,31 @@ refine_parcellation <- function(parcellation, segmentation) {
 ```
 
 
-## Flow code
+```{r templates_parc}
+template_folder <- file.path(".", "resources", "volumetry", "parcellation")
+template_images <- list.files(path = file.path(template_folder,
+                                               "images"),
+                              pattern = ".nii.gz")
+template_structs <- list.files(path = file.path(template_folder,
+                                               "masks"),
+                              pattern = ".nii.gz")
+
+```
+
 
 ```{r flow_parc}
 volumetry_flow$add(what = make_subcortical_parcellation,
                    inputs = "betted",
                    output = "parcellation_basic",
-                   num_subjects = num_subjects)
+                   template_images = template_images,
+                   template_structs = template_structs)
 
 volumetry_flow$add(what = refine_parcellation,
                    inputs = c("parcellation_basic", "segmentation"),
                    output = "parcellation")
-
 ```
 
-# Quantification
-
-## Auxiliary Functions
+## Quantification
 
 ```{r aux_quant}
 count_by_ROI <- function(img) {
@@ -429,8 +428,6 @@ count_by_ROI <- function(img) {
 }
 ```
 
-
-## Flow code
 
 ```{r flow_quant}
 volumetry_flow$add(what = count_by_ROI,

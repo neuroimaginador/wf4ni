@@ -17,9 +17,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r messages = FALSE}
-library(wf4ni)
-library(tidyverse)
+```{r messages = FALSE, warning=FALSE}
+suppressPackageStartupMessages(library(wf4ni))
+suppressPackageStartupMessages(library(tidyverse))
 ```
 
 # Objective
@@ -27,6 +27,15 @@ library(tidyverse)
 # Requirements
 
 ## Packages
+
+```{r needed_packages}
+library(neurobase)
+library(oro.nifti)
+library(fslr)
+library(dti)
+library(readr)
+```
+
 
 ## Other Resources
 
@@ -43,13 +52,9 @@ dti_flow <- NIflow$new(name = "dti",
 ```{r eddy}
 correct_dwi <- function(image) {
   
-  library(neurobase)
-  library(oro.nifti)
-  library(fslr)
-  
   my_dwi_file <- tempimg(as.nifti(image))
   
-  dwi_corrected <- fslr::eddy_correct(infile = my_dwi_file)
+  dwi_corrected <- eddy_correct(infile = my_dwi_file)
   
   return(dwi_corrected)
   
@@ -69,9 +74,6 @@ dti_flow %>%
 ```{r tensor}
 read_data <- function(image, grads, bvals) {
   
-  library(neurobase)
-  library(dti)
-  
   my_dwi_corrected_file <- tempimg(image)
   
   dwi_data <- readDWIdata(gradient = grads, 
@@ -84,8 +86,6 @@ read_data <- function(image, grads, bvals) {
 }
 
 compute_tensors <- function(dwi_data) {
-  
-  library(dti)
   
   tensors <- dtiTensor(dwi_data)
   
@@ -118,7 +118,7 @@ compute_mask <- function(S0) {
   
   S0_file <- tempimg(S0)
   
-  brain_mask <- fslr::fslbet(infile = S0_file)
+  brain_mask <- fslbet(infile = S0_file)
   
   return(brain_mask > 0)
   
@@ -141,8 +141,6 @@ dti_flow %>%
 
 ```{r fibertracking}
 fibertracking <- function(tensors, mask) {
-  
-  library(dti)
   
   fibers <- tracking(tensors, 
                      mask = mask)
@@ -196,36 +194,12 @@ lag <- stats::lag
 ```
 
 ```{r example}
-# # Download sample data
-# tdir <- tempdir()
-# tfile <- file.path(tdir, "example_dwi.zip")
-# download.file("http://cmic.cs.ucl.ac.uk/camino//uploads/Tutorials/example_dwi.zip", 
-#               destfile = tfile)
-# out <- unzip(zipfile = tfile, 
-#              exdir = tdir, 
-#              overwrite = TRUE)
-# 
-# # Read bvecs
-# b_data_file <- grep("[.]txt$", out, value = TRUE)
-# b_vecs <- read.delim2(b_data_file, header = FALSE)
-# b_vecs <- as.matrix(b_vecs)
-# class(b_vecs) <- "numeric"
-# 
-# # Associate bvals
-# b_vals <- rep(1000, nrow(b_vecs))
-# all_zero <- apply(b_vecs  == 0, 1, all)
-# b_vals[all_zero] <- 0
-# 
-# # Read image
-# img <- grep("4Ddwi_b1000", out, value = TRUE)
-# dwi <- readnii(img)
 
+dwi_file <- "./resources/dti/dti_example.nii.gz"
+bvals_file <- "./resources/dti/dti_bvals.csv"
+grads_file <- "./resources/dti/dti_gradients.csv"
 
-dwi_file <- "./resources/dti_example.nii.gz"
-bvals_file <- "./resources/dti_bvals.csv"
-grads_file <- "./resources/dti_gradients.csv"
-
-dwi <- neurobase::readnii(dwi_file)
+dwi <- readnii(dwi_file)
 bvals <- read_csv(bvals_file,
                   col_names = FALSE,
                   col_types = cols()) %>% unlist()

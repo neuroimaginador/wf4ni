@@ -488,9 +488,9 @@ fmri_flow$plot()
 
 
 ```{r example}
-T1_file <- "./vignettes/resources/rsfMRI/anat.nii.gz"
-BOLD_file <- "./vignettes/resources/rsfMRI/func.nii.gz"
-atlas_file <- file.path("./vignettes/resources/rsfMRI/",
+T1_file <- "./resources/rsfMRI/anat.nii.gz"
+BOLD_file <- "./resources/rsfMRI/func.nii.gz"
+atlas_file <- file.path("./resources/rsfMRI/",
                         'data', 'aal_MNI_V4.nii')
 
 TR <- 2
