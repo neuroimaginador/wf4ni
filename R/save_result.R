@@ -12,7 +12,7 @@
 
   }
 
-  if (inherits(value, "antsImage") {
+  if (inherits(value, "antsImage")) {
 
     my_file <- file.path(folder, paste0(name, ".nii.gz"))
 

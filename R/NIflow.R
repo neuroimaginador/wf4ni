@@ -125,7 +125,7 @@ NIflow <- R6::R6Class(
 
     },
 
-    clean_workdir <- function(all = FALSE) {
+    clean_workdir = function(all = FALSE) {
 
       my_dir <- private$work_dir
 
