@@ -309,7 +309,7 @@ fmri_flow %>%
 # regress out WM/CSF
 regress_out_wm_csf <- function(func2std_img) {
 
-  base_dir <- "./vignettes/resources/rsfMRI/"
+  base_dir <- "./resources/rsfMRI/"
 
   refwm <- file.path(base_dir, 'data',
                      'MNI152_T1_2mm_brain_pve_2.nii.gz')
@@ -385,34 +385,37 @@ fmri_flow %>%
 ## Lowpass Filter
 
 ```{r filter}
-# lowpass filter (slice by slice)
+# lowpass filter
 filter_func <- function(func, tr) {
 
   dims <- dim(func)
 
-  func_mat <- func
-  dim(func_mat) <- c(dims[1] * dims[2] * dims[3], dims[4])
-  func_mat <- t(func_mat)
+  n_voxels <- dims[1] * dims[2] * dims[3]
 
-  chunks <- seq(1, dim(func_mat)[2], by = 10000)
+  dim(func) <- c(n_voxels, dims[4])
+
+  func_mat <- matrix(0,
+                     nrow = dims[4],
+                     ncol = n_voxels)
+
+  chunks <- seq(1, n_voxels, by = 10000)
 
   for (i in seq_along(chunks)) {
 
     init <- chunks[i]
     end <- ifelse(i < length(chunks),
-                  chunks[i + 1],
-                  dim(func_mat)[2])
+                  chunks[i + 1] - 1,
+                  n_voxels)
 
-    func_mat[, init:end] <- frequencyFilterfMRI(func_mat[, init:end],
+    func_mat[, init:end] <- frequencyFilterfMRI(func[init:end, ] %>% t(),
                                                tr)
 
   }
 
+  func@.Data <- func_mat %>% t()
+  dim(func@.Data) <- dims
 
-  func_mat <- t(func_mat)
-  dim(func_mat) <- dims
-
-  return(as.nifti(func_mat, value = func))
+  return(func)
 
 }
 ```
