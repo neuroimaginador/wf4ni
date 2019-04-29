@@ -17,18 +17,18 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r messages = FALSE, warning=FALSE}
-suppressPackageStartupMessages(library(wf4ni))
-suppressPackageStartupMessages(library(tidyverse))
-```
-
 # Objective
 
 # Requirements
 
 ## Packages
 
-```{r needed_packages}
+```{r messages = FALSE, warning=FALSE}
+library(wf4ni)
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
 library(ANTsRCore)
 library(ANTsR)
 library(extrantsr)
@@ -44,60 +44,8 @@ library(fslr)
 
 ```{r v_flow}
 volumetry_flow <- NIflow$new(name = "volumetry",
+                             work_dir = "~/flow/volumetry",
                              inputs = "T1")
-```
-
-## Auxiliary Conversion Functions
-
-```{r conversion_functions}
-get_as_antsImage <- function(img) {
-
-  if (is.character(img) && file.exists(img)) {
-
-    return(antsImageRead(img))
-
-  }
-
-  if (is.antsImage(img)) {
-
-    return(img)
-
-  }
-
-  if (is.nifti(img)) {
-
-    my_file <- neurobase::tempimg(img)
-
-    return(antsImageRead(my_file))
-
-  }
-
-}
-
-get_as_nifti <- function(img) {
-
-  if (is.character(img) && file.exists(img)) {
-
-    return(readnii(img))
-
-  }
-
-  if (is.antsImage(img)) {
-
-    my_file <- tempfile(fileext = ".nii.gz")
-    antsImageWrite(image = img, filename = my_file)
-
-    return(readnii(my_file))
-
-  }
-
-  if (is.nifti(img)) {
-
-    return(img)
-
-  }
-
-}
 ```
 
 
@@ -109,16 +57,16 @@ get_as_nifti <- function(img) {
 register_to_template <- function(image, template) {
 
   image <- check_ants(image)
-  
+
   template <- check_ants(template)
-  
+
   transform <- antsRegistration(fixed = template,
                                 moving = image,
                                 typeofTransform = "AffineFast",
                                 verbose = TRUE)
-  
+
   return(transform)
-  
+
 }
 
 
@@ -143,11 +91,11 @@ get_scale_parameter <- function(M) {
   det(M)
 
 }
-
 ```
 
 ```{r template}
-template <- file.path(".", "resources", "volumetry", "MNI152_T1_1mm.nii.gz")
+template <- file.path(".", "resources",
+                      "volumetry", "MNI152_T1_1mm.nii.gz")
 ```
 
 
@@ -177,7 +125,7 @@ volumetry_flow  %>%
   add(what = register_to_template,
       inputs = "T1",
       output = "transformation",
-      atlas_name = "MNI152_T1") %>% 
+      template = template) %>% 
   add(what = get_img_in_template,
       inputs = "transformation",
       output = "T1_MNI") %>% 
@@ -209,7 +157,6 @@ bfc <- function(img) {
 volumetry_flow$add(what = bfc,
                    inputs = "T1_MNI",
                    output = "T1_bfc")
-
 ```
 
 ## Brain Extraction
@@ -218,37 +165,42 @@ volumetry_flow$add(what = bfc,
 # - brain extraction
 # Uses MALF technique with a "brain extraction" dataset
 # Returns the brain mask
-make_brain_extraction <- function(image, template_images, template_structs) {
+make_brain_extraction <- function(image, 
+                                  template_images, 
+                                  template_structs) {
 
-  res <- malf(infile = image,
+  my_image <- checkimg(image)
+
+  res <- malf(infile = my_image,
               template.images = template_images,
               template.structs = template_structs,
               typeofTransform = "SyN",
               verbose = FALSE)
-  
+
   return(res)
-  
+
 }
 ```
 
 ```{r template_images}
 template_folder <- file.path(".", "resources", "volumetry", "bet")
-template_images <- list.files(path = file.path(template_folder,
+template_images_bet <- list.files(path = file.path(template_folder,
                                                "images"),
-                              pattern = ".nii.gz")
-template_structs <- list.files(path = file.path(template_folder,
+                              pattern = ".nii.gz",
+                              full.names = TRUE)
+template_structs_bet <- list.files(path = file.path(template_folder,
                                                "masks"),
-                              pattern = ".nii.gz")
+                              pattern = ".nii.gz",
+                              full.names = TRUE)
 ```
-
 
 
 ```{r bet_flow}
 volumetry_flow$add(what = make_brain_extraction,
                    inputs = "T1_bfc",
                    output = "brain_mask",
-                   template_images = template_images,
-                   template_structs = template_structs)
+                   template_images = template_images_bet,
+                   template_structs = template_structs_bet)
 
 volumetry_flow$add(what = function(A, B) {A * B},
                    inputs = c("T1_bfc", "brain_mask"),
@@ -290,7 +242,6 @@ get_segmentation <- function(img, mask = NULL) {
   return(check_nifti(res_file))
 
 }
-
 ```
 
 ```{r flow_seg}
@@ -330,78 +281,78 @@ remap_labels <- function(img, values = NULL) {
 ```{r aux_parc}
 # - parcellation
 # Uses MALF technique with a previously labelled dataset
-make_subcortical_parcellation <- function(image, 
+make_subcortical_parcellation <- function(image,
                                           mask = NULL,
                                           template_images,
                                           template_structs) {
-  
+
   num_subjects <- length(template_images)
-  
+
   # Subcortical structures labels
   retain_structs <- c(10, 11, 12, 13, 17, 18, 49:54)
-  
+
   # Read label images
-  out <- lapply(template_structs, readnii) 
+  out <- lapply(template_structs, readnii)
   out1 <- out[[1]]
-  
+
   # Remap subcortical labels to 1, 2, ...
-  out2 <- lapply(out, 
-                 function(s) remap_labels(s@.Data, 
+  out2 <- lapply(out,
+                 function(s) remap_labels(s@.Data,
                                           values = retain_structs))
-  
+
   # Save the remapped images to file
   my_outputs <- sapply(seq(num_subjects),
                        function(i) {
-                         
+
                          out1@.Data <- out2[[i]]
-                         
+
                          tempimg(nim = out1)
-                         
+
                        })
-  
+
   if (!is.null(mask)) {
-    
+
     input <- image
     input[mask == 0] <- 0
-    
+
   } else {
-    
+
     input <- image
-    
+
   }
-  
+
   # Apply MALF
   res <- malf(infile = input,
                          template.images = template_images,
                          template.structs = my_outputs,
                          typeofTransform = "SyN",
                          verbose = FALSE)
-  
+
   return(res)
-  
+
 }
 
 # Removes CSF voxels from the parcellation
 refine_parcellation <- function(parcellation, segmentation) {
-  
-  parcellation[segmentation <= 1] <- 0
-  
-  return(parcellation)
-  
-}
 
+  parcellation[segmentation <= 1] <- 0
+
+  return(parcellation)
+
+}
 ```
 
 
 ```{r templates_parc}
 template_folder <- file.path(".", "resources", "volumetry", "parcellation")
-template_images <- list.files(path = file.path(template_folder,
+template_images_parc <- list.files(path = file.path(template_folder,
                                                "images"),
-                              pattern = ".nii.gz")
-template_structs <- list.files(path = file.path(template_folder,
+                              pattern = ".nii.gz",
+                              full.names = TRUE)
+template_structs_parc <- list.files(path = file.path(template_folder,
                                                "masks"),
-                              pattern = ".nii.gz")
-
+                              pattern = ".nii.gz",
+                              full.names = TRUE)
 ```
 
 
@@ -409,8 +360,8 @@ template_structs <- list.files(path = file.path(template_folder,
 volumetry_flow$add(what = make_subcortical_parcellation,
                    inputs = "betted",
                    output = "parcellation_basic",
-                   template_images = template_images,
-                   template_structs = template_structs)
+                   template_images = template_images_parc,
+                   template_structs = template_structs_parc)
 
 volumetry_flow$add(what = refine_parcellation,
                    inputs = c("parcellation_basic", "segmentation"),
@@ -422,7 +373,7 @@ volumetry_flow$add(what = refine_parcellation,
 ```{r aux_quant}
 count_by_ROI <- function(img) {
 
-  v <- img %>% as.vector() 
+  v <- img %>% as.vector()
   table(v[v > 0])
 
 }
@@ -453,10 +404,7 @@ volumetry_flow$add(what = count_by_ROI,
 volumetry_flow$add(what = function(A, B) {A * B},
                    inputs = c("final_volumetry_mni", "scale_parameter"),
                    output = "final_volumetry")
-
 ```
-
-
 
 # Final Flow
 
@@ -468,7 +416,7 @@ volumetry_flow$plot()
 
 ## Code
 
-```{r example}
+```{r example, eval = FALSE}
 # Load data of the brain extraction dataset
 problem <- "brain_extraction"
 problem_path <- problem %>% get_dataset()
@@ -489,13 +437,27 @@ res <- volumetry_flow$compute(what = c("T1_bfc",
 
 ## Results
 
-```{r res}
+```{r res, eval = FALSE}
 names(res$brain_volume) <- c("brain_volume")
 res$brain_volume
+```
 
+```{r echo = FALSE}
+readRDS(file = "./resources/volumetry/brain_volume.rds")
+```
+
+
+```{r, eval = FALSE}
 names(res$basic_volumetry) <- c("CSF", "GM", "WM")
 res$basic_volumetry
+```
 
+```{r echo = FALSE}
+readRDS(file = "./resources/volumetry/basic_volumetry.rds")
+```
+
+
+```{r, eval = FALSE}
 names(res$final_volumetry) <- c("left thalamus proper",
                                 "left caudate", "left putamen", 
                                 "left pallidum", "left hippocampus", 
@@ -507,6 +469,9 @@ names(res$final_volumetry) <- c("left thalamus proper",
 res$final_volumetry
 ```
 
+```{r echo = FALSE}
+readRDS(file = "./resources/volumetry/final_volumetry.rds")
+```
 
 ## Images
 
@@ -528,25 +493,46 @@ plot_overlay <- function(image, overlay, text = "") {
 }
 ```
 
-```{r plot_overlay, fig.width=7, fig.asp=1}
+```{r eval = FALSE}
 plot_overlay(image = res$T1_bfc,
              overlay = res$brain_mask,
              text = "Brain Mask")
+```
 
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/vol_brain_mask.png")
+```
+
+
+```{r eval = FALSE}
 plot_overlay(image = res$T1_bfc,
              overlay = res$segmentation,
              text = "Segmentation")
+```
 
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/vol_segmentation.png")
+```
+
+```{r eval = FALSE}
 plot_overlay(image = res$T1_bfc,
              overlay = res$parcellation,
              text = "Parcellation")
+```
 
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/vol.parcellation.png")
 ```
 
 ## Full Flow Log
 
-```{r print_log}
+```{r print_log, eval = FALSE}
 volumetry_flow$print_log()
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lines <- readLines(con = "./resources/volumetry/log.txt")
+
+cat(lines, sep = "\n")
 ```
 
 

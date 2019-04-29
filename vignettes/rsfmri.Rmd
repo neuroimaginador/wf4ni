@@ -596,7 +596,7 @@ rownames(time_series) <- roi_names$name
 plot_time_series(time_series[c(29:30, 41:42), ])
 ```
 
-```{r, out.width = 700,, fig.asp = 1, eval = TRUE, echo = FALSE}
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
 knitr::include_graphics(path = "./img/ts.png")
 ```
 
@@ -609,7 +609,7 @@ my_ind <- res$cormat %>%
 plot_time_series(time_series[my_ind, ])
 ```
 
-```{r, out.width = 700,, fig.asp = 1, eval = TRUE, echo = FALSE}
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
 knitr::include_graphics(path = "./img/max_cor_ts.png")
 ```
 
