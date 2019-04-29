@@ -106,7 +106,7 @@ NIflow <- R6::R6Class(
       }
 
       flow_env <- .create_flow(name = name,
-                               work_dir = work_dir,
+                               work_dir = normalizePath(work_dir),
                                inputs = inputs)
 
       self$.__enclos_env__$private <- flow_env
