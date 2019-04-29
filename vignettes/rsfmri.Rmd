@@ -17,10 +17,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r messages = FALSE, warning=FALSE}
-suppressPackageStartupMessages(library(wf4ni))
-suppressPackageStartupMessages(library(tidyverse))
-```
 
 # Objective
 
@@ -28,7 +24,13 @@ suppressPackageStartupMessages(library(tidyverse))
 
 ## Packages
 
-```{r}
+```{r messages = FALSE, warning=FALSE}
+library(wf4ni)
+```
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
 library(neurobase)
 library(fslr)
 library(readr)
@@ -44,6 +46,7 @@ library(signal)
 
 ```{r fmri_flow}
 fmri_flow <- NIflow$new(name = "fmri",
+                        work_dir = "~/flow/fmri",
                         inputs = c("T1", "BOLD", "TR", "atlas"))
 ```
 
@@ -435,6 +438,8 @@ extract_time_series <- function(bold, corr_label) {
 
   cmd_base <- get.fsl()
 
+  corr_label <- checkimg(corr_label)
+
   if (is.nifti(bold)) {
 
     img <- tempfile(fileext = ".nii.gz")
@@ -490,7 +495,7 @@ fmri_flow$plot()
 # Example
 
 
-```{r example}
+```{r example, eval = FALSE}
 T1_file <- "./resources/rsfMRI/anat.nii.gz"
 BOLD_file <- "./resources/rsfMRI/func.nii.gz"
 atlas_file <- file.path("./resources/rsfMRI/",
@@ -512,32 +517,111 @@ res <- fmri_flow$execute(inputs = list(T1 = T1_file,
 
 ```{r plot_matrix}
 plot_matrix <- function(M) {
-  
+
   library(scales)
   library(RColorBrewer)
-  
-  color_function <- colour_ramp(brewer.pal(11, "RdBu")) 
-  heatmap(t(M), Rowv = NA, Colv = NA, 
-          col = color_function(seq(0, 1, 0.01)), 
+
+  color_function <- colour_ramp(brewer.pal(11, "RdBu"))
+  heatmap(t(M), Rowv = NA, Colv = NA,
+          col = color_function(seq(0, 1, 0.01)),
           scale = "none")
+
+}
+
+plot_time_series <- function(ts) {
+
+  library(tidyr)
+  library(dplyr)
+  library(ggplot2)
+
+  # Runs on rows, ROIs in columns
+  ts <- t(ts) %>% as.data.frame()
+
+  n_runs <- nrow(ts)
+  ts$run <- seq(n_runs)
+
+  df <- ts %>%
+    gather(key = "variable", value = "value", -run)
+
+  if (ncol(ts) > 3) {
+
+    ggplot(df, aes(x = run, y = value)) +
+      geom_line(aes(color = variable), size = 1) +
+      scale_color_brewer(type = "div") +
+      theme_minimal()
+
+  } else {
+
+    ggplot(df, aes(x = run, y = value)) +
+      geom_line(aes(color = variable), size = 1) +
+      scale_color_brewer(type = "qual") +
+      theme_minimal()
+
+  }
 
 }
 ```
 
 
-```{r fmri_res, fig.width = 7, fig.asp = 1} 
+```{r fmri_res, fig.width = 7, fig.asp = 1, eval = FALSE} 
 ortho2(res$mean_func)
+```
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/mean_func.png")
+```
 
-ortho2(res$t12std)
-
+```{r fmri_res2, fig.width = 7, fig.asp = 1, eval = FALSE} 
 plot_matrix(res$cormat)
 ```
 
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+
+knitr::include_graphics(path = "./img/cormat.png")
+
+```
+
+```{r eval = FALSE}
+roi_names <- readr::read_tsv(file.path(".", "resources",
+                                       "rsfMRI", "data",
+                                       "aal_MNI_V4.txt"),
+                             skip = 1,
+                             col_names = FALSE,
+                             col_types = cols())
+
+colnames(roi_names) <- c("index", "name")
+
+time_series <- t(res$ts)
+rownames(time_series) <- roi_names$name
+
+plot_time_series(time_series[c(29:30, 41:42), ])
+```
+
+```{r, out.width = 700,, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/ts.png")
+```
+
+```{r eval = FALSE}
+# Which two components have the greater correlation
+my_ind <- res$cormat %>%
+  which.max() %>%
+  arrayInd(.dim = dim(res$cormat))
+
+plot_time_series(time_series[my_ind, ])
+```
+
+```{r, out.width = 700,, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/max_cor_ts.png")
+```
 
 ## Full Flow Log
 
-```{r print_log}
+```{r print_log, eval = FALSE}
 fmri_flow$print_log()
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lines <- readLines(con = "./resources/rsfMRI/log.txt")
+
+cat(lines, sep = "\n")
 ```
 
 # Availability
