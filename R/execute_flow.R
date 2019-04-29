@@ -189,6 +189,13 @@ execute <- function(flow,
     flow$log(level = "DEBUG",
              message = paste0("Memory used at init: ", mem))
 
+    # Insert shims: variations of tempdir() to save temporary
+    # results to a specific folder:
+    .insert_wf4ni_shims(flow$work_dir)
+    .create_tempdir()
+    flow$log(level = "DEBUG",
+             message = paste0("Switching tempdir to: ", flow$work_dir))
+
     for (output in desired_outputs) {
 
       pipeline <- pipelines[[output]]
@@ -239,6 +246,10 @@ execute <- function(flow,
 
           flow$log(level = "DEBUG",
                    message = paste0("Memory used after computation: ", mem))
+
+          # Save result:
+          .save_result(value = flow$computed_outputs[[intermediate_output]],
+                       name = intermediate_output)
 
           is_computed[intermediate_output] <- TRUE
 
@@ -298,6 +309,12 @@ execute <- function(flow,
       }
 
     }
+
+    # Remove the previously inserted shims.
+    .remove_wf4ni_shims()
+    flow$log(level = "DEBUG",
+             message = paste0("Switching to base tempdir"))
+
 
     flow$log(level = "DEBUG",
              message = "Computed all results")

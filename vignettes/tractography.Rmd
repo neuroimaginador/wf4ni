@@ -17,18 +17,18 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r messages = FALSE, warning=FALSE}
-suppressPackageStartupMessages(library(wf4ni))
-suppressPackageStartupMessages(library(tidyverse))
-```
-
 # Objective
 
 # Requirements
 
 ## Packages
 
-```{r needed_packages}
+```{r messages = FALSE, warning=FALSE}
+library(wf4ni)
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
 library(neurobase)
 library(oro.nifti)
 library(fslr)
@@ -42,7 +42,8 @@ library(readr)
 # DTI Processing
 
 ```{r dti_flow}
-dti_flow <- NIflow$new(name = "dti", 
+dti_flow <- NIflow$new(name = "dti",
+                       work_dir = "~/flow/dti",
                        inputs = c("dwi", "grads", "bvals"))
 ```
 
@@ -51,18 +52,18 @@ dti_flow <- NIflow$new(name = "dti",
 
 ```{r eddy}
 correct_dwi <- function(image) {
-  
+
   my_dwi_file <- tempimg(as.nifti(image))
-  
+
   dwi_corrected <- eddy_correct(infile = my_dwi_file)
-  
+
   return(dwi_corrected)
-  
+
 }
 ```
 
 ```{r eddy_flow}
-dti_flow %>% 
+dti_flow %>%
   add(what = correct_dwi,
       inputs = "dwi",
       output = "dwi_corrected")
@@ -73,67 +74,65 @@ dti_flow %>%
 
 ```{r tensor}
 read_data <- function(image, grads, bvals) {
-  
+
   my_dwi_corrected_file <- tempimg(image)
-  
-  dwi_data <- readDWIdata(gradient = grads, 
-                          dirlist = my_dwi_corrected_file, 
+
+  dwi_data <- readDWIdata(gradient = grads,
+                          dirlist = my_dwi_corrected_file,
                           bvalue = bvals,
                           format = "NIFTI")
-  
+
   return(dwi_data)
-  
+
 }
 
 compute_tensors <- function(dwi_data) {
-  
-  tensors <- dtiTensor(dwi_data)
-  
-  return(tensors)
-  
-}
 
+  tensors <- dtiTensor(dwi_data)
+
+  return(tensors)
+
+}
 ```
 
 ```{r tensor_flow}
-dti_flow %>% 
+dti_flow %>%
   add(what = read_data,
       inputs = c("dwi_corrected", "grads", "bvals"),
-      output = "dwiData") %>% 
+      output = "dwiData") %>%
   add(what = compute_tensors,
       inputs = "dwiData",
-      output = "tensors") 
+      output = "tensors")
 ```
 
 ## Mask Computation
 
 ```{r mask}
 get_S0 <- function(tensors) {
-  
+
   return(as.nifti(tensors@th0))
-  
+
 }
 
 compute_mask <- function(S0) {
-  
+
   S0_file <- tempimg(S0)
-  
+
   brain_mask <- fslbet(infile = S0_file)
-  
+
   return(brain_mask > 0)
-  
+
 }
 ```
 
 ```{r mask_flow}
-dti_flow %>% 
+dti_flow %>%
   add(what = get_S0,
       inputs = "tensors",
-      output = "S0") %>% 
+      output = "S0") %>%
   add(what = compute_mask,
       inputs = "S0",
       output = "mask")
-
 ```
 
 
@@ -141,44 +140,41 @@ dti_flow %>%
 
 ```{r fibertracking}
 fibertracking <- function(tensors, mask) {
-  
-  fibers <- tracking(tensors, 
-                     mask = mask)
-  
-  return(fibers)
-  
-}
 
+  fibers <- tracking(tensors,
+                     mask = mask)
+
+  return(fibers)
+
+}
 ```
 
 ```{r fibertracking_flow}
-dti_flow %>% 
+dti_flow %>%
   add(what = fibertracking,
       inputs = c("tensors", "mask"),
       output = "fibers")
-
 ```
 
 ## FA Map
 
 ```{r fa}
 compute_FA <- function(tensors, mask) {
-  
+
   indices <- dtiIndices(tensors)
-  
+
   FA_map <- indices@fa * mask
-  
+
   return(FA_map)
-  
+
 }
 ```
 
 ```{r fa_flow}
-dti_flow %>% 
+dti_flow %>%
   add(what = compute_FA,
       inputs = c("tensors", "mask"),
       output = "FA_map")
-
 ```
 
 # Final Flow
@@ -193,7 +189,7 @@ dti_flow$plot()
 lag <- stats::lag
 ```
 
-```{r example}
+```{r example, eval = FALSE}
 
 dwi_file <- "./resources/dti/dti_example.nii.gz"
 bvals_file <- "./resources/dti/dti_bvals.csv"
@@ -217,19 +213,44 @@ res <- dti_flow$execute(inputs = list(dwi = dwi,
 
 ```
 
-```{r dti_res, fig.width=7, fig.asp=1} 
-
+```{r eval = FALSE} 
 neurobase::ortho2(res$S0)
+```
 
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/dti_S0.png")
+```
+
+```{r eval = FALSE} 
 neurobase::ortho2(res$FA_map)
+```
 
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/dti_FA_map.png")
+```
+
+```{r eval = FALSE}
+show3d(res$fibers)
+```
+
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/dti_fibers1.png")
+knitr::include_graphics(path = "./img/dti_fibers2.png")
+knitr::include_graphics(path = "./img/dti_fibers3.png")
+knitr::include_graphics(path = "./img/dti_fibers4.png")
 ```
 
 
 ## Full Flow Log
 
-```{r print_log}
+```{r print_log, eval = FALSE}
 dti_flow$print_log()
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lines <- readLines(con = "./resources/dti/log.txt")
+
+cat(lines, sep = "\n")
 ```
 
 # Availability
