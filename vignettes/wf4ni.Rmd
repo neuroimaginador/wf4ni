@@ -66,7 +66,21 @@ In `wf4ni`, a _flow_ is an ordered collection of processes that convert inputs i
 
 By defining the appropriate functions, one can model the pipeline in the correct order and obtain a flow as the one depicted in the following figure:
 
-![A sample workflow](img/flow.png)
+```{r, eval = TRUE, echo = FALSE, out.width = 700, fig.asp = 1}
+suppressPackageStartupMessages(library(wf4ni))
+
+f <- function(a, b) {a + b}
+
+my_flow <- NIflow$new(name = "test", inputs = c("I1", "I2"))
+
+my_flow$add(what = f, inputs = c("I1", "I2"), output = "O1")
+my_flow$add(inputs = "I3")
+my_flow$add(what = f, inputs = c("I2", "I3"), output = "O2")
+my_flow$add(what = f, inputs = c("O1", "I3"), output = "O3")
+my_flow$add(what = f, inputs = c("O3", "I3"), output = "O4")
+
+my_flow$plot()
+```
 
 Original inputs in the _flow_ are _I1_, _I2_ and _I3_ (in green). Other nodes represent the output of a given function, using the incident nodes as inputs for that function.
 
@@ -76,7 +90,7 @@ A _flow_ object stores information about the functions used and their relationsh
 
 A simple example:
 
-```{r, eval = FALSE, echo = TRUE}
+```{r, eval = FALSE, echo = TRUE, message=FALSE, warning=FALSE}
 library(wf4ni)
 
 f <- function(a, b) {a + b}
