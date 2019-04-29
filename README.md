@@ -116,7 +116,7 @@ figure:
 
 ![A sample workflow](img/flow.png)
 
-Original inputs in the *flow* are *I1*, *I2* and *I3* (in green). Other
+Original inputs in the *flow* are *I1*, *I2* and *I3* (in blue). Other
 nodes represent the output of a given function, using the incident nodes
 as inputs for that function.
 

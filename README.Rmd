@@ -70,7 +70,7 @@ By defining the appropriate functions, one can model the pipeline in the correct
 
 ![A sample workflow](img/flow.png)
 
-Original inputs in the _flow_ are _I1_, _I2_ and _I3_ (in green). Other nodes represent the output of a given function, using the incident nodes as inputs for that function.
+Original inputs in the _flow_ are _I1_, _I2_ and _I3_ (in blue). Other nodes represent the output of a given function, using the incident nodes as inputs for that function.
 
 A _flow_ object stores information about the functions used and their relationships, building what is called a _computation graph_.
 
