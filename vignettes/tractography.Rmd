@@ -19,14 +19,33 @@ knitr::opts_chunk$set(
 
 # Objective
 
+In this vignette, we're going to develop a pipeline (workflow) to build the deterministic tractography from a diffusion image, using the `wf4ni` package.
+
+The main steps in this pipeline will be:
+
+- Eddy current correction.
+- Tensor computation.
+- Fiber tracking inside a mask.
+- Computation of Fractional Anisotropy (FA) map.
+
+To demonstrate the flexibility of `wf4ni`, we'll use different `R` packages to perform several of the above steps. 
+
+It must be noted that the philosophy of `wf4ni` is to separate the pipeline logic from its implementation. So, the same workflow could be used just changing, if needed, the implementation of any (or all) of the steps above.
+
+The organization of this vignette is as follows. First, we'll describe the dependencies or packages needed to run the workflow. Later, we'll describe the workflow, step by step, without presenting the actual implementation of the functions used. Then, we'll use some sample data to run an experiment with the workflow, presenting its results. We'll end the vignette with an annex in which we'll present the actual implementation of the functions.
+
 # Requirements
+
+We consider two types of requirements: packages needed to perform the key steps in the workflow and data which may be necessary at any step of the computation.
 
 ## Packages
 
+First, to build the flow, the `wf4ni` package is needed:
 ```{r messages = FALSE, warning=FALSE}
 library(wf4ni)
 ```
 
+The following packages are needed in some points of the pipeline:
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(neurobase)
@@ -36,10 +55,19 @@ library(dti)
 library(readr)
 ```
 
+`fslr` and `dti` will be used for the processing, while `neurobase`, `oro.nifti` and `readr` will be used for reading and writing files. The `tidyverse` is useful to simplify some code and make it more legible.
 
 ## Other Resources
 
+In this case, we are not using any other external data for this pipeline.
+
 # DTI Processing
+
+The diffusion workflow will be a `NIflow` object. To create such object, one needs to provide a _name_, a _work_dir_ where to store temporary results, and the name of the _inputs_ needed to execute the workflow. In this case, our pipeline will need:
+
+ - A DWI image in nifti format.
+ - A matrix of gradient directions with which the DWI image was obtained.
+ - A vector of b-values for each acquisition in the DWI image.
 
 ```{r dti_flow}
 dti_flow <- NIflow$new(name = "dti",
@@ -47,20 +75,17 @@ dti_flow <- NIflow$new(name = "dti",
                        inputs = c("dwi", "grads", "bvals"))
 ```
 
-
 ## Eddy Current Correction
 
-```{r eddy}
+The first step will be to correct the effect of eddy currents in the diffusion acquisition. We'll use the `fslr` package to this end.
+
+```{r eddy_foo}
 correct_dwi <- function(image) {
-
-  my_dwi_file <- tempimg(as.nifti(image))
-
-  dwi_corrected <- eddy_correct(infile = my_dwi_file)
-
-  return(dwi_corrected)
-
+  #...
 }
 ```
+
+This function is added to the flow a follows:
 
 ```{r eddy_flow}
 dti_flow %>%
@@ -69,32 +94,26 @@ dti_flow %>%
       output = "dwi_corrected")
 ```
 
+And a graph representation of this partial flow:
+```{r echo=TRUE, fig.show='asis', fig.width = 5, fig.asp = 1}
+dti_flow$plot()
+```
+
 
 ## Tensor Computation
 
-```{r tensor}
+The next step is to incorporate the gradient directions and the b-values in an object suitable to perform the tensor computation by the `dti` package.
+```{r tensor_foo}
 read_data <- function(image, grads, bvals) {
-
-  my_dwi_corrected_file <- tempimg(image)
-
-  dwi_data <- readDWIdata(gradient = grads,
-                          dirlist = my_dwi_corrected_file,
-                          bvalue = bvals,
-                          format = "NIFTI")
-
-  return(dwi_data)
-
+  #...
 }
 
 compute_tensors <- function(dwi_data) {
-
-  tensors <- dtiTensor(dwi_data)
-
-  return(tensors)
-
+  #...
 }
 ```
 
+And the way to include these functions in the flow is:
 ```{r tensor_flow}
 dti_flow %>%
   add(what = read_data,
@@ -105,26 +124,25 @@ dti_flow %>%
       output = "tensors")
 ```
 
+The partial flow is:
+```{r echo=TRUE, fig.show='asis', fig.width = 5, fig.asp = 1}
+dti_flow$plot()
+```
+
 ## Mask Computation
 
-```{r mask}
+Using tensor information, we can extract the _S0_ image (the average of the images acquired without gradient) and the mask (using the `fslr` package):
+```{r mask_foo}
 get_S0 <- function(tensors) {
-
-  return(as.nifti(tensors@th0))
-
+  #...
 }
 
 compute_mask <- function(S0) {
-
-  S0_file <- tempimg(S0)
-
-  brain_mask <- fslbet(infile = S0_file)
-
-  return(brain_mask > 0)
-
+  #...
 }
 ```
 
+Next, we add these steps to the flow:
 ```{r mask_flow}
 dti_flow %>%
   add(what = get_S0,
@@ -135,20 +153,21 @@ dti_flow %>%
       output = "mask")
 ```
 
+```{r echo=TRUE, fig.show='asis', fig.width = 5, fig.asp = 1}
+dti_flow$plot()
+```
 
 ## Fiber Tracking
 
-```{r fibertracking}
+One of the main results of this pipeline is to obtain the fibers associated to the tensors previously computed. We use the following function (a wrapper to a function in the `dti` package) to perform fiber tracking on the mask already calculated. 
+
+```{r fibertracking_foo}
 fibertracking <- function(tensors, mask) {
-
-  fibers <- tracking(tensors,
-                     mask = mask)
-
-  return(fibers)
-
+  #...
 }
 ```
 
+And we add this step to the flow:
 ```{r fibertracking_flow}
 dti_flow %>%
   add(what = fibertracking,
@@ -156,20 +175,20 @@ dti_flow %>%
       output = "fibers")
 ```
 
+```{r echo=TRUE, fig.show='asis', fig.width = 5, fig.asp = 1}
+dti_flow$plot()
+```
+
 ## FA Map
 
-```{r fa}
+As a side effect of the previous computations, we can compute a FA map from the tensor map (using a mask to remove non-informative voxels outside the brain). This function is also a wrapper to a function in package `dti`:
+```{r fa_foo}
 compute_FA <- function(tensors, mask) {
-
-  indices <- dtiIndices(tensors)
-
-  FA_map <- indices@fa * mask
-
-  return(FA_map)
-
+  #...
 }
 ```
 
+And, finally, we add this last step to the flow:
 ```{r fa_flow}
 dti_flow %>%
   add(what = compute_FA,
@@ -179,16 +198,22 @@ dti_flow %>%
 
 # Final Flow
 
+With these final additions, the complete pipeline is as follows:
 ```{r flow_plot, echo=TRUE, fig.show='asis', fig.width = 7, fig.asp = 1}
 dti_flow$plot()
 ```
 
 # Example
 
+To illustrate how this workflow can be used, let us suppose that we have all the functions mentioned before already implemented (an example implementation is given in the Annex), and build the workflow as in the previous steps. We'll apply this flow to compute the fibers and the FA map given a DWI image.
+
+## Code
+
 ```{r echo = FALSE}
 lag <- stats::lag
 ```
 
+We'll use sample data for the DWI image (from the Human Connectome Project), and the b-values vector and gradient matrix.
 ```{r example, eval = FALSE}
 
 dwi_file <- "./resources/dti/dti_example.nii.gz"
@@ -213,6 +238,10 @@ res <- dti_flow$execute(inputs = list(dwi = dwi,
 
 ```
 
+## Images
+
+Using the function `ortho2` in package `neurobase`, we can inspect both the _S0_ image and the obtained FA map.
+
 ```{r eval = FALSE} 
 neurobase::ortho2(res$S0)
 ```
@@ -229,6 +258,8 @@ neurobase::ortho2(res$FA_map)
 knitr::include_graphics(path = "./img/dti_FA_map.png")
 ```
 
+
+Also, we can inspect the computed fiber bundles by using the native function `show3d` of package `dti`. To illustrate the results, we present some snapshots of the obtained fibers:
 ```{r eval = FALSE}
 show3d(res$fibers)
 ```
@@ -243,6 +274,8 @@ knitr::include_graphics(path = "./img/dti_fibers4.png")
 
 ## Full Flow Log
 
+The `NIflow` object stores internally a log of all the processes that it goes through and the memory used to store its internal results:
+
 ```{r print_log, eval = FALSE}
 dti_flow$print_log()
 ```
@@ -253,4 +286,82 @@ lines <- readLines(con = "./resources/dti_log.txt")
 cat(lines, sep = "\n")
 ```
 
-# Availability
+# Annex: Full Code
+
+In this annex, we provide example code for the tractography workflow, which can be loaded and used to replicate the workflow and results given in this vignette.
+
+```{r eddy}
+correct_dwi <- function(image) {
+
+  my_dwi_file <- tempimg(as.nifti(image))
+
+  dwi_corrected <- eddy_correct(infile = my_dwi_file)
+
+  return(dwi_corrected)
+
+}
+```
+
+```{r tensor}
+read_data <- function(image, grads, bvals) {
+
+  my_dwi_corrected_file <- tempimg(image)
+
+  dwi_data <- readDWIdata(gradient = grads,
+                          dirlist = my_dwi_corrected_file,
+                          bvalue = bvals,
+                          format = "NIFTI")
+
+  return(dwi_data)
+
+}
+
+compute_tensors <- function(dwi_data) {
+
+  tensors <- dtiTensor(dwi_data)
+
+  return(tensors)
+
+}
+```
+
+```{r mask}
+get_S0 <- function(tensors) {
+
+  return(as.nifti(tensors@th0))
+
+}
+
+compute_mask <- function(S0) {
+
+  S0_file <- tempimg(S0)
+
+  brain_mask <- fslbet(infile = S0_file)
+
+  return(brain_mask > 0)
+
+}
+```
+
+```{r fibertracking}
+fibertracking <- function(tensors, mask) {
+
+  fibers <- tracking(tensors,
+                     mask = mask)
+
+  return(fibers)
+
+}
+```
+
+```{r fa}
+compute_FA <- function(tensors, mask) {
+
+  indices <- dtiIndices(tensors)
+
+  FA_map <- indices@fa * mask
+
+  return(FA_map)
+
+}
+```

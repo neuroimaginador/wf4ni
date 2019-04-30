@@ -21,17 +21,37 @@ knitr::opts_chunk$set(
 resources_folder <- "./resources"
 ```
 
-
 # Objective
+
+In this vignette, we're going to develop a volumetry pipeline (workflow) to quantify the volume of subcortical nuclei, using the `wf4ni` package.
+
+The main steps in this pipeline will be:
+
+- Reorientation of the input image into MNI space.
+- Correction of intensity inhomogeneities.
+- Removal of non-brain tissue.
+- Segmentation of different tissue types.
+- Anatomical parcellation, that is, delimitation of different regions of interest.
+- Quantification of volume of those regions.
+
+To demonstrate the flexibility of `wf4ni`, we'll use different `R` packages to perform several of the above steps. 
+
+It must be noted that the philosophy of `wf4ni` is to separate the pipeline logic from its implementation. So, the same workflow could be used just changing, if needed, the implementation of any (or all) of the steps above.
+
+The organization of this vignette is as follows. First, we'll describe the dependencies or packages needed to run the workflow. Later, we'll describe the workflow, step by step, without presenting the actual implementation of the functions used. Then, we'll use some sample data to run an experiment with the workflow, presenting its results. We'll end the vignette with an annex in which we'll present the actual implementation of the functions.
 
 # Requirements
 
+We consider two types of requirements: packages needed to perform the key steps in the workflow and data which may be necessary at any step of the computation.
+
 ## Packages
 
+First, obviously, the `wf4ni` package:
 ```{r messages = FALSE, warning=FALSE}
 library(wf4ni)
 ```
 
+Other packages needed at some point of the workflow are loaded by:
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(ANTsRCore)
@@ -43,10 +63,32 @@ library(fslr)
 library(scales)
 ```
 
+`ANTsRCore`, `ANTsR` and `extrantsr` are going to be used for input/output tasks as well as for different processes. `fslr` will be used to segment the image into tissue types.
+
+`neurobase` and `oro.nifti` are mainly used for input/output and to plot nifti objects.
+
+The `tidyverse` simplifies many of the processes in the functions.
+
+The `scales` library is used just for assigning colors in an automatic way in graphics.
 
 ## Other Resources
 
+At the beginning of the workflow, we need a template image in order to reorient our input into MNI space. We'll use the "MNI152_T1_1mm" template file available, for example, from FSL companion data.
+
+On the other hand, we intend to use the MALF (Multi-Atlas Label Fusion) algorithm, present in the `ANTsR` package, in two cases:
+
+- To perform brain extraction
+- To obtain the anatomical parcellation of the subcortical nuclei.
+
+Thus, we'll need sample data of images manually labelled for both of these tasks.
+
+Brain MRIs with its corresponding skull-stripped versions are available for free at the [Neurofeedback Skull-stripped (NFBS) repository](http://preprocessed-connectomes-project.org/NFB_skullstripped/).
+
+On the other hand, we'll use data from [Mindboggle101](https://mindboggle.info/data.html) consisting in brain images with corresponding manual labellings.
+
 # Volumetry
+
+The volumetry workflow will be a `NIflow` object. To create such object, one needs to provide a _name_, a _work_dir_ where to store temporary results, and the name of the _inputs_ needed to execute the workflow. In this case, our pipeline will only need a T1 image to obtain the results.
 
 ```{r v_flow}
 volumetry_flow <- NIflow$new(name = "volumetry",
@@ -54,56 +96,43 @@ volumetry_flow <- NIflow$new(name = "volumetry",
                              inputs = "T1")
 ```
 
+In the next sections, we'll provide the complete structure of the workflow, just by using skeletons of the functions needed.
 
 ## Register to Template Space
 
-```{r reg_to_template}
+In this task, we'll use a function  (from the `ANTsR` package) to compute the (affine) transformation from our input image to a standard template. Once we have the transformation given by the `register_to_template` function, we have to explicitly compute the transformed image, the affine matrix and the scale parameter (the determinant of the affine matrix). 
+
+```{r reg_to_template_foo}
 # - register to a template (MNI152 in case of structural imaging)
 # Returns the transformation, as declared in the ANTsRCore package
 register_to_template <- function(image, template) {
-
-  image <- check_ants(image)
-
-  template <- check_ants(template)
-
-  transform <- antsRegistration(fixed = template,
-                                moving = image,
-                                typeofTransform = "AffineFast",
-                                verbose = TRUE)
-
-  return(transform)
-
+  #...
 }
-
 
 # Returns the image reoriented in the template space
 get_img_in_template <- function(tx) {
-
-  check_nifti(tx$warpedmovout)
-
+  #...
 }
 
 # Returns the affine transformation
 get_tx_to_template <- function(tx) {
-
-  matrix(read_transformlist(tx$fwdtransforms)[[1]]$AffineTransform.float.3.3[1:9],
-         nrow = 3, ncol = 3)
-
+  #...
 }
 
 # Returns the scale parameter as the determinant of the affine transformation
 get_scale_parameter <- function(M) {
-
-  det(M)
-
+  #...
 }
 ```
+
+The template that we'll use is located in (change to your local installation, if needed):
 
 ```{r template}
 template <- file.path(".", "resources",
                       "volumetry", "MNI152_T1_1mm.nii.gz")
 ```
 
+We add the previous functions as steps in our workflow, stating clearly the inputs needed in each step, as well as the output provided in each one. Note that the `add` function allows for extra arguments (in particular, argument `template` to function `register_to_template`) for the functions used in the step. In this case, `T1_MNI` stands for T1 image in MNI space.
 
 ```{r reg_to_template_flow}
 volumetry_flow$add(what = register_to_template,
@@ -143,21 +172,23 @@ volumetry_flow  %>%
       output = "scale_parameter")
 ```
 
+With this little effort, we have built the following flow:
+```{r echo=TRUE, fig.show='asis', fig.width = 5, fig.asp = 1}
+volumetry_flow$plot()
+```
+
 ## Bias Field Correction
 
-```{r bfc}
+Next step is correction of the intensity inhomogeneities, using `ANTsR` package.
+```{r bfc_foo}
 # - bias field correction, just a simple wrapper around
 # n4BiasFieldCorrection
 bfc <- function(img) {
-
-  image2 <- as.antsImage(img)
-
-  image2 <- n4BiasFieldCorrection(img = image2, verbose = TRUE)
-
-  return(ants2oro(image2, reference = img))
-
+  #...
 }
 ```
+
+We add this step, which will be applied on the `T1_MNI` step before, and will provide with an image named `T1_bfc`:
 
 ```{r bfc_flow}
 volumetry_flow$add(what = bfc,
@@ -165,28 +196,27 @@ volumetry_flow$add(what = bfc,
                    output = "T1_bfc")
 ```
 
+Flow up to now is as follows:
+```{r echo=TRUE, fig.show='asis', fig.width = 5, fig.asp = 1}
+volumetry_flow$plot()
+```
+
 ## Brain Extraction
 
-```{r bet}
+The function to perform brain extraction uses the MALF technique implemented in the `ANTsR` package. Thus, we need to provide template images and template label images to this function.
+
+```{r bet_foo}
 # - brain extraction
 # Uses MALF technique with a "brain extraction" dataset
 # Returns the brain mask
 make_brain_extraction <- function(image, 
                                   template_images, 
                                   template_structs) {
-
-  my_image <- checkimg(image)
-
-  res <- malf(infile = my_image,
-              template.images = template_images,
-              template.structs = template_structs,
-              typeofTransform = "SyN",
-              verbose = FALSE)
-
-  return(res)
-
+  #...
 }
 ```
+
+Now, we make a list of the template images and labels that we have (see _Requirements_ section) and provide it as extra arguments in the flow:
 
 ```{r template_images}
 template_folder <- file.path(".", "resources", "volumetry", "bet")
@@ -214,8 +244,347 @@ volumetry_flow$add(what = function(A, B) {A * B},
 
 ```
 
+This last function computes the brain-extracted image. Since the `brain_mask` consists of 0s and 1s, multiplying it by the bias-field-corrected image will produce the skull-stripped (betted) image.
+
+```{r echo=TRUE, fig.show='asis', fig.width = 5, fig.asp = 1}
+volumetry_flow$plot()
+```
 
 ## Segmentation
+
+The segmentation step will be performed by FSL by means of the `fslr` package. It needes a brain extracted image as input. Since we have it computed in the previous step, we'll use as the input for this function.
+
+```{r aux_seg_foo}
+# - segmentation (GM, WM an CSF)
+# Uses FSL's FAST tool to find a segmentation into GM, WM and CSF
+# Returns the segmentation as a labelled image with labels 0 (background),
+# 1 (CSF), 2 (GM) and 3 (WM)
+get_segmentation <- function(img, mask = NULL) {
+  #...
+}
+```
+
+Thus, the flow in this step is updated simply by doing:
+```{r flow_seg}
+volumetry_flow$add(what = get_segmentation,
+                   inputs = "betted",
+                   output = "segmentation")
+```
+
+```{r echo=TRUE, fig.show='asis', fig.width = 5, fig.asp = 1}
+volumetry_flow$plot()
+```
+
+## Anatomical Parcellation
+
+Another key step of the workflow is the anatomical labelling, also based on the MALF technique. We'll need a skull-stripped image and template images and labels.
+
+```{r aux_parc_foo}
+# - parcellation
+# Uses MALF technique with a previously labelled dataset
+make_subcortical_parcellation <- function(image,
+                                          mask = NULL,
+                                          template_images,
+                                          template_structs) {
+  #...
+}
+
+# Removes CSF voxels from the parcellation
+refine_parcellation <- function(parcellation, segmentation) {
+  #...
+}
+```
+
+We also use the segmentation information to refine the parcellation, just by removing CSF voxels form the subcortical nuclei delimited in the previous function.
+
+We list all the template images and labels to be used in this step:
+```{r templates_parc}
+template_folder <- file.path(".", "resources", "volumetry", "parcellation")
+template_images_parc <- list.files(path = file.path(template_folder,
+                                               "images"),
+                              pattern = ".nii.gz",
+                              full.names = TRUE)
+template_structs_parc <- list.files(path = file.path(template_folder,
+                                               "masks"),
+                              pattern = ".nii.gz",
+                              full.names = TRUE)
+```
+
+And use them as extra arguments for the `make_subcortical_parcellation` function in this step:
+```{r flow_parc}
+volumetry_flow$add(what = make_subcortical_parcellation,
+                   inputs = "betted",
+                   output = "parcellation_basic",
+                   template_images = template_images_parc,
+                   template_structs = template_structs_parc)
+
+volumetry_flow$add(what = refine_parcellation,
+                   inputs = c("parcellation_basic", "segmentation"),
+                   output = "parcellation")
+```
+
+Without the quantification part, this is the flow we are building:
+```{r echo=TRUE, fig.show='asis', fig.width = 5, fig.asp = 1}
+volumetry_flow$plot()
+```
+
+## Quantification
+
+We define a function that computes the number of voxels for each region of interest labelled in an image.
+```{r aux_quant_foo}
+count_by_ROI <- function(img) {
+  #...
+}
+```
+
+We use repeatedly this function to count voxels inside the brain, inside each type of tissue, and in each of the subcortical nuclei. These are estimations of volumes in MNI space (where the volume of a single voxel is 1mm^3). To compute the actual real volume, we must multiplicate this _MNI volume_ by the scale parameter derived from the affine transformation in the first step.
+
+```{r flow_quant}
+volumetry_flow$add(what = count_by_ROI,
+                   inputs = "brain_mask",
+                   output = "brain_volume_mni")
+
+volumetry_flow$add(what = function(A, B) {A * B},
+                   inputs = c("brain_volume_mni", "scale_parameter"),
+                   output = "brain_volume")
+
+volumetry_flow$add(what = count_by_ROI,
+                   inputs = "segmentation",
+                   output = "basic_volumetry_mni")
+
+volumetry_flow$add(what = function(A, B) {A * B},
+                   inputs = c("basic_volumetry_mni", "scale_parameter"),
+                   output = "basic_volumetry")
+
+volumetry_flow$add(what = count_by_ROI,
+                   inputs = "parcellation",
+                   output = "final_volumetry_mni")
+
+volumetry_flow$add(what = function(A, B) {A * B},
+                   inputs = c("final_volumetry_mni", "scale_parameter"),
+                   output = "final_volumetry")
+```
+
+# Final Flow
+
+With these last additions, the flow is as follows:
+
+```{r flow_plot, echo=TRUE, fig.show='asis', fig.width = 7, fig.asp = 1}
+volumetry_flow$plot()
+```
+
+# Example
+
+To illustrate how this workflow can be used, let us suppose that we have all the functions mentioned before already implemented (an example implementation is given in the Annex), and build the workflow as in the previous steps. We'll apply this flow to compute the brain mask, the segmentation, the parcellation and the volumes of brain, tissues and subcortical nuclei.
+
+## Code
+
+Using a T1 nifti file as input, we execute:
+```{r example, eval = FALSE}
+my_t1 <- file.path(".", "resources",
+                   "volumetry", "input",
+                   "t1.nii.gz")
+
+res <- volumetry_flow$compute(what = c("T1_bfc",
+                                       "brain_mask",
+                                       "segmentation",
+                                       "parcellation",
+                                       "brain_volume",
+                                       "basic_volumetry",
+                                       "final_volumetry"),
+                              from = list(T1 = my_t1))
+
+```
+
+## Results
+
+Let us inspect the different results:
+
+```{r res, eval = FALSE}
+names(res$brain_volume) <- c("brain_volume")
+res$brain_volume
+```
+
+```{r echo = FALSE}
+readRDS(file = "./resources/brain_volume.rds")
+```
+
+
+```{r, eval = FALSE}
+names(res$basic_volumetry) <- c("CSF", "GM", "WM")
+res$basic_volumetry
+```
+
+```{r echo = FALSE}
+readRDS(file = "./resources/basic_volumetry.rds")
+```
+
+
+```{r, eval = FALSE}
+names(res$final_volumetry) <- c("left thalamus proper",
+                                "left caudate", "left putamen", 
+                                "left pallidum", "left hippocampus", 
+                                "left amygdala", "right thalamus proper",
+                                "right caudate", "right putamen", 
+                                "right pallidum", "right hippocampus", 
+                                "right amygdala")
+
+res$final_volumetry
+```
+
+```{r echo = FALSE}
+readRDS(file = "./resources/final_volumetry.rds")
+```
+
+## Images
+
+Also, using this function (a simple extension of `neurobase`'s `ortho2` function), we can inspect the volumes provided as results of the workflow execution:
+
+```{r aux_plot_overlay}
+# Plot an anatomical image with an overlay
+plot_overlay <- function(image, overlay, text = "") {
+  
+  label_ids <- overlay %>% as.vector() %>% unique() %>% sort()
+  label_ids <- label_ids[-1]
+  overlay <- remap_labels(img = overlay)
+  
+  num_classes <- length(label_ids) + 1
+  col.y <- alpha(colour = hue_pal()(num_classes), alpha = 0.45)
+  
+  if (num_classes == 4)
+    col.y <- alpha(colour = viridis_pal()(num_classes), alpha = 0.3)
+  
+  ortho2(x = image, y = overlay, col.y = col.y, text = text)
+  
+}
+```
+
+The brain mask:
+```{r eval = FALSE}
+plot_overlay(image = res$T1_bfc,
+             overlay = res$brain_mask,
+             text = "Brain Mask")
+```
+
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/vol_brain_mask.png")
+```
+
+The segmented image:
+```{r eval = FALSE}
+plot_overlay(image = res$T1_bfc,
+             overlay = res$segmentation,
+             text = "Segmentation")
+```
+
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/vol_segmentation.png")
+```
+
+The anatomical parcellation:
+```{r eval = FALSE}
+plot_overlay(image = res$T1_bfc,
+             overlay = res$parcellation,
+             text = "Parcellation")
+```
+
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/vol.parcellation.png")
+```
+
+## Full Flow Log
+
+The `NIflow` object stores internally a log of all the processes that it goes through and the memory used to store its internal results:
+
+```{r print_log, eval = FALSE}
+volumetry_flow$print_log()
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lines <- readLines(con = "./resources/vol_log.txt")
+
+cat(lines, sep = "\n")
+```
+
+
+# Annex: Full Code
+
+In this annex, we provide example code for the volumetry workflow, which can be loaded and used to replicate the workflow and results given in this vignette.
+
+```{r reg_to_template}
+# - register to a template (MNI152 in case of structural imaging)
+# Returns the transformation, as declared in the ANTsRCore package
+register_to_template <- function(image, template) {
+
+  image <- check_ants(image)
+
+  template <- check_ants(template)
+
+  transform <- antsRegistration(fixed = template,
+                                moving = image,
+                                typeofTransform = "AffineFast",
+                                verbose = TRUE)
+
+  return(transform)
+
+}
+
+# Returns the image reoriented in the template space
+get_img_in_template <- function(tx) {
+
+  check_nifti(tx$warpedmovout)
+
+}
+
+# Returns the affine transformation
+get_tx_to_template <- function(tx) {
+
+  matrix(read_transformlist(tx$fwdtransforms)[[1]]$AffineTransform.float.3.3[1:9],
+         nrow = 3, ncol = 3)
+
+}
+
+# Returns the scale parameter as the determinant of the affine transformation
+get_scale_parameter <- function(M) {
+
+  det(M)
+
+}
+```
+
+```{r bfc}
+# - bias field correction, just a simple wrapper around
+# n4BiasFieldCorrection
+bfc <- function(img) {
+
+  image2 <- as.antsImage(img)
+
+  image2 <- n4BiasFieldCorrection(img = image2, verbose = TRUE)
+
+  return(ants2oro(image2, reference = img))
+
+}
+```
+
+```{r bet}
+# - brain extraction
+# Uses MALF technique with a "brain extraction" dataset
+# Returns the brain mask
+make_brain_extraction <- function(image, 
+                                  template_images, 
+                                  template_structs) {
+
+  my_image <- checkimg(image)
+
+  res <- malf(infile = my_image,
+              template.images = template_images,
+              template.structs = template_structs,
+              typeofTransform = "SyN",
+              verbose = FALSE)
+
+  return(res)
+
+}
+```
 
 ```{r aux_seg}
 # - segmentation (GM, WM an CSF)
@@ -249,14 +618,6 @@ get_segmentation <- function(img, mask = NULL) {
 
 }
 ```
-
-```{r flow_seg}
-volumetry_flow$add(what = get_segmentation,
-                   inputs = "betted",
-                   output = "segmentation")
-```
-
-## Anatomical Parcellation
 
 ```{r aux_preproc}
 # Remaps labels given by values = (l1, l2, l3, ...) present in the image img
@@ -348,34 +709,6 @@ refine_parcellation <- function(parcellation, segmentation) {
 }
 ```
 
-
-```{r templates_parc}
-template_folder <- file.path(".", "resources", "volumetry", "parcellation")
-template_images_parc <- list.files(path = file.path(template_folder,
-                                               "images"),
-                              pattern = ".nii.gz",
-                              full.names = TRUE)
-template_structs_parc <- list.files(path = file.path(template_folder,
-                                               "masks"),
-                              pattern = ".nii.gz",
-                              full.names = TRUE)
-```
-
-
-```{r flow_parc}
-volumetry_flow$add(what = make_subcortical_parcellation,
-                   inputs = "betted",
-                   output = "parcellation_basic",
-                   template_images = template_images_parc,
-                   template_structs = template_structs_parc)
-
-volumetry_flow$add(what = refine_parcellation,
-                   inputs = c("parcellation_basic", "segmentation"),
-                   output = "parcellation")
-```
-
-## Quantification
-
 ```{r aux_quant}
 count_by_ROI <- function(img) {
 
@@ -384,162 +717,3 @@ count_by_ROI <- function(img) {
 
 }
 ```
-
-
-```{r flow_quant}
-volumetry_flow$add(what = count_by_ROI,
-                   inputs = "brain_mask",
-                   output = "brain_volume_mni")
-
-volumetry_flow$add(what = function(A, B) {A * B},
-                   inputs = c("brain_volume_mni", "scale_parameter"),
-                   output = "brain_volume")
-
-volumetry_flow$add(what = count_by_ROI,
-                   inputs = "segmentation",
-                   output = "basic_volumetry_mni")
-
-volumetry_flow$add(what = function(A, B) {A * B},
-                   inputs = c("basic_volumetry_mni", "scale_parameter"),
-                   output = "basic_volumetry")
-
-volumetry_flow$add(what = count_by_ROI,
-                   inputs = "parcellation",
-                   output = "final_volumetry_mni")
-
-volumetry_flow$add(what = function(A, B) {A * B},
-                   inputs = c("final_volumetry_mni", "scale_parameter"),
-                   output = "final_volumetry")
-```
-
-# Final Flow
-
-```{r flow_plot, echo=TRUE, fig.show='asis', fig.width = 7, fig.asp = 1}
-volumetry_flow$plot()
-```
-
-# Example
-
-## Code
-
-```{r example, eval = FALSE}
-# Load data of the brain extraction dataset
-problem <- "brain_extraction"
-problem_path <- problem %>% get_dataset()
-
-t1_dir <- file.path(problem_path, "inputs", "T1")
-t1_files <- list.files(path = t1_dir, pattern = ".nii", full.names = TRUE)
-
-res <- volumetry_flow$compute(what = c("T1_bfc",
-                                       "brain_mask",
-                                       "segmentation",
-                                       "parcellation",
-                                       "brain_volume",
-                                       "basic_volumetry",
-                                       "final_volumetry"),
-                              from = list(T1 = t1_files[length(t1_files)]))
-
-```
-
-## Results
-
-```{r res, eval = FALSE}
-names(res$brain_volume) <- c("brain_volume")
-res$brain_volume
-```
-
-```{r echo = FALSE}
-readRDS(file = "./resources/brain_volume.rds")
-```
-
-
-```{r, eval = FALSE}
-names(res$basic_volumetry) <- c("CSF", "GM", "WM")
-res$basic_volumetry
-```
-
-```{r echo = FALSE}
-readRDS(file = "./resources/basic_volumetry.rds")
-```
-
-
-```{r, eval = FALSE}
-names(res$final_volumetry) <- c("left thalamus proper",
-                                "left caudate", "left putamen", 
-                                "left pallidum", "left hippocampus", 
-                                "left amygdala", "right thalamus proper",
-                                "right caudate", "right putamen", 
-                                "right pallidum", "right hippocampus", 
-                                "right amygdala")
-
-res$final_volumetry
-```
-
-```{r echo = FALSE}
-readRDS(file = "./resources/final_volumetry.rds")
-```
-
-## Images
-
-```{r aux_plot_overlay}
-plot_overlay <- function(image, overlay, text = "") {
-  
-  label_ids <- overlay %>% as.vector() %>% unique() %>% sort()
-  label_ids <- label_ids[-1]
-  overlay <- remap_labels(img = overlay)
-  
-  num_classes <- length(label_ids) + 1
-  col.y <- alpha(colour = hue_pal()(num_classes), alpha = 0.45)
-  
-  if (num_classes == 4)
-    col.y <- alpha(colour = viridis_pal()(num_classes), alpha = 0.3)
-  
-  ortho2(x = image, y = overlay, col.y = col.y, text = text)
-  
-}
-```
-
-```{r eval = FALSE}
-plot_overlay(image = res$T1_bfc,
-             overlay = res$brain_mask,
-             text = "Brain Mask")
-```
-
-```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
-knitr::include_graphics(path = "./img/vol_brain_mask.png")
-```
-
-
-```{r eval = FALSE}
-plot_overlay(image = res$T1_bfc,
-             overlay = res$segmentation,
-             text = "Segmentation")
-```
-
-```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
-knitr::include_graphics(path = "./img/vol_segmentation.png")
-```
-
-```{r eval = FALSE}
-plot_overlay(image = res$T1_bfc,
-             overlay = res$parcellation,
-             text = "Parcellation")
-```
-
-```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
-knitr::include_graphics(path = "./img/vol.parcellation.png")
-```
-
-## Full Flow Log
-
-```{r print_log, eval = FALSE}
-volumetry_flow$print_log()
-```
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-lines <- readLines(con = "./resources/vol_log.txt")
-
-cat(lines, sep = "\n")
-```
-
-
-# Availability

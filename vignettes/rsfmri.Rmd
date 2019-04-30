@@ -17,18 +17,38 @@ knitr::opts_chunk$set(
 )
 ```
 
-
 # Objective
+
+In this vignette, we're going to develop a pipeline (workflow) to build the functional connectome from a resting state fMRI volume, associated to an atlas, using the `wf4ni` package.
+
+As a model, we have used the steps mentioned in the [Python/FSL Resting State Pipeline](https://wiki.biac.duke.edu/biac:analysis:resting_pipeline) from the [Brain Imaging and Analysis Center](https://wiki.biac.duke.edu):
+
+- Slice time correction 
+- Motion correction, then regress out motion parameter 
+- Skull stripping 
+- Data normalization
+- Regress out WM/CSF signal
+- Bandpass filter 
+- Do parcellation and produce correlation matrix from label file 
+    
+To demonstrate the flexibility of `wf4ni`, we'll use different `R` packages to perform several of the above steps. 
+
+It must be noted that the philosophy of `wf4ni` is to separate the pipeline logic from its implementation. So, the same workflow could be used just changing, if needed, the implementation of any (or all) of the steps above.
+
+The organization of this vignette is as follows. First, we'll describe the dependencies or packages needed to run the workflow. Later, we'll describe the workflow, step by step, without presenting the actual implementation of the functions used. Then, we'll use some sample data to run an experiment with the workflow, presenting its results. We'll end the vignette with an annex in which we'll present the actual implementation of the functions.
 
 # Requirements
 
+We consider two types of requirements: packages needed to perform the key steps in the workflow and data which may be necessary at any step of the computation.
+
 ## Packages
 
+Obviously, to build the workflow, we need the `wf4ni` package:
 ```{r messages = FALSE, warning=FALSE}
 library(wf4ni)
 ```
 
-
+The following packages are needed in some points of the pipeline:
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(neurobase)
@@ -44,10 +64,20 @@ library(dplyr)
 library(ggplot2)
 ```
 
+The `tidyverse` simplifies some of the functions and makes code more legible. Packages `fslr`, `ANTsR`, and `signal` are used in different parts of the code. `neurobase`, `oro.nifti` and `readr` are used in input/output tasks and to show orthographic plots of nifti volumes. Packages `RColorBrewer`, `tidyr`, `dplyr` and `ggplot2` are used to visualize the results.
 
 ## Other Resources
 
+The additional resources, such as the atlas used in this vignette to compute the functional connectome (AAL v4), or the WM/CSF probability map templates, are from the [Python/FSL Resting State Pipeline](https://wiki.biac.duke.edu/biac:analysis:resting_pipeline), mentioned above.
+
 # fMRI Processing
+
+The diffusion workflow will be a `NIflow` object. To create such object, one needs to provide a _name_, a _work_dir_ where to store temporary results, and the name of the _inputs_ needed to execute the workflow. In this case, our pipeline will need:
+
+ - A T1 image in nifti format.
+ - A rsfMRI image (BOLD) also in nifti format.
+ - The TR of the acquisition.
+ - The atlas with the appropriate labels to compute the connectome.
 
 ```{r fmri_flow}
 fmri_flow <- NIflow$new(name = "fmri",
@@ -55,8 +85,359 @@ fmri_flow <- NIflow$new(name = "fmri",
                         inputs = c("T1", "BOLD", "TR", "atlas"))
 ```
 
+There will be processes exclusively acting on the fMRI image, whereas others will act on the T1 image, for different purposes. Having a T1 image will help normalize the functional image into MNI space.
 
 ## Slice Time Correction
+
+The first action to take is to correct the functional image for slice timing, using `fslr` package:
+```{r slice_time_foo}
+# slice time correction
+correct_slice_time <- function(bold) {
+  #...
+}
+```
+
+Adding this step to the flow is straightforward:
+```{r slice_time_flow}
+fmri_flow %>%
+  add(what = correct_slice_time,
+      inputs = "BOLD",
+      output = "bold_slice_time")
+```
+
+```{r echo = TRUE, fig.show = 'asis', fig.width = 5, fig.asp = 1}
+fmri_flow$plot()
+```
+
+## Motion Correction
+
+The next step is correcting the motion between different acquisitions (using `fslr`), and regress out the effect of the motion in the fMRI signal (using functions from base `R`):
+```{r motion_correction_foo}
+# run motion correction
+correct_motion <- function(bold) {
+  #...
+}
+
+# regressing out motion correction parameters
+regress_out_motion <- function(L) {
+  #...
+}
+```
+
+Adding these two steps can be made as follows:
+```{r motion_correction_flow}
+fmri_flow %>%
+  add(what = correct_motion,
+      inputs = "bold_slice_time",
+      output = "motion_estimation") %>%
+  add(what = regress_out_motion,
+      inputs = "motion_estimation",
+      output = "bold_motion_regressed")
+```
+
+At this point, the partial flow is:
+```{r echo = TRUE, fig.show = 'asis', fig.width = 5, fig.asp = 1}
+fmri_flow$plot()
+```
+
+## Skull Strip Functional Image
+
+In order to remove the exterior of the brain, we will follow the next actions:
+
+- Compute the average functional image.
+- Extract a brain mask from this averaged image.
+- Use that result to mask the whole run.
+
+Some of these functions need the `fslr` package.
+
+```{r skull_strip_foo}
+#first create mean_func
+compute_mean_func <- function(image) {
+  #...
+}
+
+#now skull strip the mean
+skull_strip <- function(image) {
+  #...
+}
+
+#now mask full run by results
+mask_run <- function(image, mask) {
+  #...
+}
+```
+
+We concatenate this functions as follows:
+```{r skull_strip_flow}
+fmri_flow %>%
+  add(what = compute_mean_func,
+      inputs = "bold_motion_regressed",
+      output = "mean_func") %>%
+  add(what = skull_strip,
+      inputs = "mean_func",
+      output = "mean_func_brain") %>%
+  add(what = mask_run,
+      inputs = c("bold_motion_regressed", "mean_func_brain"),
+      output = "bold_masked") %>%
+  add(what = skull_strip,
+      inputs = "T1",
+      output = "T1_brain")
+```
+
+Note that we also skull-strip the T1 image. This way, later, we'll be able to reorient the anatomical image into MNI space.
+
+```{r echo = TRUE, fig.show = 'asis', fig.width = 5, fig.asp = 1}
+fmri_flow$plot()
+```
+
+## Normalize data
+
+In this step, we reorient both the anaotmical and the functional images into MNI space. We'll use `fslr` functions to this end.
+```{r normalization_foo}
+# normalize the data
+normalize_data <- function(t1_ss, bold_ss) {
+  #...
+}
+
+get_t12std <- function(L) L$t12std_img
+get_func2std <- function(L) L$func2std_img
+```
+
+Taking into account the corresponding inputs and outputs, the code to add this functions to the flow is:
+```{r normalization_flow}
+fmri_flow %>%
+  add(what = normalize_data,
+      inputs = c("T1_brain", "bold_masked"),
+      output = "all_normalized") %>%
+  add(what = get_t12std,
+      inputs = "all_normalized",
+      output = "t12std") %>%
+  add(what = get_func2std,
+      inputs = "all_normalized",
+      output = "func2std")
+```
+
+The flow up-to-now is as follows:
+```{r echo = TRUE, fig.show = 'asis', fig.width = 5, fig.asp = 1}
+fmri_flow$plot()
+```
+
+## Regress out WM and CSF Signals
+
+To regress out CSF and WM signal, we use base `R` functions. The CSF and WM maps are obtained from the external resources mentioned above.
+```{r regress_wm_csf_foo}
+# regress out WM/CSF
+regress_out_wm_csf <- function(func2std_img) {
+  #...
+}
+```
+
+We add this step to the flow:
+```{r regress_wm_csf_flow}
+fmri_flow %>%
+  add(what = regress_out_wm_csf,
+      inputs = "func2std",
+      output = "func2std_out_wm_csf")
+```
+
+```{r echo = TRUE, fig.show = 'asis', fig.width = 5, fig.asp = 1}
+fmri_flow$plot()
+```
+
+## Bandpass Filter
+
+We'll use functions from the `ANTsR` package to filter the functional image. We'll also need the TR of the acquisition as input for this step.
+```{r filter_foo}
+# bandpass filter
+filter_func <- function(func, tr) {
+  #...
+}
+```
+
+This way we add the function to the flow_
+```{r filter_flow}
+fmri_flow %>%
+  add(what = filter_func,
+      inputs = c("func2std_out_wm_csf", "TR"),
+      output = "func_filtered")
+```
+
+The partial flow is now:
+```{r echo = TRUE, fig.show = 'asis', fig.width = 5, fig.asp = 1}
+fmri_flow$plot()
+```
+
+## Extract Time-Series and Compute Correlation
+
+First, we extract a functional time series for each of the regions of interest in the labelled atlas, as the mean of the signal, at each timepoint, over all voxels of the corresponding region.
+
+Later, we compute the correlation of those time series to extract the functional connectome associated to the labelling.
+```{r correlation_foo}
+# do the parcellation
+extract_time_series <- function(bold, corr_label) {
+  #...
+}
+
+# do the correlation
+compute_correlation <- function(time_series) {
+  #...
+}
+```
+
+We add this last steps to the flow as follows:
+```{r correlation_flow}
+fmri_flow %>%
+  add(what = extract_time_series,
+      inputs = c("func_filtered", "atlas"),
+      output = "ts") %>%
+  add(what = compute_correlation,
+      inputs = "ts",
+      output = "cormat")
+```
+
+
+# Final Flow
+
+With these final additions, the complete pipeline is as follows:
+```{r flow_plot, echo = TRUE, fig.show = 'asis', fig.width = 7, fig.asp = 1}
+fmri_flow$plot()
+```
+
+# Example
+
+To illustrate how this workflow can be used, let us suppose that we have all the functions mentioned before already implemented (an example implementation is given in the Annex), and build the workflow as in the previous steps. We'll apply this flow to compute the connectome given a rsfMRI image.
+
+## Code
+
+We'll use sample data for the rsfMRI image from [openfMRI repositories](https://openfmri.org/dataset/).
+```{r example, eval = FALSE}
+T1_file <- "./resources/rsfMRI/anat.nii.gz"
+BOLD_file <- "./resources/rsfMRI/func.nii.gz"
+atlas_file <- file.path("./resources/rsfMRI/",
+                        'data', 'aal_MNI_V4.nii')
+TR <- 2
+
+res <- fmri_flow$execute(inputs = list(T1 = T1_file,
+                                       BOLD = BOLD_file,
+                                       TR = TR,
+                                       atlas = atlas_file),
+                         desired_outputs = c("mean_func",
+                                             "ts",
+                                             "cormat"))
+```
+
+## Images
+
+These are auxiliary functions to plot a connectivity matrix and a time series.
+```{r plot_matrix}
+plot_matrix <- function(M) {
+
+  color_function <- colour_ramp(brewer.pal(11, "RdBu"))
+  heatmap(t(M), Rowv = NA, Colv = NA,
+          col = color_function(seq(0, 1, 0.01)),
+          scale = "none")
+
+}
+
+plot_time_series <- function(ts) {
+
+  # Runs on rows, ROIs in columns
+  ts <- t(ts) %>% as.data.frame()
+
+  n_runs <- nrow(ts)
+  ts$run <- seq(n_runs)
+
+  df <- ts %>%
+    gather(key = "variable", value = "value", -run)
+
+  if (ncol(ts) > 3) {
+
+    ggplot(df, aes(x = run, y = value)) +
+      geom_line(aes(color = variable), size = 1) +
+      scale_color_brewer(type = "div") +
+      theme_minimal()
+
+  } else {
+
+    ggplot(df, aes(x = run, y = value)) +
+      geom_line(aes(color = variable), size = 1) +
+      scale_color_brewer(type = "qual") +
+      theme_minimal()
+
+  }
+
+}
+```
+
+This is the averaged functional image:
+```{r fmri_res, fig.width = 7, fig.asp = 1, eval = FALSE} 
+ortho2(res$mean_func)
+```
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/mean_func.png")
+```
+
+This is the connectome, the normalized correlation matrix representing a graph whose nodes are regions of interest and edge strength is given by the correlation between the time series of the regions.
+```{r fmri_res2, fig.width = 7, fig.asp = 1, eval = FALSE} 
+plot_matrix(res$cormat)
+```
+
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/cormat.png")
+```
+
+We could plot the computed averaged time series for several regions of interest:
+```{r eval = FALSE}
+roi_names <- read_tsv(file.path(".", "resources",
+                                       "rsfMRI", "data",
+                                       "aal_MNI_V4.txt"),
+                             skip = 1,
+                             col_names = FALSE,
+                             col_types = cols())
+
+colnames(roi_names) <- c("index", "name")
+
+time_series <- t(res$ts)
+rownames(time_series) <- roi_names$name
+
+plot_time_series(time_series[c(29:30, 41:42), ])
+```
+
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/ts.png")
+```
+
+We could compute which two regions have the greater correlation and plot their time series:
+```{r eval = FALSE}
+# Which two components have the greater correlation
+my_ind <- res$cormat %>%
+  which.max() %>%
+  arrayInd(.dim = dim(res$cormat))
+
+plot_time_series(time_series[my_ind, ])
+```
+```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
+knitr::include_graphics(path = "./img/max_cor_ts.png")
+```
+
+## Full Flow Log
+
+The `NIflow` object stores internally a log of all the processes that it goes through and the memory used to store its internal results:
+
+```{r print_log, eval = FALSE}
+fmri_flow$print_log()
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lines <- readLines(con = "./resources/rsfmri_log.txt")
+
+cat(lines, sep = "\n")
+```
+
+# Annex: Full Code
+
+In this annex, we provide example code for the functional connectome workflow, which can be loaded and used to replicate the workflow and results given in this vignette.
+
+When trying to use this code, take into account that several of the functions, just for the purposes of this vignette, have paths and filenames hardcoded. Please, change them when using it in your own computer.
 
 ```{r slice_time}
 # slice time correction
@@ -70,15 +451,6 @@ correct_slice_time <- function(bold) {
 
 }
 ```
-
-```{r slice_time_flow}
-fmri_flow %>%
-  add(what = correct_slice_time,
-      inputs = "BOLD",
-      output = "bold_slice_time")
-```
-
-## Motion Correction
 
 ```{r motion_correction}
 # run motion correction
@@ -153,18 +525,6 @@ regress_out_motion <- function(L) {
 }
 ```
 
-```{r motion_correction_flow}
-fmri_flow %>%
-  add(what = correct_motion,
-      inputs = "bold_slice_time",
-      output = "motion_estimation") %>%
-  add(what = regress_out_motion,
-      inputs = "motion_estimation",
-      output = "bold_motion_regressed")
-```
-
-## Skull Strip Functional Image
-
 ```{r skull_strip}
 #first create mean_func
 compute_mean_func <- function(image) {
@@ -206,25 +566,6 @@ mask_run <- function(image, mask) {
 
 }
 ```
-
-```{r skull_strip_flow}
-fmri_flow %>%
-  add(what = compute_mean_func,
-      inputs = "bold_motion_regressed",
-      output = "mean_func") %>%
-  add(what = skull_strip,
-      inputs = "mean_func",
-      output = "mean_func_brain") %>%
-  add(what = mask_run,
-      inputs = c("bold_motion_regressed", "mean_func_brain"),
-      output = "bold_masked") %>%
-  add(what = skull_strip,
-      inputs = "T1",
-      output = "T1_brain")
-```
-
-
-## Normalize data
 
 ```{r normalization}
 # normalize the data
@@ -298,21 +639,6 @@ get_t12std <- function(L) L$t12std_img
 get_func2std <- function(L) L$func2std_img
 ```
 
-```{r normalization_flow}
-fmri_flow %>%
-  add(what = normalize_data,
-      inputs = c("T1_brain", "bold_masked"),
-      output = "all_normalized") %>%
-  add(what = get_t12std,
-      inputs = "all_normalized",
-      output = "t12std") %>%
-  add(what = get_func2std,
-      inputs = "all_normalized",
-      output = "func2std")
-```
-
-## Regress out WM and CSF Signals
-
 ```{r regress_wm_csf}
 # regress out WM/CSF
 regress_out_wm_csf <- function(func2std_img) {
@@ -383,17 +709,8 @@ regress_out_wm_csf <- function(func2std_img) {
 }
 ```
 
-```{r regress_wm_csf_flow}
-fmri_flow %>%
-  add(what = regress_out_wm_csf,
-      inputs = "func2std",
-      output = "func2std_out_wm_csf")
-```
-
-## Lowpass Filter
-
 ```{r filter}
-# lowpass filter
+# bandpass filter
 filter_func <- function(func, tr) {
 
   dims <- dim(func)
@@ -427,15 +744,6 @@ filter_func <- function(func, tr) {
 
 }
 ```
-
-```{r filter_flow}
-fmri_flow %>%
-  add(what = filter_func,
-      inputs = c("func2std_out_wm_csf", "TR"),
-      output = "func_filtered")
-```
-
-## Extract Time-Series and Compute Correlation
 
 ```{r correlation}
 # do the parcellation
@@ -479,146 +787,3 @@ compute_correlation <- function(time_series) {
 
 }
 ```
-
-```{r correlation_flow}
-fmri_flow %>%
-  add(what = extract_time_series,
-      inputs = c("func_filtered", "atlas"),
-      output = "ts") %>%
-  add(what = compute_correlation,
-      inputs = "ts",
-      output = "cormat")
-```
-
-
-# Final Flow
-
-```{r flow_plot, echo = TRUE, fig.show = 'asis', fig.width = 7, fig.asp = 1}
-fmri_flow$plot()
-```
-
-# Example
-
-
-```{r example, eval = FALSE}
-T1_file <- "./resources/rsfMRI/anat.nii.gz"
-BOLD_file <- "./resources/rsfMRI/func.nii.gz"
-atlas_file <- file.path("./resources/rsfMRI/",
-                        'data', 'aal_MNI_V4.nii')
-
-TR <- 2
-
-res <- fmri_flow$execute(inputs = list(T1 = T1_file,
-                                       BOLD = BOLD_file,
-                                       TR = TR,
-                                       atlas = atlas_file),
-                         desired_outputs = c("mean_func",
-                                             "ts",
-                                             "cormat"))
-```
-
-## Results
-
-```{r plot_matrix}
-plot_matrix <- function(M) {
-
-  color_function <- colour_ramp(brewer.pal(11, "RdBu"))
-  heatmap(t(M), Rowv = NA, Colv = NA,
-          col = color_function(seq(0, 1, 0.01)),
-          scale = "none")
-
-}
-
-plot_time_series <- function(ts) {
-
-  # Runs on rows, ROIs in columns
-  ts <- t(ts) %>% as.data.frame()
-
-  n_runs <- nrow(ts)
-  ts$run <- seq(n_runs)
-
-  df <- ts %>%
-    gather(key = "variable", value = "value", -run)
-
-  if (ncol(ts) > 3) {
-
-    ggplot(df, aes(x = run, y = value)) +
-      geom_line(aes(color = variable), size = 1) +
-      scale_color_brewer(type = "div") +
-      theme_minimal()
-
-  } else {
-
-    ggplot(df, aes(x = run, y = value)) +
-      geom_line(aes(color = variable), size = 1) +
-      scale_color_brewer(type = "qual") +
-      theme_minimal()
-
-  }
-
-}
-```
-
-
-```{r fmri_res, fig.width = 7, fig.asp = 1, eval = FALSE} 
-ortho2(res$mean_func)
-```
-```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
-knitr::include_graphics(path = "./img/mean_func.png")
-```
-
-```{r fmri_res2, fig.width = 7, fig.asp = 1, eval = FALSE} 
-plot_matrix(res$cormat)
-```
-
-```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
-
-knitr::include_graphics(path = "./img/cormat.png")
-
-```
-
-```{r eval = FALSE}
-roi_names <- read_tsv(file.path(".", "resources",
-                                       "rsfMRI", "data",
-                                       "aal_MNI_V4.txt"),
-                             skip = 1,
-                             col_names = FALSE,
-                             col_types = cols())
-
-colnames(roi_names) <- c("index", "name")
-
-time_series <- t(res$ts)
-rownames(time_series) <- roi_names$name
-
-plot_time_series(time_series[c(29:30, 41:42), ])
-```
-
-```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
-knitr::include_graphics(path = "./img/ts.png")
-```
-
-```{r eval = FALSE}
-# Which two components have the greater correlation
-my_ind <- res$cormat %>%
-  which.max() %>%
-  arrayInd(.dim = dim(res$cormat))
-
-plot_time_series(time_series[my_ind, ])
-```
-
-```{r, out.width = 700, fig.asp = 1, eval = TRUE, echo = FALSE}
-knitr::include_graphics(path = "./img/max_cor_ts.png")
-```
-
-## Full Flow Log
-
-```{r print_log, eval = FALSE}
-fmri_flow$print_log()
-```
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-lines <- readLines(con = "./resources/rsfmri_log.txt")
-
-cat(lines, sep = "\n")
-```
-
-# Availability
