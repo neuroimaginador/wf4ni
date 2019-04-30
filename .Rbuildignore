@@ -1,13 +1,6 @@
-^\./vignettes/resources/dti/dti_bvals\.csv$
-^\./vignettes/resources/dti/dti_example\.nii\.gz$
-^\./vignettes/resources/dti/dti_gradients\.csv$
-^\./vignettes/resources/rsfMRI/anat\.nii\.gz$
-^\./vignettes/resources/rsfMRI/data$
-^\./vignettes/resources/rsfMRI/func\.nii\.gz$
-^\./vignettes/resources/volumetry/bet$
-^\./vignettes/resources/volumetry/input$
-^\./vignettes/resources/volumetry/MNI152_T1_1mm\.nii\.gz$
-^\./vignettes/resources/volumetry/parcellation$
+^\./vignettes/resources/dti/$
+^\./vignettes/resources/rsfMRI/$
+^\./vignettes/resources/volumetry$
 ^Meta$
 ^doc$
 ^README\.Rmd$
