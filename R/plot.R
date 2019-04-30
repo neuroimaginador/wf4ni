@@ -1,4 +1,3 @@
-
 ##%######################################################%##
 #                                                          #
 ####                      PLOTTING                      ####
@@ -6,12 +5,16 @@
 ##%######################################################%##
 
 # Auxiliary function for plotting
+#' @importFrom grid unit stringWidth convertX convertY grob
+#' @importFrom graph graphAM
+#' @importFrom methods as
+#' @importFrom igraph as_adj
+#' @importFrom Rgraphviz agopen
+#'
 .plot_flow <- function(flow,
                        to_file = "") {
 
   nWi <- function(labels, margin) {
-
-    library(grid)
 
     result <- unit(0, "inch")
     for (label in labels) result <- result + stringWidth(label) +
@@ -25,8 +28,6 @@
 
   nHi <- function(labels, margin) {
 
-    library(grid)
-
     result <- unit(1, "lines") + unit(margin$tb * 2, "inch")
     if (length(labels) > 1)
       result <- result + unit(margin$otb * 2, "inch")
@@ -36,8 +37,8 @@
 
   stopifnot(inherits(flow, "NIflow"))
 
-  suppressPackageStartupMessages(library(grid))
-  suppressPackageStartupMessages(library(Rgraphviz))
+  requireNamespace("grid", quietly = TRUE)
+  requireNamespace("Rgraphviz", quietly = TRUE)
 
   # Define color of each node as its type
   # num_types <- length(unique(V(flow$graph)$type))
@@ -119,17 +120,18 @@
 #' @description This function plots a flow using \link{igraph} plotting capabilities.
 #'
 #' @param flow           (a NIflow object) The flow.
+#' @param to_file        (character) Path to a file to save the graph. If not present, plots the flow to the screen. Otherwise, it is stored in a PNG file with the given name.
 #'
 #' @return Nothing
 #'
-#' @seealso
-#'  \code{\link[threejs]{graphjs}}
-
-#'  \code{\link[igraph]{layout_with_sugiyama}}
-
-#'  \code{\link[scales]{alpha}},\code{\link[scales]{hue_pal}}
 #' @import igraph
 #' @importFrom scales alpha hue_pal
+#' @importFrom grid unit stringWidth convertX convertY grob grid.newpage
+#' @importFrom graph graphAM
+#' @importFrom methods as
+#' @importFrom igraph as_adj
+#' @importFrom Rgraphviz agopen
+#' @importFrom grDevices dev.off png
 #'
 plot <- function(flow,
                  to_file = "") {

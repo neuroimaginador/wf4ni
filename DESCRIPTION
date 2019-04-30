@@ -2,14 +2,15 @@ Package: wf4ni
 Type: Package
 Title: Workflows for Neuroimaging
 Version: 0.1.0
-Date: 2018-01-04
+Date: 2019-04-29
+Author: Domingo López-Rodríguez [aut, cre]
 Authors@R: person("Domingo", "López-Rodríguez", role = c("aut", "cre"), email = "neuroimaginador@gmail.com")
-Maintainer: Domingo Lopez-Rodriguez <neuroimaginador@gmail.com>
+Maintainer: Domingo López-Rodríguez <neuroimaginador@gmail.com>
 Description: The aim of this package is to provide a means to create reproducible workflows specifically designed for Neuroimaging.
 License: GPL (>= 2)
 URL: https://github.com/neuroimaginador/wf4ni
 BugReports: https://github.com/neuroimaginador/wf4ni/issues
-Imports: stringr, styler, devtools, igraph, RCurl, R6, RNifti, neurobase, oro.nifti, scales, zip, crayon, prettyunits, pryr, purrr, methods, utils
+Imports: stringr, styler, devtools, igraph, RCurl, R6, RNifti, neurobase, oro.nifti, scales, zip, crayon, prettyunits, pryr, purrr, methods, utils, Rgraphviz, grid, ANTsRCore, graph
 Suggests: 
     testthat,
     knitr,

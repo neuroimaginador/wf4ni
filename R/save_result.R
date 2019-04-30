@@ -1,12 +1,17 @@
 # Save an object to the temp folder.
+#' @importFrom neurobase writenii
+#' @importFrom ANTsRCore antsImageWrite
+#'
 .save_result <- function(value, name, folder = tempdir()) {
 
   if (inherits(value, "nifti") | inherits(value, "niftiImage")) {
 
+    requireNamespace("neurobase", quietly = TRUE)
+
     my_file <- file.path(folder, paste0(name, ".nii.gz"))
 
-    neurobase::writenii(nim = value,
-                        filename = my_file)
+    writenii(nim = value,
+             filename = my_file)
 
     return(invisible(TRUE))
 
@@ -14,10 +19,12 @@
 
   if (inherits(value, "antsImage")) {
 
+    requireNamespace("ANTsRCore", quietly = TRUE)
+
     my_file <- file.path(folder, paste0(name, ".nii.gz"))
 
-    ANTsRCore::antsImageWrite(image = value,
-                              filename = my_file)
+    antsImageWrite(image = value,
+                   filename = my_file)
 
     return(invisible(TRUE))
 

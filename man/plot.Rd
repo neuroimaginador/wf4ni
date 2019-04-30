@@ -4,19 +4,16 @@
 \alias{plot}
 \title{Plot a Flow}
 \usage{
-plot(flow, as_interactive = interactive(), to_file = "")
+plot(flow, to_file = "")
 }
 \arguments{
 \item{flow}{(a NIflow object) The flow.}
+
+\item{to_file}{(character) Path to a file to save the graph. If not present, plots the flow to the screen. Otherwise, it is stored in a PNG file with the given name.}
 }
 \value{
 Nothing
 }
 \description{
 This function plots a flow using \link{igraph} plotting capabilities.
-}
-\seealso{
-\code{\link[threejs]{graphjs}}
- \code{\link[igraph]{layout_with_sugiyama}}
- \code{\link[scales]{alpha}},\code{\link[scales]{hue_pal}}
 }

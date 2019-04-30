@@ -619,7 +619,7 @@ knitr::include_graphics(path = "./img/max_cor_ts.png")
 fmri_flow$print_log()
 ```
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-lines <- readLines(con = "./resources/rsfMRI/log.txt")
+lines <- readLines(con = "./resources/rsfmri_log.txt")
 
 cat(lines, sep = "\n")
 ```

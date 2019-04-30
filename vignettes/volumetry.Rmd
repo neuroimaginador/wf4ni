@@ -17,6 +17,11 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r echo = FALSE}
+resources_folder <- "./resources"
+```
+
+
 # Objective
 
 # Requirements
@@ -443,7 +448,7 @@ res$brain_volume
 ```
 
 ```{r echo = FALSE}
-readRDS(file = "./resources/volumetry/brain_volume.rds")
+readRDS(file = "./resources/brain_volume.rds")
 ```
 
 
@@ -453,7 +458,7 @@ res$basic_volumetry
 ```
 
 ```{r echo = FALSE}
-readRDS(file = "./resources/volumetry/basic_volumetry.rds")
+readRDS(file = "./resources/basic_volumetry.rds")
 ```
 
 
@@ -470,7 +475,7 @@ res$final_volumetry
 ```
 
 ```{r echo = FALSE}
-readRDS(file = "./resources/volumetry/final_volumetry.rds")
+readRDS(file = "./resources/final_volumetry.rds")
 ```
 
 ## Images
@@ -530,7 +535,7 @@ knitr::include_graphics(path = "./img/vol.parcellation.png")
 volumetry_flow$print_log()
 ```
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-lines <- readLines(con = "./resources/volumetry/log.txt")
+lines <- readLines(con = "./resources/vol_log.txt")
 
 cat(lines, sep = "\n")
 ```

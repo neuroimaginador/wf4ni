@@ -3,6 +3,7 @@
 #' @description This internal function provides an environment usable from the class NIflow.
 #'
 #' @param name      (character) Name of the flow
+#' @param work_dir  (character) Path of the temporary folder where to store results
 #' @param inputs    (list of names) List of inputs used in the flow, Default: list()
 #'
 #' @return A NIflow object.

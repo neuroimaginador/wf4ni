@@ -4,10 +4,12 @@
 \alias{.create_flow}
 \title{Create a Flow (internal)}
 \usage{
-.create_flow(name = "", inputs = list())
+.create_flow(name = "", work_dir = tempdir(), inputs = list())
 }
 \arguments{
 \item{name}{(character) Name of the flow}
+
+\item{work_dir}{(character) Path of the temporary folder where to store results}
 
 \item{inputs}{(list of names) List of inputs used in the flow, Default: list()}
 }

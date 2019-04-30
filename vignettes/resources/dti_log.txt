@@ -1,0 +1,36 @@
+(2019-04-28 21:07:14) [DEBUG] Adding process with inputs: dwi and output(s): dwi_corrected
+(2019-04-28 21:07:17) [DEBUG] Adding process with inputs: dwi_corrected, grads, bvals and output(s): dwiData
+(2019-04-28 21:07:17) [DEBUG] Adding process with inputs: dwiData and output(s): tensors
+(2019-04-28 21:07:18) [DEBUG] Adding process with inputs: tensors and output(s): S0
+(2019-04-28 21:07:18) [DEBUG] Adding process with inputs: S0 and output(s): mask
+(2019-04-28 21:07:19) [DEBUG] Adding process with inputs: tensors, mask and output(s): fibers
+(2019-04-28 21:07:20) [DEBUG] Adding process with inputs: tensors, mask and output(s): FA_map
+(2019-04-28 21:08:36) [DEBUG] Using provided input dwi
+(2019-04-28 21:08:36) [DEBUG] Using provided input grads
+(2019-04-28 21:08:36) [DEBUG] Using provided input bvals
+(2019-04-28 21:08:36) [DEBUG] Memory used at init: 259.54 MB
+(2019-04-28 21:08:36) [DEBUG] Switching tempdir to: ~/flow/dti
+(2019-04-28 21:08:36) [DEBUG] Computing dwi_corrected...
+(2019-04-28 21:17:02) [DEBUG] Memory used after computation: 519.07 MB
+(2019-04-28 21:17:39) [DEBUG] Removed intermediate outputs: dwi
+(2019-04-28 21:17:40) [DEBUG] Memory used after cleanup: 259.54 MB
+(2019-04-28 21:17:40) [DEBUG] Computing dwiData...
+(2019-04-28 21:18:41) [DEBUG] Memory used after computation: 519.08 MB
+(2019-04-28 21:19:12) [DEBUG] Removed intermediate outputs: grads, bvals, dwi_corrected
+(2019-04-28 21:19:12) [DEBUG] Memory used after cleanup: 259.54 MB
+(2019-04-28 21:19:12) [DEBUG] Computing tensors...
+(2019-04-28 21:21:37) [DEBUG] Memory used after computation: 328.15 MB
+(2019-04-28 21:21:40) [DEBUG] Removed intermediate outputs: dwiData
+(2019-04-28 21:21:40) [DEBUG] Memory used after cleanup: 68.61 MB
+(2019-04-28 21:21:40) [DEBUG] Computing S0...
+(2019-04-28 21:21:40) [DEBUG] Memory used after computation: 76.48 MB
+(2019-04-28 21:21:41) [DEBUG] Computing mask...
+(2019-04-28 21:21:44) [DEBUG] Memory used after computation: 80.42 MB
+(2019-04-28 21:21:44) [DEBUG] Computing fibers...
+(2019-04-28 21:21:51) [DEBUG] Memory used after computation: 117.83 MB
+(2019-04-28 21:21:53) [DEBUG] Computing FA_map...
+(2019-04-28 21:21:56) [DEBUG] Memory used after computation: 125.7 MB
+(2019-04-28 21:21:56) [DEBUG] Removed intermediate outputs: tensors, mask
+(2019-04-28 21:21:57) [DEBUG] Memory used after cleanup: 53.15 MB
+(2019-04-28 21:21:57) [DEBUG] Switching to base tempdir
+(2019-04-28 21:21:57) [DEBUG] Computed all results

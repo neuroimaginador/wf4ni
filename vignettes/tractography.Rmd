@@ -248,7 +248,7 @@ dti_flow$print_log()
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-lines <- readLines(con = "./resources/dti/log.txt")
+lines <- readLines(con = "./resources/dti_log.txt")
 
 cat(lines, sep = "\n")
 ```

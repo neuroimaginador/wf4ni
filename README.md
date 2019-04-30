@@ -114,7 +114,7 @@ By defining the appropriate functions, one can model the pipeline in the
 correct order and obtain a flow as the one depicted in the following
 figure:
 
-![A sample workflow](img/flow.png)
+![A sample workflow](vignettes/img/flow.png)
 
 Original inputs in the *flow* are *I1*, *I2* and *I3* (in blue). Other
 nodes represent the output of a given function, using the incident nodes

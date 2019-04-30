@@ -68,7 +68,7 @@ In `wf4ni`, a _flow_ is an ordered collection of processes that convert inputs i
 
 By defining the appropriate functions, one can model the pipeline in the correct order and obtain a flow as the one depicted in the following figure:
 
-![A sample workflow](img/flow.png)
+![A sample workflow](vignettes/img/flow.png)
 
 Original inputs in the _flow_ are _I1_, _I2_ and _I3_ (in blue). Other nodes represent the output of a given function, using the incident nodes as inputs for that function.
 
