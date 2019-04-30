@@ -12,7 +12,7 @@
 #'
 #' @seealso
 #'  \code{\link[neurobase]{readnii}}
-#' @importFrom neurobase readnii
+#' @importFrom neurobase readnii fast_readnii
 #' @import igraph
 #' @importFrom purrr map_dbl
 #' @importFrom pryr object_size
@@ -60,7 +60,7 @@ execute <- function(flow,
 #'
 #' @seealso
 #'  \code{\link[neurobase]{readnii}}
-#' @importFrom neurobase readnii
+#' @importFrom neurobase readnii fast_readnii
 #' @import igraph
 #' @importFrom purrr map_dbl
 #' @importFrom pryr object_size
@@ -135,9 +135,9 @@ execute <- function(flow,
 
                  "rds" = readRDS(inputs[[name]]),
 
-                 "nii" = readnii(inputs[[name]]),
+                 "nii" = fast_readnii(inputs[[name]]),
 
-                 "gz" = readnii(inputs[[name]])
+                 "gz" = fast_readnii(inputs[[name]])
 
           )
 

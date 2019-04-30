@@ -4,9 +4,8 @@
 #'
 .save_result <- function(value, name, folder = tempdir()) {
 
-  if (inherits(value, "nifti") | inherits(value, "niftiImage")) {
-
-    requireNamespace("neurobase", quietly = TRUE)
+  if ((inherits(value, "nifti") || inherits(value, "niftiImage")) &&
+      requireNamespace("neurobase", quietly = TRUE)) {
 
     my_file <- file.path(folder, paste0(name, ".nii.gz"))
 
@@ -17,9 +16,8 @@
 
   }
 
-  if (inherits(value, "antsImage")) {
-
-    requireNamespace("ANTsRCore", quietly = TRUE)
+  if (inherits(value, "antsImage") &&
+      requireNamespace("ANTsRCore", quietly = TRUE)) {
 
     my_file <- file.path(folder, paste0(name, ".nii.gz"))
 
