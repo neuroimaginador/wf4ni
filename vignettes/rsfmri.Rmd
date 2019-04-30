@@ -37,6 +37,11 @@ library(readr)
 library(oro.nifti)
 library(ANTsR)
 library(signal)
+library(scales)
+library(RColorBrewer)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
 ```
 
 
@@ -83,7 +88,7 @@ correct_motion <- function(bold) {
 
   outfile <- tempfile()
 
-  res <- fslr::mcflirt(file = my_bold,
+  res <- mcflirt(file = my_bold,
                        outfile = outfile,
                        opts = "-plots")
 
@@ -509,17 +514,13 @@ res <- fmri_flow$execute(inputs = list(T1 = T1_file,
                                        atlas = atlas_file),
                          desired_outputs = c("mean_func",
                                              "ts",
-                                             "cormat",
-                                             "t12std"))
+                                             "cormat"))
 ```
 
 ## Results
 
 ```{r plot_matrix}
 plot_matrix <- function(M) {
-
-  library(scales)
-  library(RColorBrewer)
 
   color_function <- colour_ramp(brewer.pal(11, "RdBu"))
   heatmap(t(M), Rowv = NA, Colv = NA,
@@ -529,10 +530,6 @@ plot_matrix <- function(M) {
 }
 
 plot_time_series <- function(ts) {
-
-  library(tidyr)
-  library(dplyr)
-  library(ggplot2)
 
   # Runs on rows, ROIs in columns
   ts <- t(ts) %>% as.data.frame()
@@ -581,7 +578,7 @@ knitr::include_graphics(path = "./img/cormat.png")
 ```
 
 ```{r eval = FALSE}
-roi_names <- readr::read_tsv(file.path(".", "resources",
+roi_names <- read_tsv(file.path(".", "resources",
                                        "rsfMRI", "data",
                                        "aal_MNI_V4.txt"),
                              skip = 1,

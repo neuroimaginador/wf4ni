@@ -13,7 +13,9 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' download_repo("neuroimaginador/wf4ni", destination_folder = "~/Documents/wf4ni", verbose = TRUE)
+#' }
 #'
 download_repo <- function(repo_name,
                           destination_folder = normalizePath("~"),

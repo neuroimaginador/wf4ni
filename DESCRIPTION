@@ -10,9 +10,19 @@ Description: The aim of this package is to provide a means to create reproducibl
 License: GPL (>= 2)
 URL: https://github.com/neuroimaginador/wf4ni
 BugReports: https://github.com/neuroimaginador/wf4ni/issues
-Imports: stringr, styler, devtools, igraph, RCurl, R6, RNifti, neurobase, oro.nifti, scales, zip, crayon, prettyunits, pryr, purrr, methods, utils, Rgraphviz, grid, graph
+Imports: stringr, styler, devtools, igraph, RCurl, R6, RNifti, neurobase, oro.nifti, scales, zip, crayon, prettyunits, pryr, purrr, methods, utils, Rgraphviz, grid, ANTsRCore, graph
 Suggests: 
-    ANTsRCore,
+    ANTsR, 
+    RColorBrewer,
+    dplyr,
+    dti,
+    extrantsr,
+    fslr,
+    ggplot2,
+    readr,
+    signal,
+    tidyr,
+    tidyverse,
     testthat,
     knitr,
     rmarkdown,

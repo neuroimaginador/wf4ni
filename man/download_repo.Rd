@@ -21,6 +21,8 @@ The path where the repository has been downloaded.
 Download a Repository from GitHub or BitBucket
 }
 \examples{
+\dontrun{
 download_repo("neuroimaginador/wf4ni", destination_folder = "~/Documents/wf4ni", verbose = TRUE)
+}
 
 }

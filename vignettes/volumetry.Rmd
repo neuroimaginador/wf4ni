@@ -40,6 +40,7 @@ library(extrantsr)
 library(neurobase)
 library(oro.nifti)
 library(fslr)
+library(scales)
 ```
 
 
@@ -85,7 +86,7 @@ get_img_in_template <- function(tx) {
 # Returns the affine transformation
 get_tx_to_template <- function(tx) {
 
-  matrix(extrantsr::read_transformlist(tx$fwdtransforms)[[1]]$AffineTransform.float.3.3[1:9],
+  matrix(read_transformlist(tx$fwdtransforms)[[1]]$AffineTransform.float.3.3[1:9],
          nrow = 3, ncol = 3)
 
 }
@@ -488,10 +489,10 @@ plot_overlay <- function(image, overlay, text = "") {
   overlay <- remap_labels(img = overlay)
   
   num_classes <- length(label_ids) + 1
-  col.y <- scales::alpha(colour = scales::hue_pal()(num_classes), alpha = 0.45)
+  col.y <- alpha(colour = hue_pal()(num_classes), alpha = 0.45)
   
   if (num_classes == 4)
-    col.y <- scales::alpha(colour = scales::viridis_pal()(num_classes), alpha = 0.3)
+    col.y <- alpha(colour = viridis_pal()(num_classes), alpha = 0.3)
   
   ortho2(x = image, y = overlay, col.y = col.y, text = text)
   
