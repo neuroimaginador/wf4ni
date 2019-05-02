@@ -7,10 +7,7 @@
 #' @param file_prefix    (character) File name, Default: the name of the \code{flow}
 #'
 #' @return Invisibly, the name of the output file
-#'
-#' @seealso
-#'  \code{\link[zip]{zip}}
-#' @import zip
+#' @importFrom utils zip
 #'
 .save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
 
@@ -49,25 +46,20 @@
   output_file <- file.path(path, paste0(file_prefix, ".zip"))
   current_dir <- getwd()
 
-  if (requireNamespace("zip", quietly = TRUE)) {
+  output_file <- suppressWarnings(normalizePath(output_file))
 
-    output_file <- suppressWarnings(normalizePath(output_file))
+  setwd(dirname(output_dir))
 
-    setwd(dirname(output_dir))
+  file_list <- file.path(basename(output_dir),
+                         list.files(output_dir,
+                                    recursive = TRUE,
+                                    all.files = TRUE,
+                                    include.dirs = TRUE))
 
-    file_list <- file.path(basename(output_dir),
-                           list.files(output_dir,
-                                      recursive = TRUE,
-                                      all.files = TRUE,
-                                      include.dirs = TRUE))
-
-    suppressWarnings(
-      zip(zipfile = output_file,
-          files = file_list,
-          recurse = FALSE)
-    )
-
-  }
+  suppressWarnings(
+    zip(zipfile = output_file,
+        files = file_list)
+  )
 
   setwd(current_dir)
   unlink(output_dir, recursive = TRUE, force = TRUE)
@@ -85,7 +77,7 @@
 #'
 #' @return A NIflow imported from the file.
 #'
-#' @importFrom utils  installed.packages
+#' @importFrom utils unzip installed.packages
 #'
 .load_flow <- function(filename, verbose = FALSE) {
 

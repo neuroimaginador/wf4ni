@@ -1,47 +1,33 @@
-# Create a new environment as the parent of global, with
-# wf4ni versions of tempfile and tempdir.
-.insert_wf4ni_shims <- function(work_dir) {
+# Change the temporary directory to store results
+.change_workdir <- function(work_dir) {
 
   force(work_dir)
 
-  if ("wf4ni_shims" %in% search()) return()
+  attached <- search()
+
+  if ("wf4ni_shims" %in% attached) return()
 
   e <- new.env()
 
-  e$old_tempfile <- base::tempfile
-  e$old_tempdir <- base::tempdir
-  e$work_dir <- work_dir
+  e$old_tempdir <- base::tempdir()
+  e$work_dir <- normalizePath(work_dir)
+
+  setTempDir(e$work_dir)
+
+  .create_tempdir()
 
   base::attach(e,
                name = "wf4ni_shims",
                warn.conflicts = FALSE)
 
-  unlockBinding("tempdir", baseenv())
-
-  assign("tempdir",
-         function(check = NULL) {
-
-           work_dir <- get("work_dir",
-                           as.environment("wf4ni_shims"))
-
-           return(work_dir)
-
-         }, baseenv())
-
 }
 
-# Remove all inserted shims
-.remove_wf4ni_shims <- function() {
+# Restore the previous tempdir.
+.restore_tempdir <- function() {
 
   if (!("wf4ni_shims" %in% search())) return()
 
-  unlockBinding("tempdir", baseenv())
-
-  assign("tempdir",
-         get("old_tempdir", as.environment("wf4ni_shims")),
-         baseenv())
-
-  lockBinding("tempdir", baseenv())
+  setTempDir(get("old_tempdir", as.environment("wf4ni_shims")))
 
   detach(pos = which(search() == "wf4ni_shims"))
 
@@ -55,3 +41,4 @@
              showWarnings = FALSE)
 
 }
+

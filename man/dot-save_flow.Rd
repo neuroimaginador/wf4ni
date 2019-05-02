@@ -19,6 +19,3 @@ Invisibly, the name of the output file
 \description{
 This function saves a flow to a file.
 }
-\seealso{
-\code{\link[zip]{zip}}
-}

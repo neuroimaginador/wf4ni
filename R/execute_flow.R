@@ -191,8 +191,7 @@ execute <- function(flow,
 
     # Insert shims: variations of tempdir() to save temporary
     # results to a specific folder:
-    .insert_wf4ni_shims(flow$work_dir)
-    .create_tempdir()
+    .change_workdir(flow$work_dir)
     flow$log(level = "DEBUG",
              message = paste0("Switching tempdir to: ", flow$work_dir))
 
@@ -311,7 +310,7 @@ execute <- function(flow,
     }
 
     # Remove the previously inserted shims.
-    .remove_wf4ni_shims()
+    .restore_tempdir()
     flow$log(level = "DEBUG",
              message = paste0("Switching to base tempdir"))
 
