@@ -3,6 +3,8 @@
 
 [![Travis build
 status](https://travis-ci.org/neuroimaginador/wf4ni.svg?branch=master)](https://travis-ci.org/neuroimaginador/wf4ni)
+[![AppVeyor build
+status](https://ci.appveyor.com/api/projects/status/github/neuroimaginador/wf4ni?branch=master&svg=true)](https://ci.appveyor.com/project/neuroimaginador/wf4ni)
 
 # The `wf4ni` package
 
