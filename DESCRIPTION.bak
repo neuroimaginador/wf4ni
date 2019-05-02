@@ -20,36 +20,11 @@ Imports: stringr, styler, devtools, igraph, RCurl, R6,
       RNifti, neurobase, oro.nifti, scales, crayon,
       prettyunits, pryr, purrr, methods, utils,
       Rgraphviz, grid, graph, Rcpp
-Suggests: 
-    ANTsR,
-    ANTsRCore,
-    RColorBrewer,
-    dplyr,
-    dti,
-    extrantsr,
-    fslr,
-    ggplot2,
-    readr,
-    signal,
-    tidyr,
-    tidyverse,
-    testthat,
-    knitr,
-    rmarkdown,
-    covr
+Suggests: ANTsR, ANTsRCore, RColorBrewer, dplyr, dti,
+      extrantsr, fslr, ggplot2, readr, signal, tidyr,
+      tidyverse, testthat, knitr, rmarkdown,
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.0
 VignetteBuilder: knitr
 LinkingTo: Rcpp
-Repository: Neuroconductor
-Remotes:  
-    neuroconductor/RNifti@2b935076c4645151962508f8570e4bedbd04bd4a,
-    neuroconductor/ANTsRCore@764cc41cc0dec70e0918b39de5f5711714893ac2,
-    neuroconductor/oro.nifti@37297c1b90ee0942b0561d1c4373c1cc80d81ea2,
-    neuroconductor/ANTsR@b6e7c48b29b9bc262bc3654b3e80b6136ebcc2e7,
-    neuroconductor/neurobase@a1a9d18f0b12f34ee724ff6918c9add6b6f5c258,
-    neuroconductor/dti@463a90a3e55beb29743dfa2c3d7457f0e9c24e56,
-    neuroconductor/fslr@1f07464b25e59ab8e43a28b01bf4a50999ffab71,
-    neuroconductor/extrantsr@cec61789884ac2d6c342b3a9aded768e8e1a02b5
-biocViews: 

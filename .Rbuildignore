@@ -1,3 +1,4 @@
+^DESCRIPTION\.bak$
 ^appveyor\.yml$
 ^\.travis\.yml$
 ^\./vignettes/resources/dti/$
