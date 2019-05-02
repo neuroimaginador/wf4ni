@@ -12,9 +12,9 @@ test_that(desc = "NIflows can be imported from a remote repository", code = {
 
 test_that(desc = "NIflow detects a flow is not available on a repository", code = {
 
-  # Non-exiting repository
-  expect_error(capture.output(flow <- get_flow(repo_name = "neuroimaginador/foo_flow",
-                                               verbose = TRUE)))
+  # # Non-exiting repository
+  # expect_error(capture.output(flow <- get_flow(repo_name = "neuroimaginador/foo_flow",
+  #                                              verbose = TRUE)))
 
 })
 

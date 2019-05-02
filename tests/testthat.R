@@ -1,4 +1,4 @@
-suppressPackageStartupMessages(library(testthat))
-suppressPackageStartupMessages(library(wf4ni))
+library(testthat)
+library(wf4ni)
 
-write.table(test_check("wf4ni"), "test_results.csv")
+test_check("wf4ni")

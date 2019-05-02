@@ -10,7 +10,6 @@
 #'
 #' @seealso
 #'  \code{\link[zip]{zip}}
-#' @importFrom zip zip
 #' @import zip
 #'
 .save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
@@ -86,7 +85,7 @@
 #'
 #' @return A NIflow imported from the file.
 #'
-#' @importFrom utils unzip installed.packages
+#' @importFrom utils  installed.packages
 #'
 .load_flow <- function(filename, verbose = FALSE) {
 

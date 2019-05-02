@@ -8,7 +8,7 @@
 #'
 #' @importFrom stringr str_split
 #' @importFrom RCurl url.exists
-#' @importFrom utils unzip untar download.file
+#' @importFrom utils untar download.file
 #'
 #' @export
 #'

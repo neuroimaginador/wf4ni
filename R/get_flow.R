@@ -2,7 +2,7 @@ flow_globals <- new.env()
 
 with(flow_globals, {
 
-  flow_cache_dir <- file.path(normalizePath("~"), "wf4ni_flows")
+  flow_cache_dir <-  tempdir() #file.path(normalizePath("~"), "wf4ni_flows")
 
 })
 
