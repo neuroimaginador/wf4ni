@@ -1,6 +1,9 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+[![Travis build
+status](https://travis-ci.org/neuroimaginador/wf4ni.svg?branch=master)](https://travis-ci.org/neuroimaginador/wf4ni)
+
 # The `wf4ni` package
 
 There are a lot of packages in the R ecosystem focused on several
