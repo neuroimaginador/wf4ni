@@ -203,6 +203,12 @@ With these final additions, the complete pipeline is as follows:
 dti_flow$plot()
 ```
 
+We can also obtain a brief summary of the flow by typing:
+
+```{r summary}
+summary(dti_flow)
+```
+
 # Example
 
 To illustrate how this workflow can be used, let us suppose that we have all the functions mentioned before already implemented (an example implementation is given in the Annex), and build the workflow as in the previous steps. We'll apply this flow to compute the fibers and the FA map given a DWI image.
