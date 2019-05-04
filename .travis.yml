@@ -4,8 +4,83 @@ language: R
 sudo: false
 cache: packages
 warnings_are_errors: true
+use_bioc: true
+bioc_required: true
+cran: http://cran.rstudio.com
+dist: trusty
+
+addons:
+  apt:
+    packages:
+    - libfftw3-dev
+    - libgsl0-dev
+    - libgsl0ldbl
+
 os:
   - linux
   - osx
+osx_image: xcode9
+
+r:
+- 3.3
+- 3.4
+- 3.5
+- release
+- devel
+
+matrix:
+  allow_failures:
+    - r: devel
+
+
 after_success:
   - Rscript -e 'covr::coveralls()'
+
+env:
+  global:
+    - RGL_USE_NULL=TRUE
+    - PROJECT_NAME=neuroconductor
+    - DISPLAY=:99.0
+    - R_REMOTES_NO_ERRORS_FROM_WARNINGS=true
+r_check_args: --as-cran --install-args=--build
+# r_check_args: "--as-cran --install-args=--build"
+
+before_install:
+  - ulimit -n 2048
+  - export PROJ_DIR=`basename $PWD`
+  - fname=travis_helpers.sh
+  - wget -O ${fname} http://bit.ly/travis_helpers
+  - cat ${fname}; source ${fname}; rm ${fname}
+  - cat DESCRIPTION
+  - start_xvfb ;
+  - export rver=`r_version`; echo $rver ;
+  - if [ "$TRAVIS_OS_NAME" = "osx" ];
+    then
+      no_open_mp ;
+    fi
+  - jags_install ;
+  - v8_install ;
+  - dcmtk_install ;
+  - remove_neuroc_packages
+  - cat DESCRIPTION
+  - install_remotes_no_dep
+  - cat DESCRIPTION
+  - export PACKAGE_NAME=`package_name`
+  - echo "Package Name is $PACKAGE_NAME"
+  - if [[ "${PACKAGE_NAME}" == "waveslim" ]];
+    then
+      fftw_install ;
+    fi
+  - if [[ "${PACKAGE_NAME}" == "dti" ]];
+    then
+      gsl_install ;
+    fi
+  - if [[ "${PACKAGE_NAME}" == "ROpenCVLite" || "${PACKAGE_NAME}" == "Rvision" ]];
+    then
+      shopt -s expand_aliases ;
+      x=`Rscript -e "cat(Sys.which('R'))"` ;
+      echo "reset R" ;
+      alias R="travis_wait 100 ${x}" ;
+    fi
+  - install_python_requirements ;
+  - R CMD javareconf ;
