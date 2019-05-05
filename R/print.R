@@ -33,7 +33,7 @@ print.NIflow <- function(flow) {
   if (length(flow_deps) > 0) {
 
     cat("It depends on functions of the following packages:",
-        str_flatten(flow_deps %>% red()), "\n")
+        str_flatten(flow_deps %>% red(), collapse = ", "), "\n")
 
   }
 
