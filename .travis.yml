@@ -1,6 +1,3 @@
-# R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
-
-# Neuroconductor Template for ANTsR Dep
 language: r
 cache: packages
 warnings_are_errors: true
@@ -8,26 +5,21 @@ use_bioc: true
 bioc_required: true
 cran: http://cran.rstudio.com
 dist: trusty
-
 addons:
   apt:
     packages:
     - libfftw3-dev
     - libgsl-dev
-
 os:
-  - linux
-  - osx
+- linux
+- osx
 osx_image: xcode9
-
 r:
 - release
 - devel
-
 matrix:
   allow_failures:
-    - r: devel
-
+  - r: devel
 env:
   global:
   - R_BUILD_ARGS="--no-manual"
@@ -37,76 +29,78 @@ env:
   - PROJECT_NAME=neuroconductor
   - DISPLAY=:99.0
   - R_REMOTES_NO_ERRORS_FROM_WARNINGS=true
-
 before_install:
-  - ulimit -n 2048
-  - export LD_LIBRARY_PATH=/usr/local/clang/lib:${LD_LIBRARY_PATH}
-  - export PROJ_DIR=`basename $PWD`
-  - echo "travis_wait*\.log$" >> .Rbuildignore
-  - fname=travis_helpers.sh
-  - wget -O ${fname} http://bit.ly/travis_helpers
-  - cat ${fname}; source ${fname}; rm ${fname}
-  - cat DESCRIPTION
-  - start_xvfb ;
-  - v8_install ;
-  - dcmtk_install ;
-  - export rver=`r_version`; echo $rver ;
-  - export PACKAGE_NAME=`package_name`
-  - export RCHECK_DIR=${PACKAGE_NAME}.Rcheck
-  - remove_neuroc_packages
-  - export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=1
-  - export _R_CHECK_FORCE_SUGGESTS_=false
-  # does all the clang exports
-  - x=`export_clang_cxx`; eval ${x}
-  - if [ "$TRAVIS_OS_NAME" = "osx" ];
-    then
-      no_open_mp ;
-    fi
-  - echo "CC=${CC}, CXX=${CXX}, CXX1X=${CXX1X}"
-  - echo "CXX1XSTD=${CXX1XSTD}, CXX11=${CXX11}"
-  - clang_cxx
-  - export cmake_version="3.11"
-  - cmake --version
-  - x=`cmake_setup`; echo "${x}"; eval ${x};
-  - cmake --version
-  - export ants_user=neuroconductor
-  - wget -O antsr_travis.sh http://bit.ly/antsr_travis_sh
-  - source ./antsr_travis.sh
-  - rm antsr_travis.sh
-  - fftw_install ;
-  - gsl_install ;
-  - cat DESCRIPTION
-  - install_remotes_no_dep
-  - cat DESCRIPTION
-  - echo $PATH ;
-  - install_deps_no_suggests
-  - install_python_requirements ;
-  - R CMD javareconf ;
-  - travis_run_cache
-
+- ulimit -n 2048
+- export LD_LIBRARY_PATH=/usr/local/clang/lib:${LD_LIBRARY_PATH}
+- export PROJ_DIR=`basename $PWD`
+- echo "travis_wait*\.log$" >> .Rbuildignore
+- fname=travis_helpers.sh
+- wget -O ${fname} http://bit.ly/travis_helpers
+- cat ${fname}; source ${fname}; rm ${fname}
+- cat DESCRIPTION
+- start_xvfb ;
+- v8_install ;
+- dcmtk_install ;
+- export rver=`r_version`; echo $rver ;
+- export PACKAGE_NAME=`package_name`
+- export RCHECK_DIR=${PACKAGE_NAME}.Rcheck
+- remove_neuroc_packages
+- export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=1
+- export _R_CHECK_FORCE_SUGGESTS_=false
+- x=`export_clang_cxx`; eval ${x}
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then no_open_mp ; fi
+- echo "CC=${CC}, CXX=${CXX}, CXX1X=${CXX1X}"
+- echo "CXX1XSTD=${CXX1XSTD}, CXX11=${CXX11}"
+- clang_cxx
+- export cmake_version="3.11"
+- cmake --version
+- x=`cmake_setup`; echo "${x}"; eval ${x};
+- cmake --version
+- export ants_user=neuroconductor
+- wget -O antsr_travis.sh http://bit.ly/antsr_travis_sh
+- source ./antsr_travis.sh
+- rm antsr_travis.sh
+- fftw_install ;
+- gsl_install ;
+- cat DESCRIPTION
+- install_remotes_no_dep
+- cat DESCRIPTION
+- echo $PATH ;
+- install_deps_no_suggests
+- install_python_requirements ;
+- R CMD javareconf ;
+- travis_run_cache
 script:
-  # - source ~/.R/Makevars
-  - x=`export_clang_cxx`; eval ${x}
-  - travis_wait 100 R CMD build ${R_BUILD_ARGS} .
-  - rm -f travis_wait*.log
-  - PKG_TARBALL=$(ls -1t *.tar.gz | head -n 1)
-  - ls
-  - travis_wait 100 R CMD check ${R_CHECK_ARGS} "${PKG_TARBALL}"; CHECK_RET=$? ;
-  - rm -f travis_wait*.log
-  - if [[ $CHECK_RET -ne 0 ]];
-    then
-      echo "R CMD check failed";
-      check_fail;
-      dump_logs;
-      travis_terminate 1;
-    fi
-  # - check_warnings
-  # - Rscript -e "message(devtools::check_failures(path = \"${RCHECK_DIR}\"))" ;
-  # - grep -q -R "WARNING" "${RCHECK_DIR}/00check.log" ; if [[ $? -eq 0 ]]; error 1; fi
-  # - if [[ ${#TRAVIS_TAG} -eq 0 ]];
-  #   then
-  #   travis_wait 100 R CMD check ${R_CHECK_ARGS} "${PKG_TARBALL}";
-  #   fi
-
+- x=`export_clang_cxx`; eval ${x}
+- travis_wait 100 R CMD build ${R_BUILD_ARGS} .
+- rm -f travis_wait*.log
+- PKG_TARBALL=$(ls -1t *.tar.gz | head -n 1)
+- ls
+- travis_wait 100 R CMD check ${R_CHECK_ARGS} "${PKG_TARBALL}"; CHECK_RET=$? ;
+- rm -f travis_wait*.log
+- if [[ $CHECK_RET -ne 0 ]]; then echo "R CMD check failed"; check_fail; dump_logs;
+  travis_terminate 1; fi
+- dump_logs ;
 after_success:
-  - Rscript -e 'covr::coveralls()'
+- if [[ "${TRAVIS_OS_NAME}" == "linux" && ${TRAVIS_R_VERSION_STRING} = "release" ]];
+  then echo 'covr::coveralls(type = "all", quiet = FALSE)' > neuroc_covr.R ; travis_wait
+  100 Rscript neuroc_covr.R ; rm neuroc_covr.R ; fi
+before_deploy:
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then PKG_TARBALL=$(ls -1t *.tgz | head -n 1);
+  PKG_TARBALL_WITH_R=`echo $PKG_TARBALL | sed 's/.tgz/_'"R${rver}"'.tgz/'` ; mv ${PKG_TARBALL}
+  ${PKG_TARBALL_WITH_R} ; echo "Built tarball is ${PKG_TARBALL_WITH_R}" ; fi
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then PKG_TARBALL=$(ls -1t *.tar.gz | head -n
+  1); PKG_TARBALL_WITH_R=`echo $PKG_TARBALL | sed 's/.tar.gz/_'"R${rver}"'.tar.gz/'`
+  ; mv ${PKG_TARBALL} ${PKG_TARBALL_WITH_R} ; echo "Built tarball is ${PKG_TARBALL_WITH_R}"
+  ; fi
+- if [[ "${TRAVIS_OS_NAME}" = "osx" ]]; then rm -f *.tar.gz; fi
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: gfpUtxtLvJ++i06jvgR3VI1L7OEZgA0d1myTTEigHov0i7fdvWUcW2GSB8wnjUJOGVTXBnfMVIUMn63X7CABpl/yj3bdVz1PwlUPEl6uIbt4sWt4d3NNXHVwRRABZ8+XktjXtE7Yp8p5xpvz2z8ysC85ThnXhaNT2VyHcRduEbGzNKwkEV0DT3jWUSrohp1CG66womigbrwHtDIkLVi0v6j2yc9UgE3MyFhFNQ/BXYkLZhqq3oaffbX5/TCrpe2B3kb2LMsAIQOUHAMtofKbODUvm8v4JEI7VkVwUd6xYeB4N0brN/VzkF3SIum4t76DaiJjemId34E+YWnP5o65+vXX0IDaUnGgor5gdd8X0ZXfIXFPIm54B+y03BFgWCoW/dz2J7bYu9RsfSt2XM21+KNmSAcdG9wf3r66Af3P+Y6LFDRqUKER8pgzNvT1yfbB9TgIOp6qH+DV/DLg8+oFw/jhYS5zLN96/5QuQbpmR3HBR+AlVmt5+6caesDRQ/r8tyYD+Bk0NpBl271uUhCs6tEEcffcl3BgzjAGzP3jv5wWvnewjrBVl7xZ6ia6Xz2G9fEAr1g5SyeJ41XEWHZvbaZw+Hxr7UrV0By3QaJ79J+ONbIiDaUELJe+ftXQkitDae5b0FH/EoImgQEzsOAAwnmhWNLDrKszufF8SLa3LWU=
+  file_glob: true
+  file: wf4ni*.t*gz
+  on:
+    tags: true
+    repo: neuroimaginador/wf4ni

@@ -134,3 +134,13 @@ artifacts:
 
   - path: '\*_*.zip'
     name: Bits
+
+deploy:
+  provider: GitHub
+  description: 'Windows Binary'
+  auth_token:
+    secure: mmOV9mCfh+ST5uAEn3t/KpkjlMFKNytJRe3lOmeMjzjueOb/UK/9Xe8aIm97xY8y
+  draft: false
+  prerelease: false
+  on:
+    appveyor_repo_tag: true
