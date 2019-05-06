@@ -20,7 +20,6 @@ os:
   - osx
 osx_image: xcode9
 
-
 r:
 - release
 - devel
@@ -101,10 +100,13 @@ script:
       dump_logs;
       travis_terminate 1;
     fi
-  - check_warnings
+  # - check_warnings
   # - Rscript -e "message(devtools::check_failures(path = \"${RCHECK_DIR}\"))" ;
   # - grep -q -R "WARNING" "${RCHECK_DIR}/00check.log" ; if [[ $? -eq 0 ]]; error 1; fi
   # - if [[ ${#TRAVIS_TAG} -eq 0 ]];
   #   then
   #   travis_wait 100 R CMD check ${R_CHECK_ARGS} "${PKG_TARBALL}";
   #   fi
+
+after_success:
+  - Rscript -e 'covr::coveralls()'
