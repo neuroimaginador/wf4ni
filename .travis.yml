@@ -1,7 +1,7 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
-language: R
-sudo: false
+# Neuroconductor Template for ANTsR Dep
+language: r
 cache: packages
 warnings_are_errors: true
 use_bioc: true
@@ -21,6 +21,7 @@ os:
   - osx
 osx_image: xcode9
 
+
 r:
 - 3.3
 - 3.4
@@ -32,41 +33,75 @@ matrix:
   allow_failures:
     - r: devel
 
-
-after_success:
-  - Rscript -e 'covr::coveralls()'
-
 env:
   global:
-    - RGL_USE_NULL=TRUE
-    - PROJECT_NAME=neuroconductor
-    - DISPLAY=:99.0
-    - R_REMOTES_NO_ERRORS_FROM_WARNINGS=true
-r_check_args: --as-cran --install-args=--build
-# r_check_args: "--as-cran --install-args=--build"
+  - R_BUILD_ARGS="--no-manual"
+  - R_CHECK_ARGS="--as-cran --install-args=--build"
+  - RGL_USE_NULL=TRUE
+  - WARNINGS_ARE_ERRORS=1
+  - PROJECT_NAME=neuroconductor
+  - DISPLAY=:99.0
+  - R_REMOTES_NO_ERRORS_FROM_WARNINGS=true
 
 before_install:
   - ulimit -n 2048
+  - export LD_LIBRARY_PATH=/usr/local/clang/lib:${LD_LIBRARY_PATH}
   - export PROJ_DIR=`basename $PWD`
+  - echo "travis_wait*\.log$" >> .Rbuildignore
   - fname=travis_helpers.sh
   - wget -O ${fname} http://bit.ly/travis_helpers
   - cat ${fname}; source ${fname}; rm ${fname}
   - cat DESCRIPTION
   - start_xvfb ;
+  - v8_install ;
+  - dcmtk_install ;
   - export rver=`r_version`; echo $rver ;
+  - export PACKAGE_NAME=`package_name`
+  - export RCHECK_DIR=${PACKAGE_NAME}.Rcheck
+  - remove_neuroc_packages
+  - export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=1
+  # does all the clang exports
+  - x=`export_clang_cxx`; eval ${x}
   - if [ "$TRAVIS_OS_NAME" = "osx" ];
     then
       no_open_mp ;
     fi
-  - jags_install ;
-  - v8_install ;
-  - dcmtk_install ;
-  - remove_neuroc_packages
-  - cat DESCRIPTION
-  - install_remotes_no_dep
-  - cat DESCRIPTION
-  - export PACKAGE_NAME=`package_name`
-  - echo "Package Name is $PACKAGE_NAME"
+  - echo "CC=${CC}, CXX=${CXX}, CXX1X=${CXX1X}"
+  - echo "CXX1XSTD=${CXX1XSTD}, CXX11=${CXX11}"
+  - clang_cxx
+  - export cmake_version="3.11"
+  - cmake --version
+  - x=`cmake_setup`; echo "${x}"; eval ${x};
+  - cmake --version
+  - export ants_user=neuroconductor
+  - echo "Installing Missing Deps ITKR"
+  - install_missing_remote_deps_all ${ants_user}/ITKR
+  - gh_binary_install ${ants_user}/ITKR ;
+  - if [[ "${PACKAGE_NAME}" == "ITKR" || "${PACKAGE_NAME}" == "ANTsRCore" || "${PACKAGE_NAME}" == "ANTsR" ]];
+    then
+      Rscript -e "install.packages(c('Rcpp', 'RcppEigen'), type = 'source', repo = 'http://cran.rstudio.com')" ;
+    fi
+  - if [[ "${PACKAGE_NAME}" == "ITKR" || "${PACKAGE_NAME}" == "ANTsRCore" ]];
+    then
+      export R_BUILD_ARGS="${R_BUILD_ARGS} --no-build-vignettes " ;
+      export R_CHECK_ARGS="--no-vignettes ${R_CHECK_ARGS}" ;
+    fi
+  - if [[ "${PACKAGE_NAME}" != "ITKR" ]];
+    then
+      echo "Installing Missing Deps ANTsRCore" ;
+      install_missing_remote_deps_all ${ants_user}/ANTsRCore;
+      gh_binary_install_passive ${ants_user}/ANTsRCore ;
+    fi
+  - if [[ "${PACKAGE_NAME}" != "ANTsRCore" && "${PACKAGE_NAME}" != "ITKR" ]];
+    then
+      echo "Installing Missing Deps ANTsR" ;
+      install_missing_remote_deps_all ${ants_user}/ANTsR ;
+      gh_binary_install_passive ${ants_user}/ANTsR ;
+    fi
+  - if [[ "${PACKAGE_NAME}" == "ANTsR" ]];
+    then
+      export _R_CHECK_FORCE_SUGGESTS_=false ;
+    fi
   - if [[ "${PACKAGE_NAME}" == "waveslim" ]];
     then
       fftw_install ;
@@ -75,12 +110,35 @@ before_install:
     then
       gsl_install ;
     fi
-  - if [[ "${PACKAGE_NAME}" == "ROpenCVLite" || "${PACKAGE_NAME}" == "Rvision" ]];
-    then
-      shopt -s expand_aliases ;
-      x=`Rscript -e "cat(Sys.which('R'))"` ;
-      echo "reset R" ;
-      alias R="travis_wait 100 ${x}" ;
-    fi
+  - cat DESCRIPTION
+  - install_remotes_no_dep
+  - cat DESCRIPTION
+  - echo $PATH ;
+  - install_deps_no_suggests
   - install_python_requirements ;
   - R CMD javareconf ;
+  - travis_run_cache
+
+script:
+  # - source ~/.R/Makevars
+  - x=`export_clang_cxx`; eval ${x}
+  - travis_wait 100 R CMD build ${R_BUILD_ARGS} .
+  - rm -f travis_wait*.log
+  - PKG_TARBALL=$(ls -1t *.tar.gz | head -n 1)
+  - ls
+  - travis_wait 100 R CMD check ${R_CHECK_ARGS} "${PKG_TARBALL}"; CHECK_RET=$? ;
+  - rm -f travis_wait*.log
+  - if [[ $CHECK_RET -ne 0 ]];
+    then
+      echo "R CMD check failed";
+      check_fail;
+      dump_logs;
+      travis_terminate 1;
+    fi
+  - check_warnings
+  # - Rscript -e "message(devtools::check_failures(path = \"${RCHECK_DIR}\"))" ;
+  # - grep -q -R "WARNING" "${RCHECK_DIR}/00check.log" ; if [[ $? -eq 0 ]]; error 1; fi
+  # - if [[ ${#TRAVIS_TAG} -eq 0 ]];
+  #   then
+  #   travis_wait 100 R CMD check ${R_CHECK_ARGS} "${PKG_TARBALL}";
+  #   fi
