@@ -13,8 +13,7 @@ addons:
   apt:
     packages:
     - libfftw3-dev
-    - libgsl0-dev
-    - libgsl0ldbl
+    - libgsl-dev
 
 os:
   - linux
