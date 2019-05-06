@@ -77,14 +77,8 @@ before_install:
   - wget -O antsr_travis.sh http://bit.ly/antsr_travis_sh
   - source ./antsr_travis.sh
   - rm antsr_travis.sh
-  - if [[ "${PACKAGE_NAME}" == "waveslim" ]];
-    then
-      fftw_install ;
-    fi
-  - if [[ "${PACKAGE_NAME}" == "dti" ]];
-    then
-      gsl_install ;
-    fi
+  - fftw_install ;
+  - gsl_install ;
   - cat DESCRIPTION
   - install_remotes_no_dep
   - cat DESCRIPTION
