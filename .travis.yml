@@ -74,34 +74,9 @@ before_install:
   - x=`cmake_setup`; echo "${x}"; eval ${x};
   - cmake --version
   - export ants_user=neuroconductor
-  - echo "Installing Missing Deps ITKR"
-  - install_missing_remote_deps_all ${ants_user}/ITKR
-  - gh_binary_install ${ants_user}/ITKR ;
-  - if [[ "${PACKAGE_NAME}" == "ITKR" || "${PACKAGE_NAME}" == "ANTsRCore" || "${PACKAGE_NAME}" == "ANTsR" ]];
-    then
-      Rscript -e "install.packages(c('Rcpp', 'RcppEigen'), type = 'source', repo = 'http://cran.rstudio.com')" ;
-    fi
-  - if [[ "${PACKAGE_NAME}" == "ITKR" || "${PACKAGE_NAME}" == "ANTsRCore" ]];
-    then
-      export R_BUILD_ARGS="${R_BUILD_ARGS} --no-build-vignettes " ;
-      export R_CHECK_ARGS="--no-vignettes ${R_CHECK_ARGS}" ;
-    fi
-  - if [[ "${PACKAGE_NAME}" != "ITKR" ]];
-    then
-      echo "Installing Missing Deps ANTsRCore" ;
-      install_missing_remote_deps_all ${ants_user}/ANTsRCore;
-      gh_binary_install_passive ${ants_user}/ANTsRCore ;
-    fi
-  - if [[ "${PACKAGE_NAME}" != "ANTsRCore" && "${PACKAGE_NAME}" != "ITKR" ]];
-    then
-      echo "Installing Missing Deps ANTsR" ;
-      install_missing_remote_deps_all ${ants_user}/ANTsR ;
-      gh_binary_install_passive ${ants_user}/ANTsR ;
-    fi
-  - if [[ "${PACKAGE_NAME}" == "ANTsR" ]];
-    then
-      export _R_CHECK_FORCE_SUGGESTS_=false ;
-    fi
+  - wget -O antsr_travis.sh http://bit.ly/antsr_travis_sh
+  - source ./antsr_travis.sh
+  - rm antsr_travis.sh
   - if [[ "${PACKAGE_NAME}" == "waveslim" ]];
     then
       fftw_install ;
