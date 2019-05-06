@@ -5,7 +5,7 @@
 status](https://travis-ci.org/neuroimaginador/wf4ni.svg?branch=master)](https://travis-ci.org/neuroimaginador/wf4ni)
 [![AppVeyor build
 status](https://ci.appveyor.com/api/projects/status/github/neuroimaginador/wf4ni?branch=master&svg=true)](https://ci.appveyor.com/project/neuroimaginador/wf4ni)[![Coverage
-status](https://coveralls.io/repos/github/neuroimaginador/wf4ni/badge.svg)](https://coveralls.io/r/neuroimaginador/wf4ni?branch=master)
+Status](https://coveralls.io/repos/github/neuroimaginador/wf4ni/badge.svg?branch=master)](https://coveralls.io/github/neuroimaginador/wf4ni?branch=master)
 
 # The `wf4ni` package
 
