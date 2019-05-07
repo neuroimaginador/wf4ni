@@ -54,13 +54,13 @@ merge <- function(flow1, flow2, rename = TRUE) {
 
     out <- res_outputs[out_id]
 
-    if (!out %in% res_inputs) {
+    if (!(out %in% res_inputs)) {
 
       # If we're not adding an input
       old_out <- new_outputs[out_id]
 
       res$add(what = flow2$get_process(old_out),
-              inputs = res_outputs[match(inmediate_inputs[old_out], new_outputs)],
+              inputs = res_outputs[match(inmediate_inputs[[old_out]], new_outputs)],
               output = out)
 
     }
