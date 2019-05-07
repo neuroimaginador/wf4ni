@@ -7,9 +7,11 @@
 #' @param file_prefix    (character) File name, Default: the name of the \code{flow}
 #'
 #' @return Invisibly, the name of the output file
-#' @importFrom utils zip
+#' @importFrom utils zip capture.output
 #'
-.save_flow <- function(flow, path = tempdir(), file_prefix = flow$name) {
+.save_flow <- function(flow,
+                       path = tempdir(),
+                       file_prefix = flow$name) {
 
   # Basic input check
   stopifnot(inherits(flow, "NIflow"))
@@ -58,7 +60,7 @@
 
   suppressWarnings(
     zip(zipfile = output_file,
-        files = file_list)
+        files = file_list, flags = "-qr9X")
   )
 
   setwd(current_dir)
