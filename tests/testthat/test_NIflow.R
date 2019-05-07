@@ -2,10 +2,6 @@ context("NIflow")
 
 expect_works <- function(object) testthat::expect_error(object, NA)
 
-# Download external nifti file
-t1_file <- tempfile(fileext = ".nii.gz")
-download.file(url = "http://www.jannin.org/mritemplate/data/Template-T1-U8-RALPFH-BR.nii.gz",
-              destfile = t1_file, quiet = TRUE)
 
 test_that("NIflow initializes as expected", {
 
@@ -24,6 +20,10 @@ test_that("NIflow initializes as expected", {
 
   # No outputs at the beginning
   expect_identical(setdiff(flow$get_outputs(), flow$get_inputs()), character(0))
+
+  # Get tempdir and clean it
+  expect_works(flow$get_workdir())
+  expect_works(flow$clean_workdir())
 
 })
 
@@ -62,6 +62,8 @@ test_that("A NIflow can do basic operations (plot and subset)", {
   # Plot
   expect_works(flow$plot())
 
+  expect_works(flow %>% plot(to_file = tempfile(fileext = ".png")))
+
   # Subset
   expect_works(new_flow <- flow$subset(outputs = "suma3"))
   expect_works(new_flow$plot())
@@ -89,13 +91,20 @@ test_that(desc = "A NIflow can be executed", code = {
 
   flow$add(what = f, inputs = c(A, B), output = suma)
   flow$add(inputs = C)
-  flow$add(what = f, inputs = c(B, C), output = suma2)
-  flow$add(what = f, inputs = c(suma, C), output = suma3)
-  flow$add(what = f, inputs = c(suma3, C), output = suma4)
+
+  flow %>%
+    add(what = f, inputs = c("B", "C"), output = suma2) %>%
+    add(what = f, inputs = c(suma, C), output = "suma3") %>%
+    add(what = f, inputs = c(suma3, C), output = suma4)
 
   # Execute the flow
   expect_works(res <- flow$execute(inputs = list(A = 1, B = 2, C = 3),
                                    desired_outputs = c(suma, suma2, suma3)))
+
+  expect_works(res <- flow$compute(from = list(A = 1, B = 2, C = 3),
+                                   what = c(suma, suma2, suma3),
+                                   verbose = FALSE))
+
 
   # Should return a list with named components
   expect_is(res, "list")
@@ -320,6 +329,9 @@ test_that(desc = "A NIflow can be exported to an R package", code = {
 
 test_that(desc = "NIflow can read NIFTI(gz) files as input", code = {
 
+  # Create temporal nifti file
+  A <- array(0, dim = c(10, 10, 10))
+  t1_file <- neurobase::checkimg(A, allow_array = TRUE)
 
   # Sample flow
   flow <- NIflow$new(name = "test", inputs = T1)
@@ -334,22 +346,23 @@ test_that(desc = "NIflow can read NIFTI(gz) files as input", code = {
   expect_named(res, expected = c("negT1"))
   expect_is(res$negT1, "array")
 
+  unlink(t1_file)
+
 })
 
 test_that(desc = "NIflow can read RDS files as input", code = {
 
-
-  # Rewrite input as RDS file
-  nifti_img <- neurobase::readnii(t1_file)
-  tmp <- tempfile(fileext = ".rds")
-  nifti_img %>% as.array() %>% saveRDS(file = tmp)
+  # Create temporal nifti file
+  A <- array(0, dim = c(10, 10, 10))
+  t1_file <- tempfile(fileext = ".rds")
+  saveRDS(object = A, file = t1_file)
 
   # Sample flow
   flow <- NIflow$new(name = "test", inputs = T1)
   flow$add(what = function(I) {-I}, inputs = T1, output = negT1)
 
   # Input is a filename (.rds)
-  expect_works(res <- flow$execute(inputs = list(T1 = tmp),
+  expect_works(res <- flow$execute(inputs = list(T1 = t1_file),
                                    desired_outputs = negT1))
 
   # Is the result as expected?
@@ -357,27 +370,29 @@ test_that(desc = "NIflow can read RDS files as input", code = {
   expect_named(res, expected = c("negT1"))
   expect_is(res$negT1, "array")
 
+  unlink(t1_file)
+
 })
 
 test_that(desc = "NIflow can read uncompressed NIFTI files as input", code = {
 
-
-  # Rewrite input as .nii (uncompressed) file.
-  nifti_img <- neurobase::readnii(t1_file)
-  tmp <- tempfile(fileext = "")
-  oro.nifti::writeNIfTI(nifti_img, filename = tmp, gzipped = FALSE)
+  # Create temporal nifti file
+  A <- array(0, dim = c(10, 10, 10))
+  t1_file <- neurobase::checkimg(A, allow_array = TRUE, gzipped = FALSE)
 
   # Sample flow
   flow <- NIflow$new(name = "test", inputs = T1)
   flow$add(what = function(I) {-I}, inputs = T1, output = negT1)
 
   # Input is a filename (.nii)
-  expect_works(res <- flow$execute(inputs = list(T1 = paste0(tmp, ".nii")),
+  expect_works(res <- flow$execute(inputs = list(T1 = t1_file),
                                    desired_outputs = negT1))
 
   # Is the result as expected?
   expect_is(res, "list")
   expect_named(res, expected = c("negT1"))
   expect_is(res$negT1, "array")
+
+  unlink(t1_file)
 
 })
