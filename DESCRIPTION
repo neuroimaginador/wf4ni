@@ -1,7 +1,7 @@
 Package: wf4ni
 Type: Package
 Title: Work-Flows for Neuroimage Processing
-Version: 0.1.0
+Version: 0.2.0
 Date: 2019-04-29
 Author: Domingo López-Rodríguez [aut, cre]
 Authors@R: person("Domingo", "López-Rodríguez", role =
