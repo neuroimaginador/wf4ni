@@ -3,11 +3,11 @@ Type: Package
 Title: Work-Flows for Neuroimage Processing
 Version: 0.2.0
 Date: 2019-04-29
-Author: Domingo López-Rodríguez [aut, cre]
-Authors@R: person("Domingo", "López-Rodríguez", role =
+Author: Domingo Lopez-Rodriguez [aut, cre]
+Authors@R: person("Domingo", "Lopez-Rodriguez", role =
       c("aut", "cre"), email =
       "neuroimaginador@gmail.com")
-Maintainer: Domingo López-Rodríguez
+Maintainer: Domingo Lopez-Rodriguez
       <neuroimaginador@gmail.com>
 Description: The aim of this package is to provide a
       means to create reproducible work-flows
