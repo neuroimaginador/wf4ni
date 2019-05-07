@@ -1,11 +1,17 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-[![Travis build
+<!-- badges: start -->
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)[![CRAN
+status](https://www.r-pkg.org/badges/version/wf4ni)](https://cran.r-project.org/package=wf4ni)[![Travis
+build
 status](https://travis-ci.org/neuroimaginador/wf4ni.svg?branch=master)](https://travis-ci.org/neuroimaginador/wf4ni)
 [![AppVeyor build
 status](https://ci.appveyor.com/api/projects/status/github/neuroimaginador/wf4ni?branch=master&svg=true)](https://ci.appveyor.com/project/neuroimaginador/wf4ni)[![Coverage
 Status](https://coveralls.io/repos/github/neuroimaginador/wf4ni/badge.svg?branch=master)](https://coveralls.io/github/neuroimaginador/wf4ni?branch=master)
+<!-- badges: end -->
 
 # The `wf4ni` package
 
@@ -190,4 +196,9 @@ $O4
 More advanced examples, with applications to common pipelines in
 Neuroimaging, are in the vignettes of this package.
 
+# Code of Conduct
+
+Please note that the ‘wf4ni’ project is released with a [Contributor
+Code of Conduct](.github/CODE_OF_CONDUCT.md). By contributing to this
+project, you agree to abide by its terms.
 <!-- ## Extensibility of `wf4ni` -->
