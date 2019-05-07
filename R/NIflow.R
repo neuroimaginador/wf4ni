@@ -435,7 +435,6 @@ NIflow <- R6::R6Class(
       my_flow %>% .execute_flow(inputs = from,
                                 desired_outputs = what,
                                 initialize_outputs = TRUE,
-                                verbose = TRUE,
                                 ...)
 
     },
