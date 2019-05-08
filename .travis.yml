@@ -81,6 +81,8 @@ script:
 - if [[ $CHECK_RET -ne 0 ]]; then echo "R CMD check failed"; check_fail; dump_logs;
   travis_terminate 1; fi
 - dump_logs ;
+r_github_packages:
+  - r-lib/covr
 after_success:
 - if [[ "${TRAVIS_OS_NAME}" == "linux" && ${TRAVIS_R_VERSION_STRING} = "release" ]];
   then echo 'covr::coveralls(type = "all", quiet = FALSE)' > neuroc_covr.R ; travis_wait
