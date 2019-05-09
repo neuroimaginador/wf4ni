@@ -38,12 +38,15 @@ before_install:
 - wget -O ${fname} http://bit.ly/travis_helpers
 - cat ${fname}; source ${fname}; rm ${fname}
 - cat DESCRIPTION
+- export ants_user=neuroconductor
+- wget -O antsr_travis.sh http://bit.ly/antsr_travis_sh
+- source ./antsr_travis.sh
+- rm antsr_travis.sh
+- cat DESCRIPTION
 - start_xvfb ;
 - v8_install ;
 - dcmtk_install ;
 - fftw_install ;
-- gsl_install ;
-- imagemagick_install ;
 - export rver=`r_version`; echo $rver ;
 - export PACKAGE_NAME=`package_name`
 - export RCHECK_DIR=${PACKAGE_NAME}.Rcheck
@@ -59,11 +62,9 @@ before_install:
 - cmake --version
 - x=`cmake_setup`; echo "${x}"; eval ${x};
 - cmake --version
-- export ants_user=neuroconductor
-- wget -O antsr_travis.sh http://bit.ly/antsr_travis_sh
-- source ./antsr_travis.sh
-- rm antsr_travis.sh
 - cat DESCRIPTION
+- gsl_install ;
+- imagemagick_install ;
 - install_remotes_no_dep
 - cat DESCRIPTION
 - echo $PATH ;
