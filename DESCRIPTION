@@ -19,7 +19,7 @@ BugReports:
 Imports: stringr, styler, devtools, igraph, RCurl, R6,
       RNifti, neurobase, oro.nifti, scales, crayon,
       prettyunits, pryr, purrr, methods, utils,
-      Rgraphviz, grid, graph, Rcpp
+      Rgraphviz, grid, graph, Rcpp, usethis
 Suggests: 
     ANTsR,
     ANTsRCore,

@@ -597,7 +597,7 @@ NIflow <- R6::R6Class(
       # Add dependencies to the DESCRIPTION file
       deps <- self$get_dependencies()
 
-      invisible(sapply(deps, devtools::use_package, pkg = pkg))
+      invisible(sapply(deps, usethis::use_package, pkg = pkg))
 
       # Save the flow
       data_folder <- file.path(pkg, "inst", "flow")
